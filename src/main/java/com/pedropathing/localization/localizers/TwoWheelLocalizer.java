@@ -1,6 +1,7 @@
 package com.pedropathing.localization.localizers;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.pedropathing.localization.constants.TwoWheelConstants;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -84,8 +85,8 @@ public class TwoWheelLocalizer extends Localizer {
         FORWARD_TICKS_TO_INCHES = forwardTicksToInches;
         STRAFE_TICKS_TO_INCHES = strafeTicksToInches;
 
-        forwardEncoderPose = new Pose(0, forwardY, 0);
-        strafeEncoderPose = new Pose(strafeX, 0, Math.toRadians(90));
+        forwardEncoderPose = TwoWheelConstants.forwardEncoderPose;
+        strafeEncoderPose = TwoWheelConstants.strafeEncoderPose;
 
         hardwareMap = map;
 

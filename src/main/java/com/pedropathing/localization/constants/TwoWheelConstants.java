@@ -1,6 +1,7 @@
 package com.pedropathing.localization.constants;
 
 import com.pedropathing.localization.Encoder;
+import com.pedropathing.localization.Pose;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 
 /**
@@ -19,13 +20,13 @@ public class TwoWheelConstants {
      * @value Default Value: .001989436789 */
     public static double strafeTicksToInches = .001989436789;
 
-    /** The y offset of the forward encoder (Deadwheel) from the center of the robot
-     * @value Default Value: 1 */
-    public static double forwardY = 1;
+    /** The X, Y, and Rotation Offset of the Forward Encoder (Deadwheel) from the center of the robot
+     * @value Default Value: 0, 1, 0deg */
+    public static Pose forwardEncoderPose = new Pose(0, 1, Math.toRadians(0));
 
-    /** The x offset of the strafe encoder (Deadwheel) from the center of the robot
-     * @value Default Value: -2.5 */
-    public static double strafeX = -2.5;
+    /** The X, Y, and Rotation Offset of the Strafe Encoder (Deadwheel) from the center of the robot
+     * @value Default Value: 0, -2.5, 0deg */
+    public static Pose strafeEncoderPose = new Pose(-2.5, 0, Math.toRadians(90));
 
     /** The Hardware Map Name of the IMU (built-in IMU will be Port 0, "imu")
      * @value Default Value: "imu" */
