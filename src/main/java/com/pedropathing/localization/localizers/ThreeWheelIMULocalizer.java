@@ -1,6 +1,7 @@
 package com.pedropathing.localization.localizers;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.pedropathing.localization.constants.ThreeWheelIMUConstants;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -94,9 +95,9 @@ public class ThreeWheelIMULocalizer extends Localizer {
         STRAFE_TICKS_TO_INCHES = strafeTicksToInches;
         TURN_TICKS_TO_RADIANS = turnTicksToInches;
 
-        leftEncoderPose = new Pose(0, leftY, 0);
-        rightEncoderPose = new Pose(0, rightY, 0);
-        strafeEncoderPose = new Pose(strafeX, 0, Math.toRadians(90));
+        leftEncoderPose = ThreeWheelIMUConstants.leftEncoderPose;
+        rightEncoderPose = ThreeWheelIMUConstants.rightEncoderPose;
+        strafeEncoderPose = ThreeWheelIMUConstants.strafeEncoderPose;
 
         imu = hardwareMap.get(IMU.class, IMU_HardwareMapName);
         imu.initialize(new IMU.Parameters(IMU_Orientation));

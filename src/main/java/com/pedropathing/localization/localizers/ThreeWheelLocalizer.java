@@ -1,6 +1,7 @@
 package com.pedropathing.localization.localizers;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.pedropathing.localization.constants.ThreeWheelConstants;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -84,9 +85,9 @@ public class ThreeWheelLocalizer extends Localizer {
         STRAFE_TICKS_TO_INCHES = strafeTicksToInches;
         TURN_TICKS_TO_RADIANS = turnTicksToInches;
 
-        leftEncoderPose = new Pose(0, leftY, 0);
-        rightEncoderPose = new Pose(0, rightY, 0);
-        strafeEncoderPose = new Pose(strafeX, 0, Math.toRadians(90));
+        leftEncoderPose = ThreeWheelConstants.leftEncoderPose;
+        rightEncoderPose = ThreeWheelConstants.rightEncoderPose;
+        strafeEncoderPose = ThreeWheelConstants.strafeEncoderPose;
 
         leftEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, leftEncoder_HardwareMapName));
         rightEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, rightEncoder_HardwareMapName));

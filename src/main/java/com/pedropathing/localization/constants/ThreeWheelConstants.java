@@ -1,6 +1,7 @@
 package com.pedropathing.localization.constants;
 
 import com.pedropathing.localization.Encoder;
+import com.pedropathing.localization.Pose;
 
 /**
  * This is the ThreeWheelConstants class. It holds many constants and parameters for the Three Wheel Localizer.
@@ -22,17 +23,17 @@ public class ThreeWheelConstants {
      * @value Default Value: .001989436789 */
     public static double turnTicksToInches = .001989436789;
 
-    /** The Y Offset of the Left Encoder (Deadwheel) from the center of the robot
-     * @value Default Value: 1 */
-    public static double leftY = 1;
+    /** The X, Y, and Rotation Offset of the Left Encoder (Deadwheel) from the center of the robot
+     * @value Default Value: 0, 1, 0deg */
+    public static Pose leftEncoderPose = new Pose(0, 1, Math.toRadians(0));
 
-    /** The Y Offset of the Right Encoder (Deadwheel) from the center of the robot
-     * @value Default Value: -1 */
-    public static double rightY = -1;
+    /** The X, Y, and Rotation Offset of the Right Encoder (Deadwheel) from the center of the robot
+     * @value Default Value: 0, -1, 0deg */
+    public static Pose rightEncoderPose = new Pose(0, -1, Math.toRadians(0));
 
-    /** The X Offset of the Strafe Encoder (Deadwheel) from the center of the robot
-     * @value Default Value: -2.5 */
-    public static double strafeX = -2.5;
+    /** The X, Y, and Rotation Offset of the Strafe Encoder (Deadwheel) from the center of the robot
+     * @value Default Value: -2.5, 0, 90deg */
+    public static Pose strafeEncoderPose = new Pose(-2.5, 0, Math.toRadians(90));
 
     /** The name of the Left Encoder in the hardware map (name of the motor port it is plugged into)
      * @value Default Value: "leftFront" */
