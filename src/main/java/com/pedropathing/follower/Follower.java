@@ -258,6 +258,17 @@ public class Follower {
     }
 
     /**
+     * This sets the motor powers
+     */
+    private void setMotorPowers() {
+        for (int i = 0; i < motors.size(); i++) {
+            if (Math.abs(motors.get(i).getPower() - drivePowers[i]) > FollowerConstants.motorCachingThreshold) {
+                motors.get(i).setPower(drivePowers[i]);
+            }
+        }
+    }
+
+    /**
      * This sets the maximum power the motors are allowed to use.
      *
      * @param set This caps the motor power from [0, 1].
@@ -524,63 +535,7 @@ public class Follower {
     public void update() {
         updatePose();
 
-        if (!teleopDrive) {
-            if (currentPath != null) {
-                if (holdingPosition) {
-                    closestPose = currentPath.getClosestPoint(poseUpdater.getPose(), 1);
-
-                    drivePowers = driveVectorScaler.getDrivePowers(MathFunctions.scalarMultiplyVector(getTranslationalCorrection(), holdPointTranslationalScaling), MathFunctions.scalarMultiplyVector(getHeadingVector(), holdPointHeadingScaling), new Vector(), poseUpdater.getPose().getHeading());
-
-                    for (int i = 0; i < motors.size(); i++) {
-                        if (Math.abs(motors.get(i).getPower() - drivePowers[i]) > FollowerConstants.motorCachingThreshold) {
-                            motors.get(i).setPower(drivePowers[i]);
-                        }
-                    }
-                } else {
-                    if (isBusy) {
-                        closestPose = currentPath.getClosestPoint(poseUpdater.getPose(), BEZIER_CURVE_BINARY_STEP_LIMIT);
-
-                        if (followingPathChain) updateCallbacks();
-
-                        drivePowers = driveVectorScaler.getDrivePowers(getCorrectiveVector(), getHeadingVector(), getDriveVector(), poseUpdater.getPose().getHeading());
-
-                        for (int i = 0; i < motors.size(); i++) {
-                            if (Math.abs(motors.get(i).getPower() - drivePowers[i]) > FollowerConstants.motorCachingThreshold) {
-                                motors.get(i).setPower(drivePowers[i]);
-                            }
-                        }
-                    }
-                    if (currentPath.isAtParametricEnd()) {
-                        if (followingPathChain && chainIndex < currentPathChain.size() - 1) {
-                            // Not at last path, keep going
-                            breakFollowing();
-                            pathStartTimes[chainIndex] = System.currentTimeMillis();
-                            isBusy = true;
-                            followingPathChain = true;
-                            chainIndex++;
-                            currentPath = currentPathChain.getPath(chainIndex);
-                            closestPose = currentPath.getClosestPoint(poseUpdater.getPose(), BEZIER_CURVE_BINARY_STEP_LIMIT);
-                        } else {
-                            // At last path, run some end detection stuff
-                            // set isBusy to false if at end
-                            if (!reachedParametricPathEnd) {
-                                reachedParametricPathEnd = true;
-                                reachedParametricPathEndTime = System.currentTimeMillis();
-                            }
-
-                            if ((System.currentTimeMillis() - reachedParametricPathEndTime > currentPath.getPathEndTimeoutConstraint()) || (poseUpdater.getVelocity().getMagnitude() < currentPath.getPathEndVelocityConstraint() && MathFunctions.distance(poseUpdater.getPose(), closestPose) < currentPath.getPathEndTranslationalConstraint() && MathFunctions.getSmallestAngleDifference(poseUpdater.getPose().getHeading(), currentPath.getClosestPointHeadingGoal()) < currentPath.getPathEndHeadingConstraint())) {
-                                if (holdPositionAtEnd) {
-                                    holdPositionAtEnd = false;
-                                    holdPoint(new BezierPoint(currentPath.getLastControlPoint()), currentPath.getHeadingGoal(1));
-                                } else {
-                                    breakFollowing();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } else {
+        if (teleopDrive) {
             velocities.add(poseUpdater.getVelocity());
             velocities.remove(velocities.get(velocities.size() - 1));
 
@@ -588,13 +543,55 @@ public class Follower {
 
             drivePowers = driveVectorScaler.getDrivePowers(getCentripetalForceCorrection(), teleopHeadingVector, teleopDriveVector, poseUpdater.getPose().getHeading());
 
-            for (int i = 0; i < motors.size(); i++) {
-                if (Math.abs(motors.get(i).getPower() - drivePowers[i]) > FollowerConstants.motorCachingThreshold) {
-                    motors.get(i).setPower(drivePowers[i]);
-                }
+            setMotorPowers();
+            return;
+        }
+        if (currentPath == null) { return; }
+        if (holdingPosition) {
+            closestPose = currentPath.getClosestPoint(poseUpdater.getPose(), 1);
+
+            drivePowers = driveVectorScaler.getDrivePowers(MathFunctions.scalarMultiplyVector(getTranslationalCorrection(), holdPointTranslationalScaling), MathFunctions.scalarMultiplyVector(getHeadingVector(), holdPointHeadingScaling), new Vector(), poseUpdater.getPose().getHeading());
+
+            setMotorPowers();
+            return;
+        }
+        if (isBusy) {
+            closestPose = currentPath.getClosestPoint(poseUpdater.getPose(), BEZIER_CURVE_BINARY_STEP_LIMIT);
+
+            if (followingPathChain) updateCallbacks();
+
+            drivePowers = driveVectorScaler.getDrivePowers(getCorrectiveVector(), getHeadingVector(), getDriveVector(), poseUpdater.getPose().getHeading());
+
+            setMotorPowers();
+        }
+        if (!currentPath.isAtParametricEnd()) { return; }
+        if (followingPathChain && chainIndex < currentPathChain.size() - 1) {
+            // Not at last path, keep going
+            breakFollowing();
+            pathStartTimes[chainIndex] = System.currentTimeMillis();
+            isBusy = true;
+            followingPathChain = true;
+            chainIndex++;
+            currentPath = currentPathChain.getPath(chainIndex);
+            closestPose = currentPath.getClosestPoint(poseUpdater.getPose(), BEZIER_CURVE_BINARY_STEP_LIMIT);
+            return;
+        }
+        // At last path, run some end detection stuff
+        // set isBusy to false if at end
+        if (!reachedParametricPathEnd) {
+            reachedParametricPathEnd = true;
+            reachedParametricPathEndTime = System.currentTimeMillis();
+        }
+
+        if ((System.currentTimeMillis() - reachedParametricPathEndTime > currentPath.getPathEndTimeoutConstraint()) || (poseUpdater.getVelocity().getMagnitude() < currentPath.getPathEndVelocityConstraint() && MathFunctions.distance(poseUpdater.getPose(), closestPose) < currentPath.getPathEndTranslationalConstraint() && MathFunctions.getSmallestAngleDifference(poseUpdater.getPose().getHeading(), currentPath.getClosestPointHeadingGoal()) < currentPath.getPathEndHeadingConstraint())) {
+            breakFollowing();
+            if (holdPositionAtEnd) {
+                holdPositionAtEnd = false;
+                holdPoint(new BezierPoint(currentPath.getLastControlPoint()), currentPath.getHeadingGoal(1));
             }
         }
     }
+
 
     /**
      * This sets the teleop drive vectors. This defaults to robot centric.
