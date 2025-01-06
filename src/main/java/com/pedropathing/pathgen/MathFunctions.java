@@ -127,6 +127,17 @@ public class MathFunctions {
     }
 
     /**
+     * This returns the distance between a Point and another Point,
+     *
+     * @param one this is the first Point.
+     * @param two this is the second Point.
+     * @return returns the distance between the two.
+     */
+    public static double distance(Point one, Point two) {
+        return Math.sqrt(Math.pow(one.getX() - two.getX(), 2) + Math.pow(one.getY() - two.getY(), 2));
+    }
+
+    /**
      * This returns a Point that is the sum of the two input Point.
      *
      * @param one the first Point
