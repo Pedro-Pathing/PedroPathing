@@ -15,9 +15,9 @@ import com.pedropathing.pathgen.Vector;
  * @version 1.0, 4/2/2024
  */
 public class Pose {
-    private double x;
-    private double y;
-    private double heading;
+    public double x;
+    public double y;
+    public double heading;
 
     /**
      * This creates a new Pose from a x, y, and heading inputs.
