@@ -83,7 +83,7 @@ publishing {
 	publications {
 		register<MavenPublication>("release") {
 			groupId = "com.pedropathing"
-			artifactId = "localpedro"
+			artifactId = "local"
 			version = "1.0.5-local"
 
 			afterEvaluate {
