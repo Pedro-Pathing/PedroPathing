@@ -131,7 +131,7 @@ public class Drawing {
      * This draws a robot on the Dashboard at a specified Pose. This is more useful for drawing the
      * actual robot, since the Pose contains the direction the robot is facing as well as its position.
      *
-     * @param c the Canvas on the Dashboard on which this will draw
+     * @param c the Canvas on the Dashboard on which this will draw at
      * @param t the Pose to draw at
      */
     public static void drawRobotOnCanvas(Canvas c, Pose t) {

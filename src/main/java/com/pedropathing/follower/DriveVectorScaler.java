@@ -119,10 +119,10 @@ public class DriveVectorScaler {
 
         double wheelPowerMax = Math.max(Math.max(Math.abs(wheelPowers[0]), Math.abs(wheelPowers[1])), Math.max(Math.abs(wheelPowers[2]), Math.abs(wheelPowers[3])));
         if (wheelPowerMax > maxPowerScaling) {
-            wheelPowers[0] /= wheelPowerMax;
-            wheelPowers[1] /= wheelPowerMax;
-            wheelPowers[2] /= wheelPowerMax;
-            wheelPowers[3] /= wheelPowerMax;
+            wheelPowers[0] = (wheelPowers[0] / wheelPowerMax) * maxPowerScaling;
+            wheelPowers[1] = (wheelPowers[1] / wheelPowerMax) * maxPowerScaling;
+            wheelPowers[2] = (wheelPowers[2] / wheelPowerMax) * maxPowerScaling;
+            wheelPowers[3] = (wheelPowers[3] / wheelPowerMax) * maxPowerScaling;
         }
 
         return wheelPowers;
