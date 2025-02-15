@@ -60,19 +60,27 @@ public abstract class PedroOpMode extends LinearOpMode {
     });
     /// adds linear actions to list
     public void beforePTLinear(AutoActions... autoActions){
-        beforePTLinear.addAll(Arrays.asList(autoActions));
+        for (AutoActions autoAction : autoActions) {
+            beforePTLinear.add(autoAction.pathNumber, autoAction);
+        }
     }
     /// adds parallel actions to list
     public void beforePTParallel(AutoActions... autoActions){
-        beforePTParallel.addAll(Arrays.asList(autoActions));
+        for (AutoActions autoAction : autoActions) {
+            beforePTParallel.add(autoAction.pathNumber, autoAction);
+        }
     }
     /// adds linear actions to list
     public void afterPTLinear(AutoActions... autoActions){
-        afterPTLinear.addAll(Arrays.asList(autoActions));
+        for (AutoActions autoAction : autoActions) {
+            afterPTLinear.add(autoAction.pathNumber, autoAction);
+        }
     }
     /// adds parallel actions to list
     public void afterPTParallel(AutoActions... autoActions){
-        afterPTParallel.addAll(Arrays.asList(autoActions));
+        for (AutoActions autoAction : autoActions) {
+            afterPTParallel.add(autoAction.pathNumber, autoAction);
+        }
     }
     ///  Follows pathChains
     public void pedroFollowOpMode(Follower follower, PathChain... pathChains){
