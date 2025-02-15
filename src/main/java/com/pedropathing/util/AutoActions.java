@@ -5,7 +5,7 @@ public abstract class AutoActions extends Thread{
     public int pathNumber = 0;
 
     /**
-     *
+     * Creating an action for an autonomous
      * @param pathNumber with which pathchain will be used your action
      */
     public AutoActions(int pathNumber) {
