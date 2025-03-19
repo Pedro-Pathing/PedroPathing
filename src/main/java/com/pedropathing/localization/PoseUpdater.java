@@ -48,6 +48,18 @@ public class PoseUpdater {
     private long currentPoseTime;
 
     /**
+     * This is a backwards compatibility constructor. HardwareMap isn't
+     * necessary when passing in a localizer, but it's here for backwards compatibility.
+     * This constructor can be deleted with the next major release.
+     *
+     * @param hardwareMap the HardwareMap
+     * @param localizer the Localizer
+     */
+    public PoseUpdater(HardwareMap hardwareMap, Localizer localizer) {
+        this(localizer);
+    }
+
+    /**
      * Creates a new PoseUpdater from a given Localizer.
      *
      * @param localizer the Localizer
