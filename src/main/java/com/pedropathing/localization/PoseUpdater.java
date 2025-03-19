@@ -24,8 +24,6 @@ import com.pedropathing.pathgen.Vector;
  * @version 1.0, 3/4/2024
  */
 public class PoseUpdater {
-    private HardwareMap hardwareMap;
-
     private IMU imu;
 
     private Localizer localizer;
@@ -50,13 +48,11 @@ public class PoseUpdater {
     private long currentPoseTime;
 
     /**
-     * Creates a new PoseUpdater from a HardwareMap and a Localizer.
+     * Creates a new PoseUpdater from a given Localizer.
      *
-     * @param hardwareMap the HardwareMap
      * @param localizer the Localizer
      */
-    public PoseUpdater(HardwareMap hardwareMap, Localizer localizer) {
-        this.hardwareMap = hardwareMap;
+    public PoseUpdater(Localizer localizer) {
         this.localizer = localizer;
 
         if (localizer.getClass() != PinpointLocalizer.class) {
@@ -75,7 +71,7 @@ public class PoseUpdater {
      * @param hardwareMap the HardwareMap
      */
     public PoseUpdater(HardwareMap hardwareMap) {
-        this(hardwareMap, createLocalizer(hardwareMap));
+        this(createLocalizer(hardwareMap));
     }
 
     private static Localizer createLocalizer(HardwareMap hardwareMap) {
