@@ -47,8 +47,8 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import java.util.ArrayList;
 
 /**
- * This is the Follower class. It handles the actual following of the paths and all the on-the-fly
- * calculations that are relevant for movement.
+ * This is the FollowerCalculator class. It handles the calculations that are
+ * relevant for movement.
  *
  * @author Anyi Lin - 10158 Scott's Bots
  * @author Aaron Yang - 10158 Scott's Bots
@@ -139,7 +139,7 @@ public class FollowerCalculator {
     private ElapsedTime zeroVelocityDetectedTimer;
 
     /**
-     * This creates a new Follower given a HardwareMap.
+     * This creates a new FollowerCalculator given a PoseUpdater.
      */
     public FollowerCalculator(PoseUpdater poseUpdater) {
         initialize(poseUpdater);

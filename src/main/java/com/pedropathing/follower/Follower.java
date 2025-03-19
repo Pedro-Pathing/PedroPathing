@@ -62,8 +62,9 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * This is the Follower class. It handles the actual following of the paths and all the on-the-fly
- * calculations that are relevant for movement.
+ * This is the Follower class. It handles the actual following of the paths
+ * by controlling motor powers, leaving the calculations in the
+ * FollowerCalculator
  *
  * @author Anyi Lin - 10158 Scott's Bots
  * @author Aaron Yang - 10158 Scott's Bots
