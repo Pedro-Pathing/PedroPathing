@@ -39,7 +39,7 @@ public class Vector {
      * This creates a new Vector with a specified magnitude and direction.
      *
      * @param magnitude magnitude of the Vector.
-     * @param theta the direction of the Vector in radians.
+     * @param theta     the direction of the Vector in radians.
      */
     public Vector(double magnitude, double theta) {
         setComponents(magnitude, theta);
@@ -49,18 +49,18 @@ public class Vector {
      * This sets the components of the Vector in regular vector coordinates.
      *
      * @param magnitude sets the magnitude of this Vector.
-     * @param theta sets the theta value of this Vector.
+     * @param theta     sets the theta value of this Vector.
      */
     public void setComponents(double magnitude, double theta) {
         double[] orthogonalComponents;
-        if (magnitude<0) {
+        if (magnitude < 0) {
             this.magnitude = -magnitude;
-            this.theta = MathFunctions.normalizeAngle(theta+Math.PI);
+            this.theta = MathFunctions.normalizeAngle(theta + Math.PI);
         } else {
             this.magnitude = magnitude;
             this.theta = MathFunctions.normalizeAngle(theta);
         }
-        orthogonalComponents = Pose.polarToCartesian(magnitude, theta);
+        orthogonalComponents = polarToCartesian(magnitude, theta);
         xComponent = orthogonalComponents[0];
         yComponent = orthogonalComponents[1];
     }
@@ -89,7 +89,7 @@ public class Vector {
      * @param theta2 the angle to be added.
      */
     public void rotateVector(double theta2) {
-        setTheta(theta+theta2);
+        setTheta(theta + theta2);
     }
 
     /**
@@ -104,7 +104,7 @@ public class Vector {
         double[] polarComponents;
         this.xComponent = xComponent;
         this.yComponent = yComponent;
-        polarComponents = Pose.cartesianToPolar(xComponent, yComponent);
+        polarComponents = cartesianToPolar(xComponent, yComponent);
         magnitude = polarComponents[0];
         theta = polarComponents[1];
     }
@@ -143,5 +143,27 @@ public class Vector {
      */
     public double getYComponent() {
         return yComponent;
+    }
+
+    public static double[] polarToCartesian(double r, double theta) {
+        return new double[]{r * Math.cos(theta), r * Math.sin(theta)};
+    }
+
+
+    public static double[] cartesianToPolar(double x, double y) {
+        if (x == 0) {
+            if (y > 0) {
+                return new double[]{Math.abs(y), Math.PI / 2};
+            } else {
+                return new double[]{Math.abs(y), (3 * Math.PI) / 2};
+            }
+        }
+        double r = Math.sqrt(x * x + y * y);
+        if (x < 0) return new double[]{r, Math.PI + Math.atan(y / x)};
+        if (y > 0) {
+            return new double[]{r, Math.atan(y / x)};
+        } else {
+            return new double[]{r, (2 * Math.PI) + Math.atan(y / x)};
+        }
     }
 }

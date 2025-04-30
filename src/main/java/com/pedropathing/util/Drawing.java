@@ -51,7 +51,7 @@ public class Drawing {
         if (packet == null) packet = new TelemetryPacket();
 
         packet.fieldOverlay().setStroke(color);
-        Drawing.drawRobotOnCanvas(packet.fieldOverlay(), pose.copy());
+        Drawing.drawRobotOnCanvas(packet.fieldOverlay(), pose);
     }
 
     /**
@@ -120,7 +120,7 @@ public class Drawing {
      */
     public static void drawRobotOnCanvas(Canvas c, Pose t) {
         c.strokeCircle(t.getX(), t.getY(), ROBOT_RADIUS);
-        Vector v = t.getHeadingVector();
+        Vector v = t.getHeadingAsUnitVector();
         v.setMagnitude(v.getMagnitude() * ROBOT_RADIUS);
         double x1 = t.getX() + v.getXComponent() / 2, y1 = t.getY() + v.getYComponent() / 2;
         double x2 = t.getX() + v.getXComponent(), y2 = t.getY() + v.getYComponent();

@@ -311,8 +311,7 @@ public class PoseUpdater {
      */
     public Pose getDeltaPose() {
         Pose returnPose = getPose();
-        returnPose.subtract(previousPose);
-        return returnPose;
+        return returnPose.minus(previousPose);
     }
 
     /**
