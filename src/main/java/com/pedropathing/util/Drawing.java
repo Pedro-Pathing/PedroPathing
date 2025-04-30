@@ -6,9 +6,9 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 
 import com.pedropathing.follower.old.Follower;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.geometry.Path;
-import com.pedropathing.geometry.PathChain;
-import com.pedropathing.geometry.Vector;
+import com.pedropathing.paths.Path;
+import com.pedropathing.paths.PathChain;
+import math.Vector;
 
 /**
  * This is the Drawing class. It handles the drawing of stuff on FTC Dashboard, like the robot.

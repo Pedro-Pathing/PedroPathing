@@ -4,10 +4,12 @@ package com.pedropathing.geometry;
 import androidx.annotation.NonNull;
 
 import com.pedropathing.follower.old.FollowerConstants;
-import com.pedropathing.util.MathFunctions;
+import math.MathFunctions;
 
 import java.util.ArrayList;
 import java.util.Collections;
+
+import math.Vector;
 
 /**
  * This is the BezierCurve class. This class handles the creation of Bezier curves, which are used

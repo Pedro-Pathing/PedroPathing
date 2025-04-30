@@ -1,6 +1,6 @@
-package com.pedropathing.geometry;
+package math;
 
-import com.pedropathing.util.MathFunctions;
+import com.pedropathing.geometry.Pose;
 
 /**
  * This is the Point class. This class handles storing information about vectors, which are

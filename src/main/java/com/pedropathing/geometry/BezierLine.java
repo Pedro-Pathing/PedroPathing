@@ -1,8 +1,10 @@
 package com.pedropathing.geometry;
 
-import com.pedropathing.util.MathFunctions;
+import math.MathFunctions;
 
 import java.util.ArrayList;
+
+import math.Vector;
 
 /**
  * This is the BezierLine class. This class handles the creation of BezierLines, which is what I

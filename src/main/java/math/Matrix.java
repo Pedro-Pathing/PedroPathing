@@ -1,4 +1,4 @@
-package com.pedropathing.geometry;
+package math;
 
 import java.util.Arrays;
 

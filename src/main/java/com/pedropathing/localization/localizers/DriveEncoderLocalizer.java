@@ -12,10 +12,10 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import com.pedropathing.localization.Encoder;
 import com.pedropathing.localization.Localizer;
-import com.pedropathing.geometry.Matrix;
+import math.Matrix;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.util.MathFunctions;
-import com.pedropathing.geometry.Vector;
+import math.MathFunctions;
+import math.Vector;
 import com.pedropathing.util.NanoTimer;
 
 /**

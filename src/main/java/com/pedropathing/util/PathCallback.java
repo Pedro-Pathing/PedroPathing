@@ -1,5 +1,7 @@
 package com.pedropathing.util;
 
+import math.MathFunctions;
+
 /**
  * This is the PathCallback class. This class handles callbacks of Runnables in PathChains.
  * Basically, this allows you to run non-blocking code in the middle of PathChains.

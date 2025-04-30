@@ -1,7 +1,7 @@
 package com.pedropathing.follower;
 
-import com.pedropathing.util.MathFunctions;
-import com.pedropathing.geometry.Vector;
+import math.MathFunctions;
+import math.Vector;
 
 /**
  * This is the Mecanum class. This class takes in inputs Vectors for driving, heading

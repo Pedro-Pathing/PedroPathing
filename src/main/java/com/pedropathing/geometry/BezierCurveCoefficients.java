@@ -1,6 +1,6 @@
 package com.pedropathing.geometry;
 
-import com.pedropathing.util.MathFunctions;
+import math.MathFunctions;
 
 /**
  * This is the BezierCurveCoefficients class. This class handles holding the coefficients for each

@@ -1,6 +1,6 @@
 package com.pedropathing.follower;
 
-import com.pedropathing.geometry.Vector;
+import math.Vector;
 
 public abstract class Drivetrain {
     protected Vector[] vectors;

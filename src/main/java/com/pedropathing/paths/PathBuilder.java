@@ -1,7 +1,10 @@
-package com.pedropathing.geometry;
+package com.pedropathing.paths;
 
 import com.pedropathing.follower.old.FollowerConstants;
-import com.pedropathing.util.MathFunctions;
+import com.pedropathing.geometry.BezierCurve;
+import com.pedropathing.geometry.BezierLine;
+import com.pedropathing.geometry.Pose;
+import math.MathFunctions;
 import com.pedropathing.util.PathCallback;
 
 import java.util.ArrayList;

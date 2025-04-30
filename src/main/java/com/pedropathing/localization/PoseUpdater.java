@@ -12,8 +12,8 @@ import com.pedropathing.localization.localizers.PinpointLocalizer;
 import com.pedropathing.localization.localizers.ThreeWheelIMULocalizer;
 import com.pedropathing.localization.localizers.ThreeWheelLocalizer;
 import com.pedropathing.localization.localizers.TwoWheelLocalizer;
-import com.pedropathing.util.MathFunctions;
-import com.pedropathing.geometry.Vector;
+import math.MathFunctions;
+import math.Vector;
 
 /**
  * This is the PoseUpdater class. This class handles getting pose data from the localizer and returning

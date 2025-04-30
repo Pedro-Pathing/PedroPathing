@@ -1,10 +1,12 @@
 package com.pedropathing.geometry;
 
-import static com.pedropathing.util.MathFunctions.rotatePose;
+import static math.MathFunctions.rotatePose;
 
 import androidx.annotation.NonNull;
 
-import com.pedropathing.util.MathFunctions;
+import math.MathFunctions;
+
+import math.Vector;
 
 /**
  * This is the Pose class. It defines poses in 2D space. A Pose consists of

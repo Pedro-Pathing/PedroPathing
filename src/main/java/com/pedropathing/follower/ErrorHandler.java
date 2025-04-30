@@ -5,7 +5,6 @@ import static com.pedropathing.follower.old.FollowerConstants.drivePIDFSwitch;
 import static com.pedropathing.follower.old.FollowerConstants.forwardZeroPowerAcceleration;
 import static com.pedropathing.follower.old.FollowerConstants.headingPIDFFeedForward;
 import static com.pedropathing.follower.old.FollowerConstants.headingPIDFSwitch;
-import static com.pedropathing.follower.old.FollowerConstants.lateralZeroPowerAcceleration;
 import static com.pedropathing.follower.old.FollowerConstants.secondaryDrivePIDFFeedForward;
 import static com.pedropathing.follower.old.FollowerConstants.secondaryHeadingPIDFFeedForward;
 import static com.pedropathing.follower.old.FollowerConstants.secondaryTranslationalPIDFFeedForward;
@@ -16,18 +15,15 @@ import static com.pedropathing.follower.old.FollowerConstants.useSecondaryHeadin
 import static com.pedropathing.follower.old.FollowerConstants.useSecondaryTranslationalPID;
 
 import com.pedropathing.follower.old.FollowerConstants;
-import com.pedropathing.geometry.Pose;
 import com.pedropathing.localization.PoseUpdater;
-import com.pedropathing.util.MathFunctions;
-import com.pedropathing.geometry.Path;
-import com.pedropathing.geometry.PathChain;
-import com.pedropathing.geometry.Vector;
+import math.MathFunctions;
+import com.pedropathing.paths.PathChain;
+import math.Vector;
 import com.pedropathing.control.FilteredPIDFController;
 import com.pedropathing.control.KalmanFilter;
 import com.pedropathing.control.PIDFController;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class ErrorHandler {
     private PoseUpdater poseUpdater;

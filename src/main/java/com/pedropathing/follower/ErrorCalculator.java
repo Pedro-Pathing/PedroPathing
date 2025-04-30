@@ -5,11 +5,11 @@ import static com.pedropathing.follower.old.FollowerConstants.lateralZeroPowerAc
 
 import com.pedropathing.control.KalmanFilter;
 import com.pedropathing.control.KalmanFilterParameters;
-import com.pedropathing.geometry.Path;
-import com.pedropathing.geometry.PathChain;
+import com.pedropathing.paths.Path;
+import com.pedropathing.paths.PathChain;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.geometry.Vector;
-import com.pedropathing.util.MathFunctions;
+import math.Vector;
+import math.MathFunctions;
 
 import java.util.Arrays;
 

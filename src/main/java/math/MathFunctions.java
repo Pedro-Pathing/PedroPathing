@@ -1,7 +1,6 @@
-package com.pedropathing.util;
+package math;
 
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.geometry.Vector;
 
 /**
  * This is the MathFunctions class. This contains many useful math related methods that I use in
