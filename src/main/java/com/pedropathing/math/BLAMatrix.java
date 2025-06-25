@@ -6,13 +6,13 @@ import java.util.Arrays;
 import java.util.Locale;
 
 /**
- * The RealMatrix class is used to represent matrix objects. Has basic operations such as adding, subtracting, and multiplying (w/ scalars and another matrix),
+ * The BLAMatrix class is used to represent matrix objects. Has basic operations such as adding, subtracting, and multiplying (w/ scalars and another matrix),
  * but also includes an implementation of gaussian elimination with partial pivoting and row operations
  *
  * @author icaras84
  * @version 1.0.0, 06/24/2025
  */
-public class RealMatrix {
+public class BLAMatrix {
 
     /**
      * internal array representation
@@ -34,7 +34,7 @@ public class RealMatrix {
      * @param rowCount number of rows
      * @param colCount number of columns
      */
-    public RealMatrix(int rowCount, int colCount){
+    public BLAMatrix(int rowCount, int colCount){
         this.rowCount = rowCount;
         this.colCount = colCount;
         this.matrix = new double[this.rowCount][this.colCount];
@@ -45,7 +45,7 @@ public class RealMatrix {
      * A constructor that creates a matrix from a given 2d array
      * @param m 2d double array
      */
-    public RealMatrix(double[][] m){
+    public BLAMatrix(double[][] m){
        this.rowCount = m.length;
        this.colCount = m[0].length;
        this.matrix = new double[this.rowCount][this.colCount];
@@ -58,8 +58,8 @@ public class RealMatrix {
      * A method to return a separate object instance of the current matrix
      * @return a direct copy of the matrix
      */
-    public RealMatrix copy(){
-        RealMatrix output = new RealMatrix(this.rowCount, this.colCount);
+    public BLAMatrix copy(){
+        BLAMatrix output = new BLAMatrix(this.rowCount, this.colCount);
         for (int i = 0; i < this.rowCount; i++) {
             double[] temp = new double[this.colCount];
             temp = Arrays.copyOf(this.getRow(i), this.colCount);
@@ -69,7 +69,7 @@ public class RealMatrix {
     }
 
     /**
-     * Get the internal representation of RealMatrix
+     * Get the internal representation of BLAMatrix
      * @return 2d double array
      */
     public double[][] getMatrix() {
@@ -171,11 +171,11 @@ public class RealMatrix {
      * @param other the other matrix (on the right side of the equation)
      * @return a matrix with elements equivalent to the sum of each of the two's respective elements
      */
-    public RealMatrix plus(RealMatrix other){
+    public BLAMatrix plus(BLAMatrix other){
         if (other.rowCount != this.rowCount || other.colCount != this.colCount)
             throw new RuntimeException(String.format("Size is not equal. size(A) = [%d, %d]; size(B) = [%d, %d]", this.rowCount, this.colCount, other.rowCount, other.colCount));
 
-        RealMatrix output = new RealMatrix(this.rowCount, this.colCount);
+        BLAMatrix output = new BLAMatrix(this.rowCount, this.colCount);
         double[] nRow = new double[output.colCount];
         for (int i = 0; i < output.rowCount; i++) {
             for (int j = 0; j < nRow.length; j++) {
@@ -191,11 +191,11 @@ public class RealMatrix {
      * @param other the other matrix (on the right side of the equation)
      * @return a matrix with elements equivalent to the difference of each of the two's respective elements
      */
-    public RealMatrix minus(RealMatrix other){
+    public BLAMatrix minus(BLAMatrix other){
         if (other.rowCount != this.rowCount || other.colCount != this.colCount)
             throw new RuntimeException(String.format("Size is not equal. size(A) = [%d, %d]; size(B) = [%d, %d]", this.rowCount, this.colCount, other.rowCount, other.colCount));
 
-        RealMatrix output = new RealMatrix(this.rowCount, this.colCount);
+        BLAMatrix output = new BLAMatrix(this.rowCount, this.colCount);
         double[] nRow = new double[output.colCount];
         for (int i = 0; i < output.rowCount; i++) {
             for (int j = 0; j < nRow.length; j++) {
@@ -211,8 +211,8 @@ public class RealMatrix {
      * @param scalar a coefficient
      * @return a matrix with each element multiplied by the scalar
      */
-    public RealMatrix times(double scalar){
-        RealMatrix output = new RealMatrix(this.rowCount, this.colCount);
+    public BLAMatrix times(double scalar){
+        BLAMatrix output = new BLAMatrix(this.rowCount, this.colCount);
         for (int i = 0; i < output.rowCount; i++) {
             for (int j = 0; j < output.colCount; j++) {
                 output.matrix[i][j] = scalar * this.matrix[i][j];
@@ -226,11 +226,11 @@ public class RealMatrix {
      * @param other the other matrix (on the right side of the equation)
      * @return a new matrix that is the product of the two matrices
      */
-    public RealMatrix times(RealMatrix other){
+    public BLAMatrix times(BLAMatrix other){
         if (other.rowCount != this.colCount)
             throw new RuntimeException(String.format("Size mismatch for matrix multiplication. size(A) = [%d, %d]; size(B) = [%d, %d]", this.rowCount, this.colCount, other.rowCount, other.colCount));
 
-        RealMatrix output = new RealMatrix(this.rowCount, other.colCount);
+        BLAMatrix output = new BLAMatrix(this.rowCount, other.colCount);
 
         for (int i = 0; i < output.rowCount; i++) {
             double[] rowSample = this.getRow(i);
@@ -255,7 +255,7 @@ public class RealMatrix {
      * Returns a matrix that has all signs per element flipped
      * @return Additive inverse of the matrix
      */
-    public RealMatrix unaryMinus(){
+    public BLAMatrix unaryMinus(){
         return this.times(-1);
     }
 
@@ -263,8 +263,8 @@ public class RealMatrix {
      * Returns a new matrix that is the transpose of this matrix
      * @return transpose of this matrix; A^T
      */
-    public RealMatrix transposed(){
-        RealMatrix output = new RealMatrix(this.colCount, this.rowCount);
+    public BLAMatrix transposed(){
+        BLAMatrix output = new BLAMatrix(this.colCount, this.rowCount);
         for (int i = 0; i < this.colCount; i++) {
             output.setRow(i, this.getCol(i));
         }
@@ -311,9 +311,9 @@ public class RealMatrix {
      * @param augment an augment matrix that has the same number of rows as the matrix
      * @return a 1d array of two matrices --the first element is the matrix, the second element is the augment matrix; rref([A|B])
      */
-    public static RealMatrix[] rref(RealMatrix matrix, RealMatrix augment){
-        RealMatrix outputMatrix = matrix.copy();
-        RealMatrix outputAugment = augment.copy();
+    public static BLAMatrix[] rref(BLAMatrix matrix, BLAMatrix augment){
+        BLAMatrix outputMatrix = matrix.copy();
+        BLAMatrix outputAugment = augment.copy();
 
         int rowLim = outputMatrix.getRowCount();
         int colLim = outputMatrix.getColCount();
@@ -321,7 +321,7 @@ public class RealMatrix {
 
         for (int r1 = 0; r1 < rowLim; r1++) {
             for (int c1 = 0; c1 < colLim; c1++) {
-                int pivot = RealMatrix.isPivotInCol(outputMatrix, r1, c1);
+                int pivot = BLAMatrix.isPivotInCol(outputMatrix, r1, c1);
                 if (pivot != -1){
                     currentCol = c1;
                     outputMatrix.rowSwap(r1, pivot);
@@ -373,7 +373,7 @@ public class RealMatrix {
             }
         }
 
-        return new RealMatrix[]{outputMatrix, outputAugment};
+        return new BLAMatrix[]{outputMatrix, outputAugment};
     }
 
     /**
@@ -383,7 +383,7 @@ public class RealMatrix {
      * @param col column where the pivot should be
      * @return row number of the pivot (-1 if no row is found)
      */
-    private static int isPivotInCol(RealMatrix queriedMatrix, int startRow, int col){
+    private static int isPivotInCol(BLAMatrix queriedMatrix, int startRow, int col){
         int output = -1;
 
         for (int r1 = startRow; r1 < queriedMatrix.getRowCount(); r1++) {

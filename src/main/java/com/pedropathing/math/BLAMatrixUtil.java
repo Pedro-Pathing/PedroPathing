@@ -6,15 +6,15 @@ package com.pedropathing.math;
  * @author icaras84
  * @version 1.0.0, 06/24/2025
  */
-public class RealMatrixUtil {
+public class BLAMatrixUtil {
 
     /**
      * Create a square matrix that has 1's in the diagonal while 0's everywhere else
      * @param dim row/column count of the new matrix
      * @return the identity matrix of NxN size
      */
-    public static RealMatrix eye(int dim){
-        RealMatrix output = new RealMatrix(dim, dim);
+    public static BLAMatrix eye(int dim){
+        BLAMatrix output = new BLAMatrix(dim, dim);
         for (int i = 0; i < dim; i++) {
             output.set(i, i, 1);
         }
@@ -26,8 +26,8 @@ public class RealMatrixUtil {
      * @param dim row/column count of the new matrix
      * @return a zero matrix of NxN size
      */
-    public static RealMatrix zeros(int dim){
-        return new RealMatrix(dim, dim);
+    public static BLAMatrix zeros(int dim){
+        return new BLAMatrix(dim, dim);
     }
 
     /**
@@ -36,8 +36,8 @@ public class RealMatrixUtil {
      * @param cols number of columns
      * @return zero matrix of MxN size
      */
-    public static RealMatrix zeros(int rows, int cols){
-        return new RealMatrix(rows, cols);
+    public static BLAMatrix zeros(int rows, int cols){
+        return new BLAMatrix(rows, cols);
     }
 
     /**
@@ -45,10 +45,10 @@ public class RealMatrixUtil {
      * that has the diagonal elements be the passed in array values while the rest
      * of the elements are 0's
      * @param elements 1d double array
-     * @return RealMatrix of NxN size
+     * @return BLAMatrix of NxN size
      */
-    public static RealMatrix diag(double... elements){
-        RealMatrix output = new RealMatrix(elements.length, elements.length);
+    public static BLAMatrix diag(double... elements){
+        BLAMatrix output = new BLAMatrix(elements.length, elements.length);
         for (int i = 0; i < elements.length; i++) {
             output.set(i, i, elements[i]);
         }
@@ -59,10 +59,10 @@ public class RealMatrixUtil {
      * Returns an affine translation matrix of 3x3 size
      * @param x x translation
      * @param y y translation
-     * @return RealMatrix of 3x3 size
+     * @return BLAMatrix of 3x3 size
      */
-    public static RealMatrix translation(double x, double y){
-        return new RealMatrix(new double[][]{
+    public static BLAMatrix translation(double x, double y){
+        return new BLAMatrix(new double[][]{
                 {1, 0, x},
                 {0, 1, y},
                 {0, 0, 1}
@@ -74,10 +74,10 @@ public class RealMatrixUtil {
      * @param angle radians; + = CCW, - = CW
      * @return 3x3 affine rotation matrix
      */
-    public static RealMatrix createRotation(double angle){
+    public static BLAMatrix createRotation(double angle){
         double sin = Math.sin(angle);
         double cos = Math.cos(angle);
-        return new RealMatrix(new double[][]{
+        return new BLAMatrix(new double[][]{
                 {cos, -sin, 0.0},
                 {sin,  cos, 0.0},
                 {0.0,  0.0, 1.0}
@@ -91,10 +91,10 @@ public class RealMatrixUtil {
      * @param angle radians; + = CCW, - = CW
      * @return 3x3 transformation matrix
      */
-    public static RealMatrix createTransformation(double x, double y, double angle){
+    public static BLAMatrix createTransformation(double x, double y, double angle){
         double sin = Math.sin(angle);
         double cos = Math.cos(angle);
-        return new RealMatrix(new double[][]{
+        return new BLAMatrix(new double[][]{
                 {cos, -sin,   x},
                 {sin,  cos,   y},
                 {0.0,  0.0, 1.0}
