@@ -1,21 +1,25 @@
 package com.pedropathing.geometry;
 
 import com.pedropathing.math.Matrix;
+import com.pedropathing.math.MatrixUtil;
 
 import java.util.HashMap;
 
 /**
- * The BezierCurveMatrixSupplier class is responsible for "caching" characteristic matrices of bezier curves.
- * If necessary, this class if capable of generating characteristic matrices dynamically. Characteristic matrices
- * allows for the bezier curve to pre-multiply with a matrix of control points to allow for caching and easier operations (like differentiation).
- * If control points change, the computation has to happen again.
+ * The CharacteristicMatrixSupplier handles supply the characteristic matrices for splines in their matrix representations.
+ *
+ * Splines Supported:
+ * Bezier (N-degree)
+ * Hermite (Cubic and Quintic)
+ * Cardinal Spline
+ *
  *
  * @author icaras84
- * @version 0.0.1 06/14/2025
+ * @version 0.0.2, 07/11/2025
  */
-public class BezierCurveMatrixSupplier {
+public class CharacteristicMatrixSupplier {
 
-    private static final HashMap<Integer, Matrix> matrices = new HashMap<>();
+    private static final HashMap<Integer, Matrix> bezierMatrices = new HashMap<>();
     private static boolean initialized = false;
 
     /**
@@ -23,17 +27,17 @@ public class BezierCurveMatrixSupplier {
      */
     public void initialize(){
         if (!initialized) {
-            getCharacteristicMatrix(2); // quadratic bezier
-            getCharacteristicMatrix(3); // cubic bezier
-            getCharacteristicMatrix(4); // quartic bezier
-            getCharacteristicMatrix(5); // quintic bezier
+            getBezierCharacteristicMatrix(2); // quadratic bezier
+            getBezierCharacteristicMatrix(3); // cubic bezier
+            getBezierCharacteristicMatrix(4); // quartic bezier
+            getBezierCharacteristicMatrix(5); // quintic bezier
             initialized = true;
         }
     }
 
     /**
      * This method is to generate Pascal's triangle (all layers being left-aligned in a matrix) without the need for factorials
-     * @param layers how many layers of the triangle to generate; minimum should be 1
+     * @param layers how many layers of the triangle to generate; the minimum should be 1
      * @return Pascal's triangle (left-aligned)
      */
     private static double[][] generatePascalTriangle(int layers){
@@ -45,7 +49,7 @@ public class BezierCurveMatrixSupplier {
             output[i][i] = 1;
         }
 
-        // values in-between are calculated how Pascal's triangle layers are generated
+        // values in-between are calculated how Pascal's triangle layers are generated,
         // however, don't generate if the layer count is below 2
         for (int i = 2; i < layers; i++) {
             for (int j = 1; j < layers - 1; j++) {
@@ -61,7 +65,7 @@ public class BezierCurveMatrixSupplier {
      * @param degree bezier curve's degree
      * @return characteristic matrix of the Matrix class
      */
-    public static Matrix generateCharacteristicMatrix(int degree){
+    public static Matrix generateBezierCharacteristicMatrix(int degree){
         // get a square matrix that contains Pascal's triangle
         Matrix output = new Matrix(generatePascalTriangle(degree + 1));
 
@@ -101,10 +105,52 @@ public class BezierCurveMatrixSupplier {
      * @param degree bezier curve's degree
      * @return characteristic matrix of the Matrix class
      */
-    public static Matrix getCharacteristicMatrix(int degree){
-        if (!matrices.containsKey(degree)){
-            matrices.put(degree, generateCharacteristicMatrix(degree));
+    public static Matrix getBezierCharacteristicMatrix(int degree){
+        if (!bezierMatrices.containsKey(degree)){
+            bezierMatrices.put(degree, generateBezierCharacteristicMatrix(degree));
         }
-        return matrices.get(degree);
+        return bezierMatrices.get(degree);
+    }
+
+    /**
+     * This method creates a new instance of a cubic hermite spline's characteristic matrix
+     * @return characteristic matrix of the Matrix class
+     */
+    public static Matrix generateCubicHermiteMatrix(){
+        return new Matrix(new double[][]{
+                { 1,  0,  0,  0},
+                { 0,  1,  0,  0},
+                {-3, -2,  3,  1},
+                { 2,  1, -2, -1}
+        });
+    }
+
+    /**
+     * This method creates a new instance of a quintic hermite spline's characteristic matrix
+     * @return characteristic matrix of the Matrix class
+     */
+    public static Matrix generateQuinticHermiteMatrix(){
+        return new Matrix(new double[][]{
+                {  1,  0,    0,   0,  0,   0},
+                {  0,  1,    0,   0,  0,   0},
+                {  0,  0,  0.5,   0,  0,   0},
+                {-10, -6, -1.5,  10, -4, 0.5},
+                { 15,  8,  1.5, -15,  7,  -1},
+                { -6, -3, -0.5,   6, -3, 0.5}
+        });
+    }
+
+    /**
+     * This method creates a new instance of a cardinal spline's characteristic matrix
+     * @param s tautness parameter; tension is some literature (side note: 0.5 is the catmull-rom spline)
+     * @return characteristic matrix of the Matrix class
+     */
+    public static Matrix generateCardinalSpline(double s){
+        return new Matrix(new double[][]{
+                {    0,     1,         0,  0},
+                {   -s,     0,         s,  0},
+                {2 * s, s - 3, 3 - 2 * s, -s},
+                {   -s, 2 - s,     s - 2,  s}
+        });
     }
 }

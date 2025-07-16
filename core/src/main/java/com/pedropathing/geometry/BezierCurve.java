@@ -52,6 +52,7 @@ public class BezierCurve implements Curve {
             try {
                 throw new Exception("Too few control points");
             } catch (Exception e) {
+                // output to logger later
                 e.printStackTrace();
             }
         }
@@ -116,7 +117,7 @@ public class BezierCurve implements Curve {
             Pose p = this.controlPoints.get(i);
             controlPointMatrix.set(i, new double[]{p.getX(), p.getY()});
         }
-        this.cachedMatrix = BezierCurveMatrixSupplier.getCharacteristicMatrix(this.controlPoints.size() - 1).multiply(controlPointMatrix);
+        this.cachedMatrix = CharacteristicMatrixSupplier.getBezierCharacteristicMatrix(this.controlPoints.size() - 1).multiply(controlPointMatrix);
         initializeDegreeArray();
         initializeCoefficientArray();
     }
