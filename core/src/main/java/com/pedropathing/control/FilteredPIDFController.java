@@ -39,7 +39,7 @@ public class FilteredPIDFController implements Controller{
      *
      * @return this returns the value of the filtered PIDF from the current error.
      */
-    public double runPIDF() {
+    public double run() {
         return error * P() + filteredDerivative * D() + errorIntegral * I() + F() * feedForwardInput;
     }
 

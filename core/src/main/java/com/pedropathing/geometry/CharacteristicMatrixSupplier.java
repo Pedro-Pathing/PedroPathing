@@ -1,21 +1,14 @@
 package com.pedropathing.geometry;
 
 import com.pedropathing.math.Matrix;
-import com.pedropathing.math.MatrixUtil;
 
 import java.util.HashMap;
 
 /**
  * The CharacteristicMatrixSupplier handles supply the characteristic matrices for splines in their matrix representations.
  *
- * Splines Supported:
- * Bezier (N-degree)
- * Hermite (Cubic and Quintic)
- * Cardinal Spline
- *
- *
  * @author William Phomphakdee - 7462 Not to Scale Alumni
- * @version 0.0.2, 07/11/2025
+ * @version 0.0.2, 08/29/2025
  */
 public class CharacteristicMatrixSupplier {
 
@@ -23,7 +16,8 @@ public class CharacteristicMatrixSupplier {
     private static boolean initialized = false;
 
     /**
-     * This method sets up this class and caches some commonly used bezier curves, such as the quadratic and cubic beziers.
+     * This method sets up this class and caches some commonly used Bézier curves,
+     * such as the quadratic and cubic Béziers.
      */
     public void initialize(){
         if (!initialized) {
@@ -36,24 +30,25 @@ public class CharacteristicMatrixSupplier {
     }
 
     /**
-     * This method is to generate Pascal's triangle (all layers being left-aligned in a matrix) without the need for factorials
+     * This method generate Pascal's triangle with alternating signs (all values are left-aligned in the matrix)
      * @param layers how many layers of the triangle to generate; the minimum should be 1
      * @return Pascal's triangle (left-aligned)
      */
-    private static double[][] generatePascalTriangle(int layers){
+    private static double[][] generatePascalTriangle(int layers) {
         double[][] output = new double[layers][layers];
 
         // pad the start and end of all layers with 1's
+        int prevSign = 1;
         for (int i = 0; i < layers; i++) {
-            output[i][0] = 1;
+            output[i][0] = prevSign;
             output[i][i] = 1;
+            prevSign *= -1;
         }
 
-        // values in-between are calculated how Pascal's triangle layers are generated,
-        // however, don't generate if the layer count is below 2
-        for (int i = 2; i < layers; i++) {
-            for (int j = 1; j < layers - 1; j++) {
-                output[i][j] = output[i - 1][j] + output[i - 1][j - 1];
+        // apply the rule for the alternating sign pascal's triangle 'b - a = c' instead of the regular 'a + b = c'
+        for (int i = 2; i < output.length; i++) {
+            for (int j = 1; j < i; j++) {
+                output[i][j] = output[i - 1][j - 1] - output[i - 1][j];
             }
         }
 
@@ -61,7 +56,8 @@ public class CharacteristicMatrixSupplier {
     }
 
     /**
-     * This method generates the characteristic matrix based on the degree of a requested bezier curve. 2 for quadratic, 3 for cubic, 4 for quartic, 5 for quintic... etc.
+     * This method generates the characteristic matrix based on the degree of a requested Bézier curve.
+     * 2 for quadratic, 3 for cubic, 4 for quartic, 5 for quintic... etc.
      * @param degree bezier curve's degree
      * @return characteristic matrix of the Matrix class
      */
@@ -69,35 +65,16 @@ public class CharacteristicMatrixSupplier {
         // get a square matrix that contains Pascal's triangle
         Matrix output = new Matrix(generatePascalTriangle(degree + 1));
 
-        // since a bezier's characteristic matrix has rows multiplied by the n-th layer of pascal's triangle respectively
-        // construct an elementary row operation matrix that does those things
-        Matrix rowMultOp = new Matrix(output.getRows(), output.getColumns());
-        double[] mult = output.getRow(output.getRows() - 1);
-
-        for (int i = 0; i < rowMultOp.getRows(); i++) {
-            rowMultOp.set(i, i, mult[i]);
-        }
-
-        // multiply to obtain a characteristic matrix that doesn't have the appropriate negative signs yet
-        rowMultOp = rowMultOp.multiply(output);
-
-        // flip signs if necessary
-        // similar to the signs of a cofactor matrix
-        int startingSign = 1;
-        for (int i = 0; i < rowMultOp.getRows(); i++) {
-
-            double[] cachedRow = rowMultOp.getRow(i);
-
-            int realSign = startingSign;
-            for (int j = 0; j < cachedRow.length; j++) {
-                cachedRow[j] *= realSign;
-                realSign *= -1;
+        // sample the last row and multiply all other rows by the corresponding value
+        double[] sampledRow = output.getRow(output.getRows() - 1);
+        for (int i = 1; i < output.getRows() - 1; i++) {
+            for (int j = 0; j <= i; j++) {
+                // I wasn't sure if bitwise math to obtain an unsigned double is valid here since big endian vs little endian
+                output.set(i, j, output.get(i, j) * Math.abs(sampledRow[i]));
             }
-            rowMultOp.setRow(i, cachedRow);
-            startingSign *= -1;
         }
 
-        return new Matrix(rowMultOp);
+        return output;
     }
 
     /**

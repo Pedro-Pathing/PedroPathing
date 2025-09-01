@@ -20,6 +20,7 @@ import java.util.List;
  * @author Anyi Lin - 10158 Scott's Bots
  * @author Aaron Yang - 10158 Scott's Bots
  * @author Harrison Womack - 10158 Scott's Bots
+ * @author William Phomphakdee - 7462 Not to Scale Alumni
  * @version 1.0, 3/5/2024
  */
 public class BezierCurve implements Curve {

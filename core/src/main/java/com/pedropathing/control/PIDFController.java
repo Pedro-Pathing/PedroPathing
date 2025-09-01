@@ -41,7 +41,7 @@ public class PIDFController implements Controller {
      *
      * @return this returns the value of the PIDF from the current error.
      */
-    public double runPIDF() {
+    public double run() {
         return error * P() + errorDerivative * D() + errorIntegral * I() + feedForwardInput * F();
     }
 
@@ -50,12 +50,12 @@ public class PIDFController implements Controller {
      * a target position to calculate error. This will update the error from the current position to
      * the target position specified.
      *
-     * @param update This is the current position.
+     * @param position This is the current position.
      */
-    public void updatePosition(double update) {
-        position = update;
+    public void updatePosition(double position) {
+        this.position = position;
         previousError = error;
-        error = targetPosition - position;
+        error = targetPosition - this.position;
 
         deltaTimeNano = System.nanoTime() - previousUpdateTimeNano;
         previousUpdateTimeNano = System.nanoTime();

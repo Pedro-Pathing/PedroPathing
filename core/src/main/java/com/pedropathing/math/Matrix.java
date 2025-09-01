@@ -10,7 +10,7 @@ import java.util.Locale;
  * but also includes an implementation of gaussian elimination with partial pivoting and row operations
  *
  * @author William Phomphakdee - 7462 Not to Scale Alumni
- * @version 1.0.0, 06/24/2025
+ * @version 1.0.0, 08/29/2025
  */
 public class Matrix {
 
@@ -194,9 +194,7 @@ public class Matrix {
      */
     public void setRow(int row, double... elements){
         int len = Math.min(elements.length, this.rowCount);
-        for (int i = 0; i < len; i++) {
-            this.matrix[row][i] = elements[i];
-        }
+        if (len >= 0) System.arraycopy(elements, 0, this.matrix[row], 0, len);
     }
 
     /**
@@ -291,6 +289,8 @@ public class Matrix {
      */
     public Matrix multiply(double scalar){
         Matrix output = new Matrix(this.rowCount, this.colCount);
+        if (scalar == 0) return MatrixUtil.zeros(this.rowCount, this.colCount);
+
         for (int i = 0; i < output.rowCount; i++) {
             for (int j = 0; j < output.colCount; j++) {
                 output.matrix[i][j] = scalar * this.matrix[i][j];
@@ -300,13 +300,22 @@ public class Matrix {
     }
 
     /**
+     * Returns a new matrix that has all elements multiplied by a scalar; cA
+     * @param scalar a coefficient
+     * @return a matrix with each element multiplied by the scalar
+     */
+    public Matrix times(double scalar){
+        return this.multiply(scalar);
+    }
+
+    /**
      * Matrix multiplication between two matrices; A * B
      * @param other the other matrix (on the right side of the equation)
      * @return a new matrix that is the product of the two matrices
      */
     public Matrix multiply(Matrix other){
         if (other.rowCount != this.colCount)
-            throw new RuntimeException(String.format("Size mismatch for matrix multiplication. size(A) = [%d, %d]; size(B) = [%d, %d]", this.rowCount, this.colCount, other.rowCount, other.colCount));
+            throw new IllegalArgumentException(String.format("Size mismatch for matrix multiplication. size(A) = [%d, %d]; size(B) = [%d, %d]", this.rowCount, this.colCount, other.rowCount, other.colCount));
 
         Matrix output = new Matrix(this.rowCount, other.colCount);
 
@@ -318,7 +327,9 @@ public class Matrix {
                 double[] colSample = other.getCol(j);
 
                 for (int k = 0; k < rowSample.length; k++) {
-                    dpSum += rowSample[k] * colSample[k];
+                    if (!(rowSample[k] == 0|| colSample[k] == 0)) {
+                        dpSum += rowSample[k] * colSample[k];
+                    }
                 }
 
                 output.matrix[i][j] = dpSum;
@@ -327,6 +338,15 @@ public class Matrix {
         }
 
         return output;
+    }
+
+    /**
+     * Matrix multiplication between two matrices; A * B
+     * @param other the other matrix (on the right side of the equation)
+     * @return a new matrix that is the product of the two matrices
+     */
+    public Matrix times(Matrix other){
+        return this.multiply(other);
     }
 
     /**
