@@ -12,7 +12,7 @@ package com.pedropathing.control;
  * @author Harrison Womack - 10158 Scott's Bots
  * @version 1.0, 3/5/2024
  */
-public class PIDFController {
+public class PIDFController implements Controller {
     private PIDFCoefficients coefficients;
 
     private double previousError;
@@ -104,6 +104,11 @@ public class PIDFController {
         previousUpdateTimeNano = System.nanoTime();
     }
 
+    @Override
+    public double run() {
+        return runPIDF();
+    }
+
     /**
      * This is used to set the target position if the PIDF is being run with current position and
      * target position inputs rather than error inputs.
@@ -139,6 +144,15 @@ public class PIDFController {
      */
     public PIDFCoefficients getCoefficients() {
         return coefficients;
+    }
+
+    @Override
+    public void setCoefficients(Coefficients coefficients) {
+        if (coefficients instanceof PIDFCoefficients) {
+            setCoefficients((PIDFCoefficients) coefficients);
+        } else {
+            throw new IllegalArgumentException("Expected PIDFCoefficients");
+        }
     }
 
     /**
