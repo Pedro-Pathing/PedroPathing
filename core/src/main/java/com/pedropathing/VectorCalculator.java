@@ -1,5 +1,6 @@
 package com.pedropathing;
 
+import com.pedropathing.control.Controller;
 import com.pedropathing.control.FilteredPIDFCoefficients;
 import com.pedropathing.control.PIDFCoefficients;
 import com.pedropathing.follower.FollowerConstants;
@@ -8,7 +9,6 @@ import com.pedropathing.math.MathFunctions;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.math.Vector;
-import com.pedropathing.control.FilteredPIDFController;
 import com.pedropathing.control.PIDFController;
 
 import java.util.ArrayList;
@@ -50,43 +50,43 @@ public class VectorCalculator {
     private int chainIndex;
     private double centripetalScaling;
 
-    private PIDFController secondaryTranslationalPIDF;
+    private Controller secondaryTranslationalController;
     private PIDFController secondaryTranslationalIntegral;
-    private PIDFController translationalPIDF;
+    private Controller translationalController;
     private PIDFController translationalIntegral;
-    private PIDFController secondaryHeadingPIDF;
+    private Controller secondaryHeadingController;
 
-    private PIDFController headingPIDF;
-    private FilteredPIDFController secondaryDrivePIDF, drivePIDF;
+    private Controller headingController;
+    private Controller secondaryDrive, drive;
 
     public VectorCalculator(FollowerConstants constants) {
         this.constants = constants;
-        drivePIDF = new FilteredPIDFController(constants.coefficientsDrivePIDF);
-        secondaryDrivePIDF = new FilteredPIDFController(constants.coefficientsSecondaryDrivePIDF);
-        headingPIDF = new PIDFController(constants.coefficientsHeadingPIDF);
-        secondaryHeadingPIDF = new PIDFController(constants.coefficientsSecondaryHeadingPIDF);
-        translationalPIDF = new PIDFController(constants.coefficientsTranslationalPIDF);
-        secondaryTranslationalPIDF = new PIDFController(constants.coefficientsSecondaryTranslationalPIDF);
+        drive = constants.coefficientsDrive.create();
+        secondaryDrive = constants.coefficientsSecondaryDrive.create();
+        headingController = constants.coefficientsHeading.create();
+        secondaryHeadingController = constants.coefficientsSecondaryHeading.create();
+        translationalController = constants.coefficientsTranslational.create();
+        secondaryTranslationalController = constants.coefficientsSecondaryTranslational.create();
         translationalIntegral = new PIDFController(constants.integralTranslational);
         secondaryTranslationalIntegral = new PIDFController(constants.integralSecondaryTranslational);
         updateConstants();
     }
     
     public void updateConstants() {
-        drivePIDF.setCoefficients(constants.coefficientsDrivePIDF);
-        secondaryDrivePIDF.setCoefficients(constants.coefficientsSecondaryDrivePIDF);
-        headingPIDF.setCoefficients(constants.coefficientsHeadingPIDF);
-        secondaryHeadingPIDF.setCoefficients(constants.coefficientsSecondaryHeadingPIDF);
-        translationalPIDF.setCoefficients(constants.coefficientsTranslationalPIDF);
-        secondaryTranslationalPIDF.setCoefficients(constants.coefficientsSecondaryTranslationalPIDF);
+        drive.setCoefficients(constants.coefficientsDrive);
+        secondaryDrive.setCoefficients(constants.coefficientsSecondaryDrive);
+        headingController.setCoefficients(constants.coefficientsHeading);
+        secondaryHeadingController.setCoefficients(constants.coefficientsSecondaryHeading);
+        translationalController.setCoefficients(constants.coefficientsTranslational);
+        secondaryTranslationalController.setCoefficients(constants.coefficientsSecondaryTranslational);
         translationalIntegral.setCoefficients(constants.integralTranslational);
         secondaryTranslationalIntegral.setCoefficients(constants.integralSecondaryTranslational);
-        drivePIDFSwitch = constants.drivePIDFSwitch;
-        headingPIDFSwitch = constants.headingPIDFSwitch;
-        translationalPIDFSwitch = constants.translationalPIDFSwitch;
-        useSecondaryDrivePID = constants.useSecondaryDrivePIDF;
-        useSecondaryHeadingPID = constants.useSecondaryHeadingPIDF;
-        useSecondaryTranslationalPID = constants.useSecondaryTranslationalPIDF;
+        drivePIDFSwitch = constants.driveSwitch;
+        headingPIDFSwitch = constants.headingSwitch;
+        translationalPIDFSwitch = constants.translationalSwitch;
+        useSecondaryDrivePID = constants.useSecondaryDrive;
+        useSecondaryHeadingPID = constants.useSecondaryHeading;
+        useSecondaryTranslationalPID = constants.useSecondaryTranslational;
         mass = constants.mass;
     }
 
@@ -117,13 +117,13 @@ public class VectorCalculator {
     }
     
     public void breakFollowing() {
-        secondaryDrivePIDF.reset();
-        drivePIDF.reset();
-        secondaryHeadingPIDF.reset();
-        headingPIDF.reset();
-        secondaryTranslationalPIDF.reset();
+        secondaryDrive.reset();
+        drive.reset();
+        secondaryHeadingController.reset();
+        headingController.reset();
+        secondaryTranslationalController.reset();
         secondaryTranslationalIntegral.reset();
-        translationalPIDF.reset();
+        translationalController.reset();
         translationalIntegral.reset();
         
         secondaryTranslationalIntegralVector = new Vector();
@@ -180,15 +180,15 @@ public class VectorCalculator {
         Vector tangent = currentPath.getClosestPointTangentVector().normalize();
 
         if (Math.abs(driveError) < drivePIDFSwitch && useSecondaryDrivePID) {
-            secondaryDrivePIDF.updateFeedForwardInput(Math.signum(driveError));
-            secondaryDrivePIDF.updateError(driveError);
-            driveVector = new Vector(MathFunctions.clamp(secondaryDrivePIDF.runPIDF(), -maxPowerScaling, maxPowerScaling), tangent.getTheta());
+            secondaryDrive.updateFeedForwardInput(Math.signum(driveError));
+            secondaryDrive.updateError(driveError);
+            driveVector = new Vector(MathFunctions.clamp(secondaryDrive.run(), -maxPowerScaling, maxPowerScaling), tangent.getTheta());
             return driveVector.copy();
         }
 
-        drivePIDF.updateFeedForwardInput(Math.signum(driveError));
-        drivePIDF.updateError(driveError);
-        driveVector = new Vector(MathFunctions.clamp(drivePIDF.runPIDF(), -maxPowerScaling, maxPowerScaling), tangent.getTheta());
+        drive.updateFeedForwardInput(Math.signum(driveError));
+        drive.updateError(driveError);
+        driveVector = new Vector(MathFunctions.clamp(drive.run(), -maxPowerScaling, maxPowerScaling), tangent.getTheta());
         return driveVector.copy();
     }
 
@@ -205,14 +205,14 @@ public class VectorCalculator {
     public Vector getHeadingVector() {
         if (!useHeading) return new Vector();
         if (Math.abs(headingError) < headingPIDFSwitch && useSecondaryHeadingPID) {
-            secondaryHeadingPIDF.updateFeedForwardInput(MathFunctions.getTurnDirection(currentPose.getHeading(), headingGoal));
-            secondaryHeadingPIDF.updateError(headingError);
-            headingVector = new Vector(MathFunctions.clamp(secondaryHeadingPIDF.runPIDF(), -maxPowerScaling, maxPowerScaling), currentPose.getHeading());
+            secondaryHeadingController.updateFeedForwardInput(MathFunctions.getTurnDirection(currentPose.getHeading(), headingGoal));
+            secondaryHeadingController.updateError(headingError);
+            headingVector = new Vector(MathFunctions.clamp(secondaryHeadingController.run(), -maxPowerScaling, maxPowerScaling), currentPose.getHeading());
             return headingVector.copy();
         }
-        headingPIDF.updateFeedForwardInput(MathFunctions.getTurnDirection(currentPose.getHeading(), headingGoal));
-        headingPIDF.updateError(headingError);
-        headingVector = new Vector(MathFunctions.clamp(headingPIDF.runPIDF(), -maxPowerScaling, maxPowerScaling), currentPose.getHeading());
+        headingController.updateFeedForwardInput(MathFunctions.getTurnDirection(currentPose.getHeading(), headingGoal));
+        headingController.updateError(headingError);
+        headingVector = new Vector(MathFunctions.clamp(headingController.run(), -maxPowerScaling, maxPowerScaling), currentPose.getHeading());
         return headingVector.copy();
     }
 
@@ -262,18 +262,18 @@ public class VectorCalculator {
             secondaryTranslationalIntegralVector = secondaryTranslationalIntegralVector.plus(new Vector(secondaryTranslationalIntegral.runPIDF() - previousSecondaryTranslationalIntegral, translationalVector.getTheta()));
             previousSecondaryTranslationalIntegral = secondaryTranslationalIntegral.runPIDF();
 
-            secondaryTranslationalPIDF.updateFeedForwardInput(1);
-            secondaryTranslationalPIDF.updateError(translationalVector.getMagnitude());
-            translationalVector.setMagnitude(secondaryTranslationalPIDF.runPIDF());
+            secondaryTranslationalController.updateFeedForwardInput(1);
+            secondaryTranslationalController.updateError(translationalVector.getMagnitude());
+            translationalVector.setMagnitude(secondaryTranslationalController.run());
             translationalVector = translationalVector.plus(secondaryTranslationalIntegralVector);
         } else {
             translationalIntegral.updateError(translationalVector.getMagnitude());
             translationalIntegralVector = translationalIntegralVector.plus(new Vector(translationalIntegral.runPIDF() - previousTranslationalIntegral, translationalVector.getTheta()));
             previousTranslationalIntegral = translationalIntegral.runPIDF();
 
-            translationalPIDF.updateFeedForwardInput(1);
-            translationalPIDF.updateError(translationalVector.getMagnitude());
-            translationalVector.setMagnitude(translationalPIDF.runPIDF());
+            translationalController.updateFeedForwardInput(1);
+            translationalController.updateError(translationalVector.getMagnitude());
+            translationalVector.setMagnitude(translationalController.run());
             translationalVector = translationalVector.plus(translationalIntegralVector);
         }
 
@@ -414,27 +414,27 @@ public class VectorCalculator {
     }
 
     public void setDrivePIDFCoefficients(FilteredPIDFCoefficients drivePIDFCoefficients) {
-        this.drivePIDF.setCoefficients(drivePIDFCoefficients);
+        this.drive.setCoefficients(drivePIDFCoefficients);
     }
 
     public void setSecondaryDrivePIDFCoefficients(FilteredPIDFCoefficients secondaryDrivePIDFCoefficients) {
-        this.secondaryDrivePIDF.setCoefficients(secondaryDrivePIDFCoefficients);
+        this.secondaryDrive.setCoefficients(secondaryDrivePIDFCoefficients);
     }
 
     public void setHeadingPIDFCoefficients(PIDFCoefficients headingPIDFCoefficients) {
-        this.headingPIDF.setCoefficients(headingPIDFCoefficients);
+        this.headingController.setCoefficients(headingPIDFCoefficients);
     }
 
     public void setSecondaryHeadingPIDFCoefficients(PIDFCoefficients secondaryHeadingPIDFCoefficients) {
-        this.secondaryHeadingPIDF.setCoefficients(secondaryHeadingPIDFCoefficients);
+        this.secondaryHeadingController.setCoefficients(secondaryHeadingPIDFCoefficients);
     }
 
     public void setTranslationalPIDFCoefficients(PIDFCoefficients translationalPIDFCoefficients) {
-        translationalPIDF.setCoefficients(translationalPIDFCoefficients);
+        translationalController.setCoefficients(translationalPIDFCoefficients);
     }
 
     public void setSecondaryTranslationalPIDFCoefficients(PIDFCoefficients secondaryTranslationalPIDFCoefficients) {
-        this.secondaryTranslationalPIDF.setCoefficients(secondaryTranslationalPIDFCoefficients);
+        this.secondaryTranslationalController.setCoefficients(secondaryTranslationalPIDFCoefficients);
     }
 
     public void setConstants(FollowerConstants constants) {
