@@ -679,5 +679,6 @@ public class Path {
      */
     public void init() {
         curve.initialize();
+        headingInterpolator.init();
     }
 }

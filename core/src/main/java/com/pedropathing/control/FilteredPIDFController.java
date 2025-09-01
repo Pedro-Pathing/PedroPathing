@@ -8,7 +8,7 @@ package com.pedropathing.control;
  * @author Anyi Lin - 10158 Scott's Bots
  * @version 1.0, 7/15/2024
  */
-public class FilteredPIDFController {
+public class FilteredPIDFController implements Controller{
     private FilteredPIDFCoefficients coefficients;
 
     private double previousError;
@@ -39,7 +39,7 @@ public class FilteredPIDFController {
      *
      * @return this returns the value of the filtered PIDF from the current error.
      */
-    public double runPIDF() {
+    public double run() {
         return error * P() + filteredDerivative * D() + errorIntegral * I() + F() * feedForwardInput;
     }
 

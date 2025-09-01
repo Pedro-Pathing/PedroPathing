@@ -12,7 +12,7 @@ package com.pedropathing.control;
  * @author Harrison Womack - 10158 Scott's Bots
  * @version 1.0, 3/5/2024
  */
-public class PIDFController {
+public class PIDFController implements Controller {
     private PIDFCoefficients coefficients;
 
     private double previousError;
@@ -41,7 +41,7 @@ public class PIDFController {
      *
      * @return this returns the value of the PIDF from the current error.
      */
-    public double runPIDF() {
+    public double run() {
         return error * P() + errorDerivative * D() + errorIntegral * I() + feedForwardInput * F();
     }
 
@@ -50,12 +50,12 @@ public class PIDFController {
      * a target position to calculate error. This will update the error from the current position to
      * the target position specified.
      *
-     * @param update This is the current position.
+     * @param position This is the current position.
      */
-    public void updatePosition(double update) {
-        position = update;
+    public void updatePosition(double position) {
+        this.position = position;
         previousError = error;
-        error = targetPosition - position;
+        error = targetPosition - this.position;
 
         deltaTimeNano = System.nanoTime() - previousUpdateTimeNano;
         previousUpdateTimeNano = System.nanoTime();
@@ -220,5 +220,13 @@ public class PIDFController {
      */
     public double getError() {
         return error;
+    }
+
+    /**
+     * This returns the current derivative of the error.
+     * @return the derivative
+     */
+    public double getErrorDerivative() {
+        return errorDerivative;
     }
 }

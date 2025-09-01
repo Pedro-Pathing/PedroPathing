@@ -182,13 +182,13 @@ public class VectorCalculator {
         if (Math.abs(driveError) < drivePIDFSwitch && useSecondaryDrivePID) {
             secondaryDrivePIDF.updateFeedForwardInput(Math.signum(driveError));
             secondaryDrivePIDF.updateError(driveError);
-            driveVector = new Vector(MathFunctions.clamp(secondaryDrivePIDF.runPIDF(), -maxPowerScaling, maxPowerScaling), tangent.getTheta());
+            driveVector = new Vector(MathFunctions.clamp(secondaryDrivePIDF.run(), -maxPowerScaling, maxPowerScaling), tangent.getTheta());
             return driveVector.copy();
         }
 
         drivePIDF.updateFeedForwardInput(Math.signum(driveError));
         drivePIDF.updateError(driveError);
-        driveVector = new Vector(MathFunctions.clamp(drivePIDF.runPIDF(), -maxPowerScaling, maxPowerScaling), tangent.getTheta());
+        driveVector = new Vector(MathFunctions.clamp(drivePIDF.run(), -maxPowerScaling, maxPowerScaling), tangent.getTheta());
         return driveVector.copy();
     }
 
@@ -207,12 +207,12 @@ public class VectorCalculator {
         if (Math.abs(headingError) < headingPIDFSwitch && useSecondaryHeadingPID) {
             secondaryHeadingPIDF.updateFeedForwardInput(MathFunctions.getTurnDirection(currentPose.getHeading(), headingGoal));
             secondaryHeadingPIDF.updateError(headingError);
-            headingVector = new Vector(MathFunctions.clamp(secondaryHeadingPIDF.runPIDF(), -maxPowerScaling, maxPowerScaling), currentPose.getHeading());
+            headingVector = new Vector(MathFunctions.clamp(secondaryHeadingPIDF.run(), -maxPowerScaling, maxPowerScaling), currentPose.getHeading());
             return headingVector.copy();
         }
         headingPIDF.updateFeedForwardInput(MathFunctions.getTurnDirection(currentPose.getHeading(), headingGoal));
         headingPIDF.updateError(headingError);
-        headingVector = new Vector(MathFunctions.clamp(headingPIDF.runPIDF(), -maxPowerScaling, maxPowerScaling), currentPose.getHeading());
+        headingVector = new Vector(MathFunctions.clamp(headingPIDF.run(), -maxPowerScaling, maxPowerScaling), currentPose.getHeading());
         return headingVector.copy();
     }
 
@@ -259,21 +259,21 @@ public class VectorCalculator {
 
         if (currentPose.distanceFrom(closestPose) < translationalPIDFSwitch && useSecondaryTranslationalPID) {
             secondaryTranslationalIntegral.updateError(translationalVector.getMagnitude());
-            secondaryTranslationalIntegralVector = secondaryTranslationalIntegralVector.plus(new Vector(secondaryTranslationalIntegral.runPIDF() - previousSecondaryTranslationalIntegral, translationalVector.getTheta()));
-            previousSecondaryTranslationalIntegral = secondaryTranslationalIntegral.runPIDF();
+            secondaryTranslationalIntegralVector = secondaryTranslationalIntegralVector.plus(new Vector(secondaryTranslationalIntegral.run() - previousSecondaryTranslationalIntegral, translationalVector.getTheta()));
+            previousSecondaryTranslationalIntegral = secondaryTranslationalIntegral.run();
 
             secondaryTranslationalPIDF.updateFeedForwardInput(1);
             secondaryTranslationalPIDF.updateError(translationalVector.getMagnitude());
-            translationalVector.setMagnitude(secondaryTranslationalPIDF.runPIDF());
+            translationalVector.setMagnitude(secondaryTranslationalPIDF.run());
             translationalVector = translationalVector.plus(secondaryTranslationalIntegralVector);
         } else {
             translationalIntegral.updateError(translationalVector.getMagnitude());
-            translationalIntegralVector = translationalIntegralVector.plus(new Vector(translationalIntegral.runPIDF() - previousTranslationalIntegral, translationalVector.getTheta()));
-            previousTranslationalIntegral = translationalIntegral.runPIDF();
+            translationalIntegralVector = translationalIntegralVector.plus(new Vector(translationalIntegral.run() - previousTranslationalIntegral, translationalVector.getTheta()));
+            previousTranslationalIntegral = translationalIntegral.run();
 
             translationalPIDF.updateFeedForwardInput(1);
             translationalPIDF.updateError(translationalVector.getMagnitude());
-            translationalVector.setMagnitude(translationalPIDF.runPIDF());
+            translationalVector.setMagnitude(translationalPIDF.run());
             translationalVector = translationalVector.plus(translationalIntegralVector);
         }
 

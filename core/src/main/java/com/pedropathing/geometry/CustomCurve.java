@@ -9,6 +9,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * This is the CustomCurve class. This class can be used to generate custom curves for the robot to follow.
+ * @author Havish Sripada - 12808 RevAmped Robotics
+ */
 public abstract class CustomCurve implements Curve {
     protected ArrayList<Pose> controlPoints;
     protected PathConstraints pathConstraints;
