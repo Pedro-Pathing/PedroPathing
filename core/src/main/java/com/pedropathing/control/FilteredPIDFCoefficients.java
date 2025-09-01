@@ -8,7 +8,7 @@ package com.pedropathing.control;
  * @version 1.0, 7/15/2024
  */
 
-public class FilteredPIDFCoefficients {
+public class FilteredPIDFCoefficients implements Controller.Coefficients {
     public double P;
     public double I;
     public double D;
@@ -43,5 +43,22 @@ public class FilteredPIDFCoefficients {
     @Override
     public String toString() {
         return "P: " + P + ", I: " + I + ", D: " + D + ", T: " + T + ", F: " + F;
+    }
+
+    @Override
+    public FilteredPIDFController create() {
+        return new FilteredPIDFController(this);
+    }
+
+    @Override
+    public void setCoefficients(double... coefficients) {
+        if (coefficients.length != 5) {
+            throw new IllegalArgumentException("Expected 5 coefficients, got " + coefficients.length);
+        }
+        P = coefficients[0];
+        I = coefficients[1];
+        D = coefficients[2];
+        T = coefficients[3];
+        F = coefficients[4];
     }
 }
