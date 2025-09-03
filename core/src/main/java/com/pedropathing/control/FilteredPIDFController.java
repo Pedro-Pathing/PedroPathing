@@ -8,22 +8,18 @@ package com.pedropathing.control;
  * @author Anyi Lin - 10158 Scott's Bots
  * @version 1.0, 7/15/2024
  */
-public class FilteredPIDFController implements Controller{
+public class FilteredPIDFController implements Controller<FilteredPIDFCoefficients> {
     private FilteredPIDFCoefficients coefficients;
 
     private double previousError;
     private double error;
-    private double position;
-    private double targetPosition;
     private double errorIntegral;
     private double errorDerivative;
     private double previousDerivative;
     private double filteredDerivative;
-    private double feedForwardInput;
 
     private long previousUpdateTimeNano;
-    private long deltaTimeNano;
-
+    
     /**
      * This creates a new filtered PIDFController from a CustomPIDFCoefficients.
      *
@@ -39,29 +35,9 @@ public class FilteredPIDFController implements Controller{
      *
      * @return this returns the value of the filtered PIDF from the current error.
      */
-    public double run() {
-        return error * P() + filteredDerivative * D() + errorIntegral * I() + F() * feedForwardInput;
-    }
-
-    /**
-     * This can be used to update the filtered PIDF's current position when inputting a current position and
-     * a target position to calculate error. This will update the error from the current position to
-     * the target position specified.
-     *
-     * @param update This is the current position.
-     */
-    public void updatePosition(double update) {
-        position = update;
-        previousError = error;
-        error = targetPosition - position;
-
-        deltaTimeNano = System.nanoTime() - previousUpdateTimeNano;
-        previousUpdateTimeNano = System.nanoTime();
-
-        errorIntegral += error * (deltaTimeNano / Math.pow(10.0, 9));
-        previousDerivative = filteredDerivative;
-        errorDerivative = (error - previousError) / (deltaTimeNano / Math.pow(10.0, 9));
-        filteredDerivative = T() * previousDerivative + (1 - T()) * errorDerivative;
+    public double run(double error) {
+        updateError(error);
+        return error * P() + filteredDerivative * D() + errorIntegral * I() + F() * Math.signum(error);
     }
 
     /**
@@ -73,57 +49,27 @@ public class FilteredPIDFController implements Controller{
     public void updateError(double error) {
         previousError = this.error;
         this.error = error;
-
-        deltaTimeNano = System.nanoTime() - previousUpdateTimeNano;
+        
+        long deltaTimeNano = System.nanoTime() - previousUpdateTimeNano;
         previousUpdateTimeNano = System.nanoTime();
 
-        errorIntegral += error * (deltaTimeNano / Math.pow(10.0, 9));
+        errorIntegral += error * (deltaTimeNano / 1e9);
         previousDerivative = errorDerivative;
-        errorDerivative = (error - previousError) / (deltaTimeNano / Math.pow(10.0, 9));
+        errorDerivative = (error - previousError) / (deltaTimeNano / 1e9);
         filteredDerivative = T() * previousDerivative + (1 - T()) * errorDerivative;
     }
-
-    /**
-     * This can be used to update the feedforward equation's input, if applicable.
-     *
-     * @param input the input into the feedforward equation.
-     */
-    public void updateFeedForwardInput(double input) {
-        feedForwardInput = input;
-    }
-
+    
     /**
      * This resets all the filtered PIDF's error and position values, as well as the time stamps.
      */
     public void reset() {
         previousError = 0;
         error = 0;
-        position = 0;
-        targetPosition = 0;
         errorIntegral = 0;
         errorDerivative = 0;
         previousDerivative = 0;
         filteredDerivative = 0;
         previousUpdateTimeNano = System.nanoTime();
-    }
-
-    /**
-     * This is used to set the target position if the filtered PIDF is being run with current position and
-     * target position inputs rather than error inputs.
-     *
-     * @param set this sets the target position.
-     */
-    public void setTargetPosition(double set) {
-        targetPosition = set;
-    }
-
-    /**
-     * This returns the target position of the filtered PIDF.
-     *
-     * @return this returns the target position.
-     */
-    public double getTargetPosition() {
-        return targetPosition;
     }
 
     /**

@@ -1,7 +1,10 @@
 package com.pedropathing.follower;
 
+import com.pedropathing.control.Coefficients;
+import com.pedropathing.control.ControllerManager;
 import com.pedropathing.control.FilteredPIDFCoefficients;
 import com.pedropathing.control.PIDFCoefficients;
+import com.pedropathing.control.QuadraticDampedCoefficients;
 
 /**
  * This is the FollowerConstants class. It holds many constants and parameters for various parts of
@@ -16,16 +19,19 @@ import com.pedropathing.control.PIDFCoefficients;
  */
 
 public class FollowerConstants {
+    
+    public ControllerManager m = new ControllerManager.DefaultControllerManager();
 
     /**
      * Translational PIDF coefficients
-     * Default Value: new PIDFCoefficients(0.1,0,0,0);
+     * Default Value: new PIDFCoefficients(0.1,0,0,0.015);
      */
-    public PIDFCoefficients coefficientsTranslationalPIDF = new PIDFCoefficients(
-            0.1,
-            0,
-            0,
-            0.015);
+    public PIDFCoefficients coefficientsTranslationalPIDF = new PIDFCoefficients(0.1,0,
+                                                                                 0,0.015);
+//            0.5,
+//            0.07,
+//            0.001,
+//            0.015);
 
     /**
      * Translational Integral

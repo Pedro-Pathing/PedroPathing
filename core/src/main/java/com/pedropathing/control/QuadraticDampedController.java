@@ -6,39 +6,35 @@ package com.pedropathing.control;
  * @author Jacob Ophoven - 18535, Frozen Code
  * @version after v2.0.0, 9/1/2025
  */
-public class QuadraticDampedController implements ErrorController {
+public class QuadraticDampedController implements Controller<QuadraticDampedCoefficients> {
     private QuadraticDampedCoefficients coefficients;
-    private double error;
-    private double velocity;
+    private double previousError;
+
+    private long previousUpdateTimeNano;
     
     public QuadraticDampedController(QuadraticDampedCoefficients coefficients) {
         this.coefficients = coefficients;
     }
     
     @Override
-    public double run() {
+    public double run(double error) {
+        double derivative = (error - previousError) / ((System.nanoTime() - previousUpdateTimeNano) / 1e9);
+        double velocity = -derivative;
+        previousUpdateTimeNano = System.nanoTime();
+        previousError = error;
+        
         double predictedBrakingDisplacement =
             velocity * Math.abs(velocity) * coefficients.kQuadraticFriction + velocity * coefficients.kLinearBraking;
         return coefficients.P * (error - predictedBrakingDisplacement) + coefficients.kStaticFriction * Math.signum(velocity);
     }
     
     @Override
-    public void updateError(double error) {
-        this.error = error;
-    }
-    
-    public void updateVelocity(double velocity) {
-        this.velocity = velocity;
-    }
-    
-    @Override
-    public QuadraticDampedController setCoefficients(QuadraticDampedCoefficients coefficients) {
+    public void setCoefficients(QuadraticDampedCoefficients coefficients) {
         this.coefficients = coefficients;
-        return this;
     }
     
     @Override
     public void reset() {
-        error = 0;
+        previousError = 0;
     }
 }

@@ -30,6 +30,7 @@ public class ErrorCalculator {
     private Double driveError;
     private Vector velocityVector = new Vector();
     private double headingGoal;
+    double totalDistanceRemaining;
     
     public ErrorCalculator(FollowerConstants constants) {
         this.constants = constants;
@@ -42,7 +43,10 @@ public class ErrorCalculator {
 
     }
 
-    public void update(Pose currentPose, Path currentPath, PathChain currentPathChain, boolean followingPathChain, Pose closestPose, Vector velocity, int chainIndex, double xMovement, double yMovement, double headingGoal) {
+    public void update(Pose currentPose, Path currentPath, PathChain currentPathChain,
+                       boolean followingPathChain, Pose closestPose, Vector velocity,
+                       int chainIndex, double xMovement, double yMovement,
+                       double headingGoal) {
         this.currentPose = currentPose;
         this.velocityVector = velocity;
         this.currentPath = currentPath;
@@ -53,6 +57,7 @@ public class ErrorCalculator {
         this.xVelocity = xMovement;
         this.yVelocity = yMovement;
         this.headingGoal = headingGoal;
+        this.totalDistanceRemaining = getTotalDistanceRemaining();
         driveError = null;
     }
 
@@ -93,7 +98,7 @@ public class ErrorCalculator {
         if (currentPath == null) {
             return 0;
         }
-
+        
         Vector tangent = currentPath.getClosestPointTangentVector().normalize();
         Vector distanceToGoalVector = tangent.times(distanceToGoal);
         Vector velocity = velocityVector.projectOnto(tangent);
@@ -148,6 +153,34 @@ public class ErrorCalculator {
 
         return driveKalmanFilter.getState();
     }
+    
+    
+    public double getTotalDistanceRemaining() {
+        if (currentPath.isAtParametricEnd()) {
+            Vector offset = new Vector();
+            offset.setOrthogonalComponents(currentPose.getX() - currentPath.getLastControlPoint().getX(), currentPose.getY() - currentPath.getLastControlPoint().getY());
+            return currentPath.getEndTangent().dot(offset);
+        }
+        
+        if (!followingPathChain) {
+            return currentPath.getDistanceRemaining();
+        }
+        
+        PathChain.DecelerationType type = currentPathChain.getDecelerationType();
+        if (type != PathChain.DecelerationType.GLOBAL) {
+            return currentPath.getDistanceRemaining();
+        }
+        
+        double remainingLength = 0;
+        
+        if (chainIndex < currentPathChain.size()) {
+            for (int i = chainIndex + 1; i < currentPathChain.size(); i++) {
+                remainingLength += currentPathChain.getPath(i).length();
+            }
+        }
+        
+        return remainingLength + currentPath.getDistanceRemaining();
+    }
 
     public double getDriveError() {
         if (driveError != null) return driveError;
@@ -171,7 +204,7 @@ public class ErrorCalculator {
                     }
 
                     distanceToGoal = remainingLength + currentPath.getDistanceRemaining();
-
+                    
                     Vector tangent = currentPath.getClosestPointTangentVector().normalize();
                     Vector forwardTheoreticalHeadingVector = new Vector(1.0, headingGoal);
 
