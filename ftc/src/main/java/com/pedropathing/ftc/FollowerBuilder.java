@@ -1,5 +1,7 @@
 package com.pedropathing.ftc;
 import com.pedropathing.Drivetrain;
+import com.pedropathing.control.ControllerManager;
+import com.pedropathing.control.DefaultControllerManager;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.FollowerConstants;
 import com.pedropathing.ftc.drivetrains.Mecanum;
@@ -33,11 +35,22 @@ public class FollowerBuilder {
     private final HardwareMap hardwareMap;
     private Localizer localizer;
     private Drivetrain drivetrain;
+    private ControllerManager controllerManager = null;
 
     public FollowerBuilder(FollowerConstants constants, HardwareMap hardwareMap) {
         this.constants = constants;
+        
+        if (controllerManager == null) {
+            this.controllerManager = new DefaultControllerManager(constants);
+        }
+        
         this.hardwareMap = hardwareMap;
         constraints = PathConstraints.defaultConstraints;
+    }
+    
+    public FollowerBuilder setCustomControllerManager(ControllerManager controllerManager) {
+        this.controllerManager = controllerManager;
+        return this;
     }
 
     public FollowerBuilder setLocalizer(Localizer localizer) {

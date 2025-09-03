@@ -7,8 +7,8 @@ package com.pedropathing.control;
  * @author Anyi Lin - 10158 Scott's Bots
  * @version 1.0, 7/15/2024
  */
-
-public class FilteredPIDFCoefficients {
+public class FilteredPIDFCoefficients implements Coefficients<FilteredPIDFCoefficients,
+ FilteredPIDFController> {
     public double P;
     public double I;
     public double D;
@@ -25,14 +25,6 @@ public class FilteredPIDFCoefficients {
      * @param f the coefficient for the feedforward factor.
      */
     public FilteredPIDFCoefficients(double p, double i, double d, double t, double f) {
-        P = p;
-        I = i;
-        D = d;
-        F = f;
-        T = t;
-    }
-
-    public void setCoefficients(double p, double i, double d, double t, double f) {
         P = p;
         I = i;
         D = d;

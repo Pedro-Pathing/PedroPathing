@@ -12,20 +12,17 @@ package com.pedropathing.control;
  * @author Harrison Womack - 10158 Scott's Bots
  * @version 1.0, 3/5/2024
  */
-public class PIDFController implements Controller {
+public class PIDFController implements Controller<PIDFCoefficients> {
     private PIDFCoefficients coefficients;
 
     private double previousError;
     private double error;
-    private double position;
     private double targetPosition;
     private double errorIntegral;
     private double errorDerivative;
-    private double feedForwardInput;
 
     private long previousUpdateTimeNano;
-    private long deltaTimeNano;
-
+    
     /**
      * This creates a new PIDFController from a CustomPIDFCoefficients.
      *
@@ -41,27 +38,9 @@ public class PIDFController implements Controller {
      *
      * @return this returns the value of the PIDF from the current error.
      */
-    public double run() {
-        return error * P() + errorDerivative * D() + errorIntegral * I() + feedForwardInput * F();
-    }
-
-    /**
-     * This can be used to update the PIDF's current position when inputting a current position and
-     * a target position to calculate error. This will update the error from the current position to
-     * the target position specified.
-     *
-     * @param position This is the current position.
-     */
-    public void updatePosition(double position) {
-        this.position = position;
-        previousError = error;
-        error = targetPosition - this.position;
-
-        deltaTimeNano = System.nanoTime() - previousUpdateTimeNano;
-        previousUpdateTimeNano = System.nanoTime();
-
-        errorIntegral += error * (deltaTimeNano / Math.pow(10.0, 9));
-        errorDerivative = (error - previousError) / (deltaTimeNano / Math.pow(10.0, 9));
+    public double run(double error) {
+        updateError(error);
+        return error * P() + errorDerivative * D() + errorIntegral * I() + F() * Math.signum(error);
     }
 
     /**
@@ -74,21 +53,12 @@ public class PIDFController implements Controller {
         previousError = this.error;
         this.error = error;
         long nanoTime = System.nanoTime();
-
-        deltaTimeNano = nanoTime - previousUpdateTimeNano;
+        
+        long deltaTimeNano = nanoTime - previousUpdateTimeNano;
         previousUpdateTimeNano = nanoTime;
 
-        errorIntegral += error * (deltaTimeNano / Math.pow(10.0, 9));
-        errorDerivative = (error - previousError) / (deltaTimeNano / Math.pow(10.0, 9));
-    }
-
-    /**
-     * This can be used to update the feedforward equation's input, if applicable.
-     *
-     * @param input the input into the feedforward equation.
-     */
-    public void updateFeedForwardInput(double input) {
-        feedForwardInput = input;
+        errorIntegral += error * (deltaTimeNano / 1e9);
+        errorDerivative = (error - previousError) / (deltaTimeNano / 1e9);
     }
 
     /**
@@ -97,7 +67,6 @@ public class PIDFController implements Controller {
     public void reset() {
         previousError = 0;
         error = 0;
-        position = 0;
         targetPosition = 0;
         errorIntegral = 0;
         errorDerivative = 0;
@@ -128,6 +97,7 @@ public class PIDFController implements Controller {
      *
      * @param set the coefficients that the PIDF will use.
      */
+    @Override
     public void setCoefficients(PIDFCoefficients set) {
         coefficients = set;
     }

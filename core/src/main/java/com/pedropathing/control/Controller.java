@@ -1,8 +1,11 @@
 package com.pedropathing.control;
 
-public interface Controller {
-    double run();
+/**
+ * Error Controller.
+ *
+ * @author Jacob Ophoven - 18535, Frozen Code
+ */
+public interface Controller<K extends Coefficients> {
+    double run(double error);
     void reset();
-    void updateError(double error);
-    void updatePosition(double position);
 }
