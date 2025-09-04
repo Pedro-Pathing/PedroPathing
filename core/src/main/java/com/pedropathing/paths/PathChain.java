@@ -26,7 +26,14 @@ public class PathChain {
     public enum DecelerationType {
         NONE,
         GLOBAL,
-        LAST_PATH
+        LAST_PATH,
+        
+        /**
+         * Brakes the robot as fast as possible without overshooting. Switches drive to
+         * translational near end of the path. QuadraticDampedController is necessary
+         * to account for non-linear friction when braking.
+         */
+        FAST_BRAKE
     }
     private DecelerationType decelerationType = DecelerationType.LAST_PATH;
     private ArrayList<PathCallback> callbacks = new ArrayList<>();

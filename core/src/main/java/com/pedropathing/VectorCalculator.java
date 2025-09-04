@@ -1,15 +1,16 @@
 package com.pedropathing;
 
+import com.pedropathing.control.ControllerManager;
+import com.pedropathing.control.Controller;
 import com.pedropathing.control.FilteredPIDFCoefficients;
 import com.pedropathing.control.PIDFCoefficients;
+import com.pedropathing.control.QuadraticDampedController;
 import com.pedropathing.follower.FollowerConstants;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.MathFunctions;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.math.Vector;
-import com.pedropathing.control.FilteredPIDFController;
-import com.pedropathing.control.PIDFController;
 
 import java.util.ArrayList;
 
@@ -49,44 +50,27 @@ public class VectorCalculator {
 
     private int chainIndex;
     private double centripetalScaling;
-
-    private PIDFController secondaryTranslationalPIDF;
-    private PIDFController secondaryTranslationalIntegral;
-    private PIDFController translationalPIDF;
-    private PIDFController translationalIntegral;
-    private PIDFController secondaryHeadingPIDF;
-
-    private PIDFController headingPIDF;
-    private FilteredPIDFController secondaryDrivePIDF, drivePIDF;
+    
+    private ControllerManager controllerManager;
+    
+    private Controller translationalPIDF;
+    private Controller headingPIDF;
+    private Controller drivePIDF;
 
     public VectorCalculator(FollowerConstants constants) {
         this.constants = constants;
-        drivePIDF = new FilteredPIDFController(constants.coefficientsDrivePIDF);
-        secondaryDrivePIDF = new FilteredPIDFController(constants.coefficientsSecondaryDrivePIDF);
-        headingPIDF = new PIDFController(constants.coefficientsHeadingPIDF);
-        secondaryHeadingPIDF = new PIDFController(constants.coefficientsSecondaryHeadingPIDF);
-        translationalPIDF = new PIDFController(constants.coefficientsTranslationalPIDF);
-        secondaryTranslationalPIDF = new PIDFController(constants.coefficientsSecondaryTranslationalPIDF);
-        translationalIntegral = new PIDFController(constants.integralTranslational);
-        secondaryTranslationalIntegral = new PIDFController(constants.integralSecondaryTranslational);
+        this.controllerManager = constants.controllerManager;
+        
+        drivePIDF = this.controllerManager.createDrive();
+        translationalPIDF = this.controllerManager.createTranslational();
+        headingPIDF = this.controllerManager.createHeading();
+
         updateConstants();
     }
     
     public void updateConstants() {
-        drivePIDF.setCoefficients(constants.coefficientsDrivePIDF);
-        secondaryDrivePIDF.setCoefficients(constants.coefficientsSecondaryDrivePIDF);
-        headingPIDF.setCoefficients(constants.coefficientsHeadingPIDF);
-        secondaryHeadingPIDF.setCoefficients(constants.coefficientsSecondaryHeadingPIDF);
-        translationalPIDF.setCoefficients(constants.coefficientsTranslationalPIDF);
-        secondaryTranslationalPIDF.setCoefficients(constants.coefficientsSecondaryTranslationalPIDF);
-        translationalIntegral.setCoefficients(constants.integralTranslational);
-        secondaryTranslationalIntegral.setCoefficients(constants.integralSecondaryTranslational);
-        drivePIDFSwitch = constants.drivePIDFSwitch;
-        headingPIDFSwitch = constants.headingPIDFSwitch;
-        translationalPIDFSwitch = constants.translationalPIDFSwitch;
-        useSecondaryDrivePID = constants.useSecondaryDrivePIDF;
-        useSecondaryHeadingPID = constants.useSecondaryHeadingPIDF;
-        useSecondaryTranslationalPID = constants.useSecondaryTranslationalPIDF;
+        controllerManager.updateCoefficients();
+
         mass = constants.mass;
     }
 
@@ -117,14 +101,7 @@ public class VectorCalculator {
     }
     
     public void breakFollowing() {
-        secondaryDrivePIDF.reset();
-        drivePIDF.reset();
-        secondaryHeadingPIDF.reset();
-        headingPIDF.reset();
-        secondaryTranslationalPIDF.reset();
-        secondaryTranslationalIntegral.reset();
-        translationalPIDF.reset();
-        translationalIntegral.reset();
+        controllerManager.reset();
         
         secondaryTranslationalIntegralVector = new Vector();
         translationalIntegralVector = new Vector();
@@ -145,8 +122,6 @@ public class VectorCalculator {
         calculateAveragedVelocityAndAcceleration();
         teleopDriveVector = new Vector();
         teleopHeadingVector = new Vector();
-        previousSecondaryTranslationalIntegral = 0;
-        previousTranslationalIntegral = 0;
         teleopDriveValues = new double[3];
     }
 
@@ -159,6 +134,57 @@ public class VectorCalculator {
 
         calculateAveragedVelocityAndAcceleration();
     }
+    
+    public double getTotalDistanceRemaining() {
+        if (currentPath.isAtParametricEnd()) {
+            Vector offset = new Vector();
+            offset.setOrthogonalComponents(currentPose.getX() - currentPath.getLastControlPoint().getX(), currentPose.getY() - currentPath.getLastControlPoint().getY());
+            return currentPath.getEndTangent().dot(offset);
+        }
+        
+        if (!followingPathChain) {
+            return currentPath.getDistanceRemaining();
+        }
+        
+        PathChain.DecelerationType type = currentPathChain.getDecelerationType();
+        if (type != PathChain.DecelerationType.GLOBAL) {
+            return currentPath.getDistanceRemaining();
+        }
+        
+        double remainingLength = 0;
+        
+        if (chainIndex < currentPathChain.size()) {
+            for (int i = chainIndex + 1; i < currentPathChain.size(); i++) {
+                remainingLength += currentPathChain.getPath(i).length();
+            }
+        }
+        
+        return remainingLength + currentPath.getDistanceRemaining();
+    }
+    
+    /**
+     * Prevents the robot from applying too much power in the opposite direction of the
+     * robot's momentum. This prevents voltage drops and doesn't hurt braking performance
+     * that much since reversing the direction of wheels with just -0.001 power behaves
+     * identical to -0.3 at high speeds due to EMF braking.
+     *
+     * @author Jacob Ophoven - 18535, Frozen Code
+     */
+    private double clampReversePower(double power, double directionOfMotion) {
+        boolean isOpposingMotion = directionOfMotion * power < 0;
+        
+        if (!isOpposingMotion) {
+            return power;
+        }
+        
+        double clampedPower;
+        if (power < 0) {
+            clampedPower = Math.max(power, -0.2);
+        } else {
+            clampedPower = Math.min(power, 0.2);
+        }
+        return clampedPower;
+    }
 
     /**
      * This returns a Vector in the direction the robot must go to move along the path. This Vector
@@ -170,25 +196,37 @@ public class VectorCalculator {
      */
     public Vector getDriveVector() {
         if (!useDrive) return new Vector();
-
+        
         if (followingPathChain && ((chainIndex < currentPathChain.size() - 1 && currentPathChain.getDecelerationType() == PathChain.DecelerationType.LAST_PATH) || currentPathChain.getDecelerationType() == PathChain.DecelerationType.NONE)) {
             return new Vector(maxPowerScaling, currentPath.getClosestPointTangentVector().getTheta());
         }
-
-        if (driveError == -1) return new Vector(maxPowerScaling, currentPath.getClosestPointTangentVector().getTheta());
-
+        
         Vector tangent = currentPath.getClosestPointTangentVector().normalize();
-
-        if (Math.abs(driveError) < drivePIDFSwitch && useSecondaryDrivePID) {
-            secondaryDrivePIDF.updateFeedForwardInput(Math.signum(driveError));
-            secondaryDrivePIDF.updateError(driveError);
-            driveVector = new Vector(MathFunctions.clamp(secondaryDrivePIDF.run(), -maxPowerScaling, maxPowerScaling), tangent.getTheta());
-            return driveVector.copy();
+        
+        // Should also be an option for a singular path, not just path chain
+        if (followingPathChain && currentPathChain.getDecelerationType() == PathChain.DecelerationType.FAST_BRAKE) {
+            double totalDistanceRemaining = getTotalDistanceRemaining();
+            
+            // 20 is the max braking distance possible (prevents the robot from
+            // skipping part of tight paths)
+            boolean isNearEnd = totalDistanceRemaining <= 20;
+            double brakingPower = translationalPIDF.run(totalDistanceRemaining);
+            boolean isDecelerating = brakingPower < maxPowerScaling;
+            if (isNearEnd && isDecelerating) {
+                // if the controller is quadratic and
+                // deceleration is set to none then exit the path here instead of
+                // waiting until overshooting the path.
+                double tangentialVelocity = velocity.dot(tangent);
+                driveVector = new Vector(clampReversePower(MathFunctions.clamp(brakingPower
+                    , -maxPowerScaling, maxPowerScaling), tangentialVelocity),
+                                         tangent.getTheta());
+                return driveVector.copy();
+            }
         }
-
-        drivePIDF.updateFeedForwardInput(Math.signum(driveError));
-        drivePIDF.updateError(driveError);
-        driveVector = new Vector(MathFunctions.clamp(drivePIDF.run(), -maxPowerScaling, maxPowerScaling), tangent.getTheta());
+        
+        if (driveError == -1) return new Vector(maxPowerScaling, currentPath.getClosestPointTangentVector().getTheta());
+        
+        driveVector = new Vector(MathFunctions.clamp(drivePIDF.run(driveError), -maxPowerScaling, maxPowerScaling), tangent.getTheta());
         return driveVector.copy();
     }
 
@@ -204,15 +242,8 @@ public class VectorCalculator {
      */
     public Vector getHeadingVector() {
         if (!useHeading) return new Vector();
-        if (Math.abs(headingError) < headingPIDFSwitch && useSecondaryHeadingPID) {
-            secondaryHeadingPIDF.updateFeedForwardInput(MathFunctions.getTurnDirection(currentPose.getHeading(), headingGoal));
-            secondaryHeadingPIDF.updateError(headingError);
-            headingVector = new Vector(MathFunctions.clamp(secondaryHeadingPIDF.run(), -maxPowerScaling, maxPowerScaling), currentPose.getHeading());
-            return headingVector.copy();
-        }
-        headingPIDF.updateFeedForwardInput(MathFunctions.getTurnDirection(currentPose.getHeading(), headingGoal));
-        headingPIDF.updateError(headingError);
-        headingVector = new Vector(MathFunctions.clamp(headingPIDF.run(), -maxPowerScaling, maxPowerScaling), currentPose.getHeading());
+        
+        headingVector = new Vector(MathFunctions.clamp(headingPIDF.run(headingError), -maxPowerScaling, maxPowerScaling), currentPose.getHeading());
         return headingVector.copy();
     }
 
@@ -251,33 +282,13 @@ public class VectorCalculator {
         Vector translationalVector = translationalError.copy();
 
         if (!(currentPath.isAtParametricEnd() || currentPath.isAtParametricStart())) {
-            translationalVector = translationalVector.minus(new Vector(translationalVector.dot(currentPath.getClosestPointTangentVector().normalize()), currentPath.getClosestPointTangentVector().getTheta()));
-
-            secondaryTranslationalIntegralVector = secondaryTranslationalIntegralVector.minus(new Vector(secondaryTranslationalIntegralVector.dot(currentPath.getClosestPointTangentVector().normalize()), currentPath.getClosestPointTangentVector().getTheta()));
-            translationalIntegralVector = translationalIntegralVector.minus(new Vector(translationalIntegralVector.dot( currentPath.getClosestPointTangentVector().normalize()), currentPath.getClosestPointTangentVector().getTheta()));
+            translationalVector = translationalVector.minus(new Vector(
+                translationalVector.dot(
+                    currentPath.getClosestPointTangentVector().normalize()),
+                currentPath.getClosestPointTangentVector().getTheta()));
         }
-
-        if (currentPose.distanceFrom(closestPose) < translationalPIDFSwitch && useSecondaryTranslationalPID) {
-            secondaryTranslationalIntegral.updateError(translationalVector.getMagnitude());
-            secondaryTranslationalIntegralVector = secondaryTranslationalIntegralVector.plus(new Vector(secondaryTranslationalIntegral.run() - previousSecondaryTranslationalIntegral, translationalVector.getTheta()));
-            previousSecondaryTranslationalIntegral = secondaryTranslationalIntegral.run();
-
-            secondaryTranslationalPIDF.updateFeedForwardInput(1);
-            secondaryTranslationalPIDF.updateError(translationalVector.getMagnitude());
-            translationalVector.setMagnitude(secondaryTranslationalPIDF.run());
-            translationalVector = translationalVector.plus(secondaryTranslationalIntegralVector);
-        } else {
-            translationalIntegral.updateError(translationalVector.getMagnitude());
-            translationalIntegralVector = translationalIntegralVector.plus(new Vector(translationalIntegral.run() - previousTranslationalIntegral, translationalVector.getTheta()));
-            previousTranslationalIntegral = translationalIntegral.run();
-
-            translationalPIDF.updateFeedForwardInput(1);
-            translationalPIDF.updateError(translationalVector.getMagnitude());
-            translationalVector.setMagnitude(translationalPIDF.run());
-            translationalVector = translationalVector.plus(translationalIntegralVector);
-        }
-
-        translationalVector.setMagnitude(MathFunctions.clamp(translationalVector.getMagnitude(), 0, maxPowerScaling));
+        
+        translationalVector.setMagnitude(MathFunctions.clamp(translationalPIDF.run(translationalVector.getMagnitude()), 0, maxPowerScaling));
 
         this.translationalVector = translationalVector.copy();
 
@@ -414,27 +425,27 @@ public class VectorCalculator {
     }
 
     public void setDrivePIDFCoefficients(FilteredPIDFCoefficients drivePIDFCoefficients) {
-        this.drivePIDF.setCoefficients(drivePIDFCoefficients);
+        constants.setCoefficientsDrivePIDF(drivePIDFCoefficients);
     }
 
     public void setSecondaryDrivePIDFCoefficients(FilteredPIDFCoefficients secondaryDrivePIDFCoefficients) {
-        this.secondaryDrivePIDF.setCoefficients(secondaryDrivePIDFCoefficients);
+        constants.secondaryDrivePIDFCoefficients(secondaryDrivePIDFCoefficients);
     }
 
     public void setHeadingPIDFCoefficients(PIDFCoefficients headingPIDFCoefficients) {
-        this.headingPIDF.setCoefficients(headingPIDFCoefficients);
+        constants.setCoefficientsHeadingPIDF(headingPIDFCoefficients);
     }
 
     public void setSecondaryHeadingPIDFCoefficients(PIDFCoefficients secondaryHeadingPIDFCoefficients) {
-        this.secondaryHeadingPIDF.setCoefficients(secondaryHeadingPIDFCoefficients);
+        constants.setCoefficientsSecondaryHeadingPIDF(secondaryHeadingPIDFCoefficients);
     }
 
     public void setTranslationalPIDFCoefficients(PIDFCoefficients translationalPIDFCoefficients) {
-        translationalPIDF.setCoefficients(translationalPIDFCoefficients);
+        constants.setCoefficientsTranslationalPIDF(translationalPIDFCoefficients);
     }
 
     public void setSecondaryTranslationalPIDFCoefficients(PIDFCoefficients secondaryTranslationalPIDFCoefficients) {
-        this.secondaryTranslationalPIDF.setCoefficients(secondaryTranslationalPIDFCoefficients);
+        constants.secondaryTranslationalPIDFCoefficients(secondaryTranslationalPIDFCoefficients);
     }
 
     public void setConstants(FollowerConstants constants) {
