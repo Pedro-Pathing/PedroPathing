@@ -5,7 +5,7 @@ package com.pedropathing.control;
  *
  * @author Jacob Ophoven - 18535, Frozen Code
  */
-public interface Controller<K extends Coefficients> {
+public interface Controller {
     double run(double error);
     void reset();
 }
