@@ -298,6 +298,15 @@ public final class Pose implements FuturePose {
     }
 
     /**
+     * This mirrors this pose across x = 72 in Pedro coordinates. This will return a new Pose in Pedro coordinates.
+     * @return the mirrored Pose.
+     */
+    public Pose mirror() {
+        Pose k = getAsCoordinateSystem(PedroCoordinates.INSTANCE);
+        return new Pose(144 - k.getX(), k.getY(), MathFunctions.normalizeAngle(Math.PI - k.getHeading()), PedroCoordinates.INSTANCE);
+    }
+
+    /**
      * Converts this pose to the specified coordinate system.
      *
      * @param coordinateSystem the target coordinate system
