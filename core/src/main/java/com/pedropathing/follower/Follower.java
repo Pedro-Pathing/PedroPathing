@@ -1040,4 +1040,8 @@ public class Follower {
     public PathPoint getPreviousClosestPose() {
         return previousClosestPose;
     }
+
+    public double getHeading() {
+        return getPose().getHeading();
+    }
 }
