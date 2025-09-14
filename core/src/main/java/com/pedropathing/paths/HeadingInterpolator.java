@@ -408,4 +408,19 @@ public interface HeadingInterpolator {
             }
         };
     }
+
+    /**
+     * Sets a constant heading interpolation from an undetermined heading
+     * @param heading the heading to set the interpolation to
+     * @return the heading interpolation
+     */
+    static HeadingInterpolator constant(FutureDouble heading) {
+        return new HeadingInterpolator() {
+            final double headingGoal = MathFunctions.normalizeAngle(heading.get());
+            @Override
+            public double interpolate(PathPoint closestPoint) {
+                return headingGoal;
+            }
+        };
+    }
 }

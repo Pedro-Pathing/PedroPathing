@@ -5,6 +5,7 @@ import com.pedropathing.math.Vector;
 import com.pedropathing.paths.PathConstraints;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public interface Curve {
     /**
@@ -204,4 +205,16 @@ public interface Curve {
     default String pathType() {
         return "other";
     }
+
+    /**
+     * Returns whether the curve is initialized or not
+     * @return true if the curve has been initialized and false otherwise
+     */
+    boolean isInitialized();
+
+    /**
+     * Gets the list of future control points
+     * @return a list of uninitialized control points
+     */
+    List<FuturePose> getFutureControlPoints();
 }
