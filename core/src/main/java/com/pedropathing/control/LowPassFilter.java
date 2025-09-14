@@ -12,7 +12,7 @@ public class LowPassFilter implements NoiseFilter {
 
     /**
      * Constructs a LowPassFilter with the specified alpha value.
-     * @param alpha The smoothing factor (0 &lt; alpha &lt; 1). A higher alpha means more smoothing.
+     * @param alpha The smoothing factor (0 < alpha < 1). A higher alpha means more smoothing.
      */
     public LowPassFilter(double alpha) {
         if (alpha <= 0 || alpha >= 1) {
