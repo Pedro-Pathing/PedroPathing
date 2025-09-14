@@ -651,4 +651,9 @@ public class BezierCurve implements Curve {
 
         return new BezierCurve(output);
     }
+
+    @Override
+    public ArrayList<FuturePose> getFutureControlPoints() {
+        return futureControlPoints;
+    }
 }
