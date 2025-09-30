@@ -4,6 +4,10 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.MathFunctions;
 import com.pedropathing.math.Vector;
 
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.TreeMap;
+
 /**
  * This is the PoseTracker class. This class handles getting pose data from the localizer and returning
  * the information in a useful way to the Follower.
@@ -37,6 +41,27 @@ public class PoseTracker {
     private long previousPoseTime;
     private long currentPoseTime;
 
+
+    private final double kBufferDuration = 1.5; // seconds, same as WPILib default
+
+    // odometry pose buffer: timestampSeconds -> odometry-only Pose (un-offset)
+    private final NavigableMap<Double, Pose> m_odometryPoseBuffer = new TreeMap<>();
+
+    // vision updates: timestampSeconds -> VisionUpdate
+    // VisionUpdate contains vision-compensated pose and the odometry pose at that time.
+    private final NavigableMap<Double, PoseTracker.VisionUpdate> m_visionUpdates = new TreeMap<>();
+
+    // state and measurement uncertainties (std devs)
+    // Defaults chosen conservatively; change with setters below.
+    private final double[] m_stateStdDevs = new double[] {0.05, 0.05, 0.02}; // meters, meters, radians
+    private final double[] m_visionMeasurementStdDevs = new double[] {0.5, 0.5, 0.2}; // meters, meters, radians
+
+    // internal variances and diagonal 'gain' (same closed form as WPILib)
+    // q = state variance (std^2), r = vision variance, k = gain per axis
+    private final double[] m_q = new double[3];
+    private final double[][] m_visionK = new double[3][3];
+
+
     /**
      * Creates a new PoseTracker from a Localizer.
      *
@@ -50,9 +75,16 @@ public class PoseTracker {
         } catch (InterruptedException ignored) {
             System.out.println("PoseTracker: resetIMU() interrupted");
         }
+
+        // initialize covariances and gains
+        setVisionMeasurementStdDevs(m_visionMeasurementStdDevs[0], m_visionMeasurementStdDevs[1], m_visionMeasurementStdDevs[2]);
+
+        currentPose = localizer.getPose().copy();
+        previousPose = localizer.getPose().copy();
+        previousPoseTime = System.nanoTime();
+        currentPoseTime = System.nanoTime();
     }
-
-
+    
     /**
      * This updates the robot's pose, as well as updating the previous pose, velocity, and
      * acceleration. The cache for the current pose, velocity, and acceleration is cleared, and
@@ -67,6 +99,243 @@ public class PoseTracker {
         previousPoseTime = currentPoseTime;
         currentPoseTime = System.nanoTime();
         localizer.update();
+
+        // sample and store odometry-only pose at this timestamp (seconds)
+        double nowSeconds = System.nanoTime() / 1e9;
+        Pose odomPose = localizer.getPose().copy();
+        m_odometryPoseBuffer.put(nowSeconds, odomPose);
+
+        // clean up old odometry samples
+        cleanUpOdometryBuffer(nowSeconds);
+
+        // update current pose estimate by applying the latest vision compensation (if any)
+        if (m_visionUpdates.isEmpty()) {
+            currentPose = odomPose.copy();
+        } else {
+            PoseTracker.VisionUpdate latestVU = m_visionUpdates.get(m_visionUpdates.lastKey());
+            currentPose = latestVU.compensate(odomPose);
+        }
+    }
+
+    /**
+     * Set the standard deviations (x, y, heading) for the internal state (odometry) uncertainty.
+     */
+    public void setStateStdDevs(double xStd, double yStd, double headingStd) {
+        m_stateStdDevs[0] = xStd;
+        m_stateStdDevs[1] = yStd;
+        m_stateStdDevs[2] = headingStd;
+        for (int i = 0; i < 3; ++i) {
+            m_q[i] = m_stateStdDevs[i] * m_stateStdDevs[i];
+        }
+        recomputeVisionK();
+    }
+
+    /**
+     * Set the standard deviations (x, y, heading) for vision measurement uncertainty.
+     */
+    public void setVisionMeasurementStdDevs(double xStd, double yStd, double headingStd) {
+        m_visionMeasurementStdDevs[0] = xStd;
+        m_visionMeasurementStdDevs[1] = yStd;
+        m_visionMeasurementStdDevs[2] = headingStd;
+        recomputeVisionK();
+    }
+
+    private void recomputeVisionK() {
+        // r = vision variance
+        double[] r = new double[3];
+        for (int i = 0; i < 3; ++i) {
+            r[i] = m_visionMeasurementStdDevs[i] * m_visionMeasurementStdDevs[i];
+        }
+
+        // zero the matrix first (ensures off-diagonals are cleared)
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                m_visionK[i][j] = 0.0;
+            }
+        }
+
+        // closed-form diagonal Kalman-like gain used by WPILib:
+        // k = q / ( q + sqrt(q * r) ), placed on the diagonal
+        for (int i = 0; i < 3; ++i) {
+            double k;
+            if (m_q[i] == 0.0) {
+                k = 0.0;
+            } else {
+                k = m_q[i] / (m_q[i] + Math.sqrt(m_q[i] * r[i]));
+            }
+            m_visionK[i][i] = k;
+        }
+    }
+
+    private void cleanUpOdometryBuffer(double nowSeconds) {
+        double cutoff = nowSeconds - kBufferDuration;
+        m_odometryPoseBuffer.headMap(cutoff, false).clear();
+        cleanUpVisionUpdates();
+    }
+
+    /**
+     * Return the odometry-only pose at given timestamp (seconds) by linear interpolation.
+     * Returns null if buffer empty.
+     */
+    public Pose getOdometrySample(double timestampSeconds) {
+        if (m_odometryPoseBuffer.isEmpty()) {
+            return null;
+        }
+
+        double oldest = m_odometryPoseBuffer.firstKey();
+        double newest = m_odometryPoseBuffer.lastKey();
+
+        // clamp
+        timestampSeconds = Math.max(oldest, Math.min(newest, timestampSeconds));
+
+        if (m_odometryPoseBuffer.containsKey(timestampSeconds)) {
+            return m_odometryPoseBuffer.get(timestampSeconds).copy();
+        }
+
+        Map.Entry<Double, Pose> floor = m_odometryPoseBuffer.floorEntry(timestampSeconds);
+        Map.Entry<Double, Pose> ceil = m_odometryPoseBuffer.ceilingEntry(timestampSeconds);
+
+        if (floor == null) return ceil.getValue().copy();
+        if (ceil == null) return floor.getValue().copy();
+
+        if (floor.getKey().equals(ceil.getKey())) {
+            return floor.getValue().copy();
+        }
+
+        double t0 = floor.getKey();
+        double t1 = ceil.getKey();
+        double frac = (timestampSeconds - t0) / (t1 - t0);
+
+        Pose p0 = floor.getValue();
+        Pose p1 = ceil.getValue();
+
+        // linearly interpolate x,y; interpolate heading using smallest angle difference
+        double ix = p0.getX() + frac * (p1.getX() - p0.getX());
+        double iy = p0.getY() + frac * (p1.getY() - p0.getY());
+        double dtheta = MathFunctions.getSmallestAngleDifference(p0.getHeading(), p1.getHeading());
+        double iheading = p0.getHeading() + frac * dtheta;
+
+        return new Pose(ix, iy, iheading);
+    }
+
+    /**
+     * Samples the vision-compensated pose at timestampSeconds. Returns null if buffer empty.
+     */
+    public Pose sampleAt(double timestampSeconds) {
+        if (m_odometryPoseBuffer.isEmpty()) {
+            return null;
+        }
+
+        // clamp timestamp within odometry buffer range
+        double oldest = m_odometryPoseBuffer.firstKey();
+        double newest = m_odometryPoseBuffer.lastKey();
+        timestampSeconds = Math.max(oldest, Math.min(newest, timestampSeconds));
+
+        // If there are no applicable vision updates before this timestamp, just return odometry sample
+        if (m_visionUpdates.isEmpty() || timestampSeconds < m_visionUpdates.firstKey()) {
+            return getOdometrySample(timestampSeconds);
+        }
+
+        // get the latest vision update <= timestamp
+        double floorTimestamp = m_visionUpdates.floorKey(timestampSeconds);
+        PoseTracker.VisionUpdate visionUpdate = m_visionUpdates.get(floorTimestamp);
+
+        Pose odomSample = getOdometrySample(timestampSeconds);
+
+        if (odomSample == null) return null;
+        return visionUpdate.compensate(odomSample);
+    }
+
+    /** Removes vision updates that are too old to matter relative to the odometry buffer. */
+    private void cleanUpVisionUpdates() {
+        if (m_odometryPoseBuffer.isEmpty()) return;
+
+        double oldestOdometryTimestamp = m_odometryPoseBuffer.firstKey();
+        if (m_visionUpdates.isEmpty() || oldestOdometryTimestamp < m_visionUpdates.firstKey()) {
+            return;
+        }
+
+        // newest needed vision update at or before oldest odometry timestamp
+        double newestNeeded = m_visionUpdates.floorKey(oldestOdometryTimestamp);
+        // remove strictly before newestNeeded
+        m_visionUpdates.headMap(newestNeeded, false).clear();
+    }
+
+    /**
+     * Add a vision measurement (pose) with a timestampSeconds (seconds epoch). This will:
+     *  - reject if measurement too old for buffer,
+     *  - compute the difference between vision pose and current vision-compensated pose at that time,
+     *  - scale it by a per-axis Kalman-like gain,
+     *  - store a VisionUpdate and update the current pose estimate.
+     * Usage: when your vision system reports a pose, call:
+     *   poseTracker.addVisionMeasurement(visionPose, System.nanoTime()/1e9);
+     */
+    public void addVisionMeasurement(Pose visionRobotPoseMeters, double timestampSeconds) {
+        // Step 0: reject if too old (outside buffer window)
+        if (m_odometryPoseBuffer.isEmpty()
+            || m_odometryPoseBuffer.lastKey() - kBufferDuration > timestampSeconds) {
+            return;
+        }
+
+        // Step 1: clean old entries
+        cleanUpVisionUpdates();
+
+        // Step 2: odometry pose at the moment the vision measurement was made
+        Pose odomSample = getOdometrySample(timestampSeconds);
+        if (odomSample == null) return;
+
+        // Step 3: vision-compensated pose at measurement time
+        Pose visionSample = sampleAt(timestampSeconds);
+        if (visionSample == null) return;
+
+        // Step 4: compute delta (twist) from visionSample to measured vision pose
+        double dx = visionRobotPoseMeters.getX() - visionSample.getX();
+        double dy = visionRobotPoseMeters.getY() - visionSample.getY();
+        double raw = visionRobotPoseMeters.getHeading() - visionSample.getHeading();
+        double dtheta = Math.copySign(
+            MathFunctions.getSmallestAngleDifference(visionSample.getHeading(),
+                visionRobotPoseMeters.getHeading()),
+            raw);
+
+        // Rotate delta into the local (visionSample) frame:
+        double theta = visionSample.getHeading();
+        double cos = Math.cos(theta);
+        double sin = Math.sin(theta);
+        // R(-theta) * [dx_f; dy_f] gives local-frame translation
+        double dx_local =  cos * dx + sin * dy;
+        double dy_local = -sin * dx + cos * dy;
+
+        // Step 5: scale by full 3x3 gain matrix (m_visionK is double[3][3], row-major)
+        double[] localDelta = new double[]{dx_local, dy_local, dtheta};
+        double[] k_times_twist = MathFunctions.mat3x3MulVec(m_visionK, localDelta);
+
+        double scaled_dx_local = k_times_twist[0];
+        double scaled_dy_local = k_times_twist[1];
+        double scaled_dtheta   = k_times_twist[2];
+
+        // Step 6: rotate scaled local corrections back to field frame:
+        double corr_x_f = cos * scaled_dx_local - sin * scaled_dy_local;
+        double corr_y_f = sin * scaled_dx_local + cos * scaled_dy_local;
+
+        double currentUnwrappedHeading = visionSample.getHeading() + scaled_dtheta;
+        double wrappedAngle =Math.atan2(
+            Math.sin(currentUnwrappedHeading), Math.cos(currentUnwrappedHeading));
+
+        // Apply correction to visionSample in field coords
+        Pose correctedVisionPose = new Pose(
+            visionSample.getX() + corr_x_f,
+            visionSample.getY() + corr_y_f,
+            wrappedAngle
+        );
+
+        // Step 7: record the vision update and remove later vision measurements
+        PoseTracker.VisionUpdate visionUpdate = new PoseTracker.VisionUpdate(correctedVisionPose, odomSample);
+        m_visionUpdates.put(timestampSeconds, visionUpdate);
+        m_visionUpdates.tailMap(timestampSeconds, false).clear();
+
+        // Step 8: update latest pose estimate by compensating current odometry pose
+        Pose nowOdom = localizer.getPose();
+        currentPose = visionUpdate.compensate(nowOdom);
     }
 
     /**
@@ -207,6 +476,9 @@ public class PoseTracker {
     public void setPose(Pose set) {
         resetOffset();
         localizer.setPose(set);
+        m_odometryPoseBuffer.clear();
+        m_visionUpdates.clear();
+        currentPose = set.copy();
     }
 
     /**
@@ -342,5 +614,40 @@ public class PoseTracker {
                 ", yOffset=" + getYOffset() +
                 ", headingOffset=" + getHeadingOffset() +
                 '}';
+    }
+    
+    /**
+     * Represents a vision update record. The record contains the vision-compensated pose estimate as
+     * well as the corresponding odometry pose estimate.
+     */
+    private static final class VisionUpdate {
+        // The vision-compensated pose estimate.
+        private final Pose visionPose;
+
+        // The pose estimated based solely on odometry.
+        private final Pose odometryPose;
+
+        /**
+         * Constructs a vision update record with the specified parameters.
+         *
+         * @param visionPose The vision-compensated pose estimate.
+         * @param odometryPose The pose estimate based solely on odometry.
+         */
+        private VisionUpdate(Pose visionPose, Pose odometryPose) {
+            this.visionPose = visionPose;
+            this.odometryPose = odometryPose;
+        }
+
+        /**
+         * Returns the vision-compensated version of the pose. Specifically, changes the pose from being
+         * relative to this record's odometry pose to being relative to this record's vision pose.
+         *
+         * @param pose The pose to compensate.
+         * @return The compensated pose.
+         */
+        public Pose compensate(Pose pose) {
+            Pose delta = pose.minus(this.odometryPose);
+            return this.visionPose.plus(delta);
+        }
     }
 }
