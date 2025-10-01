@@ -171,6 +171,33 @@ public class Follower {
     }
 
     /**
+     * Set the standard deviations (x, y, heading) for the odometry uncertainty.
+     */
+    public void setOdometryStdDevs(double xStd, double yStd, double headingStd) {
+        poseTracker.setOdometryStdDevs(xStd, yStd, headingStd);
+    }
+
+    /**
+     * Set the standard deviations (x, y, heading) for vision measurement uncertainty.
+     */
+    public void setVisionMeasurementStdDevs(double xStd, double yStd, double headingStd) {
+        poseTracker.setVisionMeasurementStdDevs(xStd, yStd, headingStd);
+    }
+
+    /**
+     * Add a vision measurement (pose) with a timestampSeconds (seconds epoch). This will:
+     *  - reject if measurement too old for buffer,
+     *  - compute the difference between vision pose and current vision-compensated pose at that time,
+     *  - scale it by a per-axis Kalman-like gain,
+     *  - store a VisionUpdate and update the current pose estimate.
+     * Usage: when your vision system reports a pose, call:
+     *   poseTracker.addVisionMeasurement(visionPose, System.nanoTime()/1e9);
+     */
+    public void addVisionMeasurement(Pose visionRobotPoseMeters, double timestampSeconds) {
+        poseTracker.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds);
+    }
+
+    /**
      * This holds a Point.
      *
      * @param point   the Point to stay at.
