@@ -42,22 +42,15 @@ public class PoseTracker {
     private long currentPoseTime;
 
 
-    private final double kBufferDuration = 1.5; // seconds, same as WPILib default
+    private final double kBufferDuration = 1.5;
 
-    // odometry pose buffer: timestampSeconds -> odometry-only Pose (un-offset)
     private final NavigableMap<Double, Pose> m_odometryPoseBuffer = new TreeMap<>();
 
-    // vision updates: timestampSeconds -> VisionUpdate
-    // VisionUpdate contains vision-compensated pose and the odometry pose at that time.
     private final NavigableMap<Double, PoseTracker.VisionUpdate> m_visionUpdates = new TreeMap<>();
 
-    // state and measurement uncertainties (std devs)
-    // Defaults chosen conservatively; change with setters below.
-    private final double[] m_stateStdDevs = new double[] {0.05, 0.05, 0.02}; // meters, meters, radians
-    private final double[] m_visionMeasurementStdDevs = new double[] {0.5, 0.5, 0.2}; // meters, meters, radians
+    private final double[] m_odometryStdDevs = new double[] {0.05, 0.05, 0.02};
+    private final double[] m_visionMeasurementStdDevs = new double[] {0.5, 0.5, 0.2};
 
-    // internal variances and diagonal 'gain' (same closed form as WPILib)
-    // q = state variance (std^2), r = vision variance, k = gain per axis
     private final double[] m_q = new double[3];
     private final double[][] m_visionK = new double[3][3];
 
@@ -76,7 +69,7 @@ public class PoseTracker {
             System.out.println("PoseTracker: resetIMU() interrupted");
         }
 
-        // initialize covariances and gains
+        setOdometryStdDevs(m_odometryStdDevs[0], m_odometryStdDevs[1], m_odometryStdDevs[2]);
         setVisionMeasurementStdDevs(m_visionMeasurementStdDevs[0], m_visionMeasurementStdDevs[1], m_visionMeasurementStdDevs[2]);
 
         currentPose = localizer.getPose().copy();
@@ -118,14 +111,14 @@ public class PoseTracker {
     }
 
     /**
-     * Set the standard deviations (x, y, heading) for the internal state (odometry) uncertainty.
+     * Set the standard deviations (x, y, heading) for the odometry uncertainty.
      */
-    public void setStateStdDevs(double xStd, double yStd, double headingStd) {
-        m_stateStdDevs[0] = xStd;
-        m_stateStdDevs[1] = yStd;
-        m_stateStdDevs[2] = headingStd;
+    public void setOdometryStdDevs(double xStd, double yStd, double headingStd) {
+        m_odometryStdDevs[0] = xStd;
+        m_odometryStdDevs[1] = yStd;
+        m_odometryStdDevs[2] = headingStd;
         for (int i = 0; i < 3; ++i) {
-            m_q[i] = m_stateStdDevs[i] * m_stateStdDevs[i];
+            m_q[i] = m_odometryStdDevs[i] * m_odometryStdDevs[i];
         }
         recomputeVisionK();
     }
