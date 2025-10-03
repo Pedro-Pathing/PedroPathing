@@ -237,8 +237,7 @@ public class ErrorCalculator {
                 distanceToGoal = currentPath.getDistanceRemaining();
             }
         } else {
-            Vector offset = new Vector();
-            offset.setOrthogonalComponents(currentPose.getX() - currentPath.getLastControlPoint().getX(), currentPose.getY() - currentPath.getLastControlPoint().getY());
+            Vector offset = currentPath.getLastControlPoint().minus(currentPose).getAsVector();
             distanceToGoal = currentPath.getEndTangent().dot(offset);
         }
 
