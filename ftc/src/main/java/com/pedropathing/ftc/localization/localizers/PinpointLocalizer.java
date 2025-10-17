@@ -145,7 +145,8 @@ public class PinpointLocalizer implements Localizer {
     public void update() {
         odo.update();
         Pose currentPinpointPose = PoseConverter.pose2DToPose(odo.getPosition(), PedroCoordinates.INSTANCE);
-        totalHeading += MathFunctions.getSmallestAngleDifference(currentPinpointPose.getHeading(), previousHeading);
+        // Thank you to GoldenElf58 of FTC Team 16657 for spotting a bug here; it was resolved by adding the turn direction.
+        totalHeading += MathFunctions.getSmallestAngleDifference(currentPinpointPose.getHeading(), previousHeading) * MathFunctions.getTurnDirection(previousHeading, currentPinpointPose.getHeading());
         previousHeading = currentPinpointPose.getHeading();
         currentVelocity = new Pose(odo.getVelX(DistanceUnit.INCH), odo.getVelY(DistanceUnit.INCH), odo.getHeading(AngleUnit.RADIANS));
         pinpointPose = currentPinpointPose;
