@@ -134,7 +134,8 @@ public class OTOSLocalizer implements Localizer {
     @Override
     public void update() {
         otos.getPosVelAcc(otosPose,otosVel,otosAcc);
-        totalHeading += MathFunctions.getSmallestAngleDifference(otosPose.h, previousHeading);
+        totalHeading += MathFunctions.getSmallestAngleDifference(otosPose.h, previousHeading) *
+        MathFunctions.getTurnDirection(previousHeading, otosPose.h);
         previousHeading = otosPose.h;
     }
 
