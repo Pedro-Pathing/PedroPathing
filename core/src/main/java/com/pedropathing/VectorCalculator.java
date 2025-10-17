@@ -316,8 +316,9 @@ public class VectorCalculator {
      *                     movement, this is the y-axis.
      * @param heading determines the heading vector for the robot in teleop.
      * @param robotCentric sets if the movement will be field or robot centric
+     * @param headingOffset sets an offset for the heading based either robot centric or field centric movement
      */
-    public void setTeleOpMovementVectors(double forwardDrive, double lateralDrive, double heading, boolean robotCentric) {
+    public void setTeleOpMovementVectors(double forwardDrive, double lateralDrive, double heading, boolean robotCentric, double headingOffset) {
         teleopDriveValues[0] = MathFunctions.clamp(forwardDrive, -1, 1);
         teleopDriveValues[1] = MathFunctions.clamp(lateralDrive, -1, 1);
         teleopDriveValues[2] = MathFunctions.clamp(heading, -1, 1);
@@ -327,6 +328,8 @@ public class VectorCalculator {
         if (robotCentric) {
             teleopDriveVector.rotateVector(currentPose.getHeading());
         }
+
+        teleopDriveVector.rotateVector(headingOffset);
 
         teleopHeadingVector.setComponents(teleopDriveValues[2], currentPose.getHeading());
     }
@@ -342,6 +345,10 @@ public class VectorCalculator {
      */
     public void setTeleOpMovementVectors(double forwardDrive, double lateralDrive, double heading) {
         setTeleOpMovementVectors(forwardDrive, lateralDrive, heading, true);
+    }
+
+    public void setTeleOpMovementVectors(double forwardDrive, double lateralDrive, double heading, boolean robotCentric) {
+        setTeleOpMovementVectors(forwardDrive, lateralDrive, heading, robotCentric, 0);
     }
 
     /**

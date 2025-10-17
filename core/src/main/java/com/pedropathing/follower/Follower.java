@@ -334,6 +334,7 @@ public class Follower {
     public void startTeleopDrive() {
         breakFollowing();
         manualDrive = true;
+        update();
         drivetrain.startTeleopDrive();
     }
 
@@ -343,14 +344,65 @@ public class Follower {
     public void startTeleopDrive(boolean useBrakeMode) {
         breakFollowing();
         manualDrive = true;
+        update();
         drivetrain.startTeleopDrive(useBrakeMode);
+    }
+
+    public void startTeleOpDrive(boolean useBrakeMode) {
+        startTeleopDrive(useBrakeMode);
+    }
+
+    public void startTeleOpDrive() {
+        startTeleopDrive();
     }
 
     /**
      * This sets the Teleop drive movement vectors
+     *
+     * @param forward the forward movement
+     * @param strafe the strafe movement
+     * @param turn the turn movement
+     * @param isRobotCentric true if robot centric control, false if field centric
+     * @param offsetHeading the offset heading for field centric control, will face the direction of such heading in radians in the field coordinate system when driving forward
+     */
+    public void setTeleOpDrive(double forward, double strafe, double turn, boolean isRobotCentric, double offsetHeading) {
+        vectorCalculator.setTeleOpMovementVectors(forward, strafe, turn, isRobotCentric, offsetHeading);
+    }
+
+    /**
+     * This sets the Teleop drive movement vectors
+     *
+     * @param forward the forward movement
+     * @param strafe the strafe movement
+     * @param turn the turn movement
+     * @param offsetHeading the offset heading for field centric control, will face the direction of such heading in radians in the field coordinate system when driving forward
+     */
+    public void setTeleOpDrive(double forward, double strafe, double turn, double offsetHeading) {
+        vectorCalculator.setTeleOpMovementVectors(forward, strafe, turn, true, offsetHeading);
+    }
+
+    /**
+     * This sets the Teleop drive movement vectors
+     *
+     * @param forward the forward movement
+     * @param strafe the strafe movement
+     * @param turn the turn movement
+     * @param isRobotCentric true if robot centric control, false if field centric
      */
     public void setTeleOpDrive(double forward, double strafe, double turn, boolean isRobotCentric) {
         vectorCalculator.setTeleOpMovementVectors(forward, strafe, turn, isRobotCentric);
+    }
+
+    /**
+     * This sets the Teleop drive movement vectors
+     * This will default to robot centric control
+     *
+     * @param forward the forward movement
+     * @param strafe the strafe movement
+     * @param turn the turn movement
+     */
+    public void setTeleOpDrive(double forward, double strafe, double turn) {
+        vectorCalculator.setTeleOpMovementVectors(forward, strafe, turn);
     }
 
     /** Updates the Mecanum constants */
