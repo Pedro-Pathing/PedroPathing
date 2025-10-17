@@ -1,7 +1,7 @@
 plugins {
-    id("java-library")
-    id("io.deepmedia.tools.deployer")
-    id("org.jetbrains.dokka")
+    `java-library`
+    alias(libs.plugins.dokka)
+    alias(libs.plugins.deployer)
 }
 
 dependencies {

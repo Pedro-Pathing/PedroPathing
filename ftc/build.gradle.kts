@@ -1,7 +1,8 @@
 plugins {
-    id("com.android.library")
-    id("org.jetbrains.dokka")
-    id("io.deepmedia.tools.deployer")
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.dokka)
+    alias(libs.plugins.deployer)
+    alias(libs.plugins.kotlin.android)
 }
 
 android {

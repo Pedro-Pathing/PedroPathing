@@ -1,5 +1,6 @@
 [versions]
 ftc = "11.0.0"
+kotlin = "2.0.0"
 
 [libraries]
 ftc-robot-core = { group = "org.firstinspires.ftc", name = "RobotCore", version.ref = "ftc" }
@@ -11,6 +12,7 @@ dokka-java-plugin = "org.jetbrains.dokka:kotlin-as-java-plugin:2.0.0"
 ftc = ["ftc-robot-core", "ftc-hardware"]
 
 [plugins]
-android-library = { id = "com.android.library", version = "8.7.3" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+android-library = { id = "com.android.library", version = "8.12.3" }
 deployer = { id = "io.deepmedia.tools.deployer", version = "0.18.0" }
 dokka = { id = "org.jetbrains.dokka", version = "2.0.0" }
