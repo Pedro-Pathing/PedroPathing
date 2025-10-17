@@ -63,7 +63,7 @@ public class PinpointLocalizer implements Localizer {
         }
 
         if(constants.customEncoderResolution.isPresent()) {
-            odo.setEncoderResolution(constants.customEncoderResolution.getAsDouble(), DistanceUnit.INCH);
+            odo.setEncoderResolution(constants.customEncoderResolution.getAsDouble(), constants.distanceUnit);
         } else {
             odo.setEncoderResolution(constants.encoderResolution);
         }
