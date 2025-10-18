@@ -2,6 +2,7 @@ plugins {
     id("com.android.library")
     id("org.jetbrains.dokka")
     id("io.deepmedia.tools.deployer")
+    kotlin("android")
 }
 
 android {
