@@ -335,7 +335,7 @@ public final class Pose implements FuturePose {
      * @return an array \`[r, theta]\` where r is the radius and theta is the angle in radians
      */
     public static double[] cartesianToPolar(double x, double y) {
-        return new double[] {Math.sqrt(x * x + y * y), Math.atan2(y, x)};
+        return new double[] {Math.sqrt(x * x + y * y), MathFunctions.normalizeAngle(Math.atan2(y, x))};
     }
 
     /**
