@@ -203,8 +203,8 @@ public interface HeadingInterpolator {
      */
     static HeadingInterpolator facingPoint(double x, double y) {
         return closestPoint -> MathFunctions.normalizeAngle(Math.atan2(
-            x - closestPoint.pose.getY(),
-            y - closestPoint.pose.getX()
+            y - closestPoint.pose.getY(),
+            x - closestPoint.pose.getX()
         ));
     }
 
