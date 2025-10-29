@@ -12,6 +12,9 @@ import java.util.List;
 /**
  * This is the CustomCurve class. This class can be used to generate custom curves for the robot to follow.
  * @author Havish Sripada - 12808 RevAmped Robotics
+ *
+ * Modified by J Kenney to accomodate a wider variety of custom curves and to prevent
+ * problems that can arise when repeat following a path.
  */
 public abstract class CustomCurve implements Curve {
     protected ArrayList<Pose> controlPoints;
@@ -22,25 +25,57 @@ public abstract class CustomCurve implements Curve {
     private double[][] panelsDrawingPoints;
     protected AbstractBijectiveMap.NumericBijectiveMap completionMap = new AbstractBijectiveMap.NumericBijectiveMap();
 
-    public CustomCurve(List<Pose> controlPoints, PathConstraints pathConstraints) {
+    /*
+     * Set this flag each time the curve is initialized, to indicate that the initialTValueGuess for
+     * getClosestPoint needs to be reset. Otherwise, following the same curve a second time may not work.
+     */
+    private boolean resetClosestPointFlag = true;
+
+    /*
+     * Arbitrary data that may be needed to generate the custom curve
+     */
+    protected Object curveData;
+
+    /*
+     * Add constructors that accept arbitrary data, 'curveData' as parameters. For example, one could pass a
+     * double[2] array that specifies the beginning and ending direction of travel for a spline.
+     */
+
+    public CustomCurve(List<Pose> controlPoints, PathConstraints pathConstraints, Object curveData) {
         this.pathConstraints = pathConstraints;
         this.controlPoints = new ArrayList<>(controlPoints);
+
+        this.curveData = curveData;
 
         // Initialize the curve with the provided control points
         initialize();
     }
 
+    public CustomCurve(List<Pose> controlPoints, PathConstraints pathConstraints){
+        this(controlPoints, pathConstraints, null);
+    }
+
+    public CustomCurve(PathConstraints pathConstraints, Object curveData, Pose... controlPoints){
+        this(new ArrayList<>(Arrays.asList(controlPoints)), pathConstraints, curveData);
+    }
+
     public CustomCurve(Pose... controlPoints) {
-        this(new ArrayList<>(Arrays.asList(controlPoints)), PathConstraints.defaultConstraints);
+        this(PathConstraints.defaultConstraints, null, controlPoints);
     }
 
-    public CustomCurve(FuturePose... controlPoints) {
-        this(PathConstraints.defaultConstraints, controlPoints);
+    public CustomCurve(PathConstraints pathConstraints, FuturePose... controlPoints) {
+        this(pathConstraints, null, controlPoints);
     }
 
-    public CustomCurve(PathConstraints constraints, FuturePose... controlPoints) {
+    public CustomCurve(FuturePose... controlPoints){
+        this(PathConstraints.defaultConstraints, null, controlPoints);
+    }
+
+    public CustomCurve(PathConstraints constraints, Object curveData, FuturePose... controlPoints) {
         this.pathConstraints = constraints;
         this.controlPoints = new ArrayList<>();
+
+        this.curveData = curveData;
 
         boolean lazyInitialize = false;
         ArrayList<Pose> initializedControlPoints = new ArrayList<>();
@@ -86,7 +121,14 @@ public abstract class CustomCurve implements Curve {
 
     @Override
     public void initialize() {
+        /*
+         * Set the flag so that the initialTValueGuess for getClosestPoint will be reset during the next
+         * call to getClosestPoint.
+         */
+        resetClosestPointFlag = true;
+
         if (initialized) return;
+
         if (controlPoints.isEmpty() && !futureControlPoints.isEmpty()) {
             // If control points are not initialized, use future control points
             for (FuturePose futurePose : futureControlPoints) {
@@ -94,11 +136,19 @@ public abstract class CustomCurve implements Curve {
             }
             futureControlPoints.clear();
         }
+
+        generateCurve();
+
         initialized = true;
         length = approximateLength();
         initialization();
         initializePanelsDrawingPoints();
     }
+
+    /*
+     * This method can be overridden to generate the custom curve using the control points and
+     */
+    public void generateCurve(){}
 
     /**
      * This creates the Array that holds the Points to draw on Panels.
@@ -179,5 +229,33 @@ public abstract class CustomCurve implements Curve {
         if (aNormalMag == 0) return new Vector(0, 0); // straight line, no principal normal
 
         return aNormal.normalize();
+    }
+
+    /*
+     * Modify the default getClosestPoint method so that the initialTValueGuess gets reset
+     * to a rough estimate of closest, if the curve has been initialized since that last call
+     * to the getClosestPoint method.
+     */
+    @Override
+    public double getClosestPoint(Pose pose, int searchLimit, double initialTValueGuess){
+        if (resetClosestPointFlag){
+            resetClosestPointFlag = false;
+            initialTValueGuess = 0.0;
+            Pose pTest = this.getPose(0);
+            double closestSquare = (pTest.getX()-pose.getX())*(pTest.getX()-pose.getX())
+                    + (pTest.getY()-pose.getY())*(pTest.getY()-pose.getY());
+            double[] searchEstimates =
+                    new double[]{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
+            for (int k=0; k<searchEstimates.length; k++){
+                pTest = this.getPose(searchEstimates[k]);
+                double distSquared = (pTest.getX()-pose.getX())*(pTest.getX()-pose.getX())
+                        + (pTest.getY()-pose.getY())*(pTest.getY()-pose.getY());
+                if (distSquared < closestSquare){
+                    initialTValueGuess = searchEstimates[k];
+                    closestSquare = distSquared;
+                }
+            }
+        }
+        return Curve.super.getClosestPoint(pose, searchLimit, initialTValueGuess);
     }
 }
