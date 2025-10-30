@@ -137,18 +137,12 @@ public abstract class CustomCurve implements Curve {
             futureControlPoints.clear();
         }
 
-        generateCurve();
+        initialization();
 
         initialized = true;
         length = approximateLength();
-        initialization();
         initializePanelsDrawingPoints();
     }
-
-    /*
-     * This method can be overridden to generate the custom curve using the control points and
-     */
-    public void generateCurve(){}
 
     /**
      * This creates the Array that holds the Points to draw on Panels.
