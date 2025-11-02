@@ -6,7 +6,7 @@ import com.pedropathing.math.MathFunctions;
 /**
  * A heading interpolator is a function that takes a path and returns the heading goal the robot
  * should be at a specific point on the path.
- * Note: these methods all use degrees for input and radians internally.
+ * Note: these methods all use radians.
  *
  * <p>
  * Example usage:
