@@ -460,7 +460,7 @@ public class Follower {
             updateErrorAndVectors();
             drivetrain.runDrive(useHoldScaling? getTranslationalCorrection().times(holdPointTranslationalScaling) : getTranslationalCorrection(), useHoldScaling? getHeadingVector().times(holdPointHeadingScaling) : getHeadingVector(), new Vector(), poseTracker.getPose().getHeading());
 
-            if(getHeadingError() < turnHeadingErrorThreshold && isTurning) {
+            if(Math.abs(getHeadingError()) < turnHeadingErrorThreshold && isTurning) {
                 isTurning = false;
                 isBusy = false;
             }
@@ -967,7 +967,8 @@ public class Follower {
      */
     public double getClosestPointHeadingGoal() {
         if (currentPath == null) return 0;
-        if (currentPathChain != null) return currentPathChain.getClosestPointHeadingGoal(new PathChain.PathT(chainIndex, closestPose.tValue));
+        if (followingPathChain && currentPathChain != null)
+            return currentPathChain.getClosestPointHeadingGoal(new PathChain.PathT(chainIndex, closestPose.tValue));
         return currentPath.getHeadingGoal(closestPose);
     }
 
