@@ -2,7 +2,6 @@ package com.pedropathing.geometry;
 
 
 import com.pedropathing.math.Matrix;
-import com.pedropathing.math.PolyDiffUtil;
 
 import java.util.Arrays;
 
@@ -11,20 +10,87 @@ import java.util.Arrays;
  * <br>Eq: [1, t, t^2, t^3...] * P * C; where P is the characteristic matrix of the spline/curve while C is the control parameters
  *
  * @author William Phomphakdee - 7462 Not to Scale Alumni
- * @version 1.0.0, 11/03/2025
+ * @version 0.0.1, 07/11/2025
  */
+@Deprecated
 public class TVector {
 
-    private double[] preFilledArray;
+    private int[][] diffPowers;
+    private int[][] diffCoefficients;
 
     private int controlPointCount;
+    private int differentiationLevel;
+
+    /**
+     * Construct a ParametricRowVector using two numbers: the number of control points a spline has, and the number of differentiations (including the 0th diff)
+     * @param controlPointCount the number of control points a spline has
+     * @param differentiationLevel the number of differentiations that can be requested (positional, velocity, acceleration, jerk... etc.)
+     */
+    public TVector(int controlPointCount, int differentiationLevel) {
+        this.controlPointCount = controlPointCount;
+        this.differentiationLevel = differentiationLevel;
+        this.reload();
+    }
 
     /**
      * Constructs a ParametricRowVector with the number of control points a spline has. The default differentiation level (including the 0th diff) is 3.
      * @param controlPointCount number of control points a spline has
      */
     public TVector(int controlPointCount) {
-        this.resizePoly(controlPointCount);
+        this(controlPointCount, 3);
+    }
+
+    /**
+     * Recompute what should be cached
+     */
+    public void reload(){
+        initializeDegreeArray();
+        initializeCoefficientArray();
+    }
+
+    /**
+     * Initializes the degree/power array (for later processing) and cache them
+     */
+    private void initializeDegreeArray(){
+        int deg = this.controlPointCount - 1;
+        // for now, cache position, velocity, and acceleration powers (thus 3) per bezier obj (change to global caching later)
+        this.diffPowers = new int[this.differentiationLevel][this.controlPointCount];
+
+        for (int i = 0; i < this.diffPowers.length; i++) {
+            this.diffPowers[i] = TVector.genDiff(deg, i);
+        }
+    }
+
+    /**
+     * Generate and return a polynomial's powers at the differentiation level
+     * @param deg degree of poly
+     * @param diffLevel number of differentiations
+     * @return powers of each term in integers
+     */
+    private static int[] genDiff(int deg, int diffLevel){
+        int[] output = new int[deg + 1];
+
+        for (int i = diffLevel; i < output.length; i++) {
+            output[i] = i - diffLevel;
+        }
+
+        return output;
+    }
+
+    /**
+     * Initializes the coefficient array (for later processing) and cache them.
+     * Each row is a different level of differentiation.
+     */
+    public void initializeCoefficientArray(){
+        this.diffCoefficients = new int[this.differentiationLevel][this.controlPointCount];
+
+        Arrays.fill(this.diffCoefficients[0], 1);
+
+        for (int row = 1; row < this.diffCoefficients.length; row++) {
+            for (int col = 0; col < this.diffCoefficients[0].length; col++) {
+                this.diffCoefficients[row][col] = this.diffCoefficients[row - 1][col] * this.diffPowers[row - 1][col];
+            }
+        }
     }
 
     /**
@@ -34,34 +100,19 @@ public class TVector {
      * @return t vector
      */
     private double[] getTArray(double t, int diffLevel){
-        double[] unmappedOutput = PolyDiffUtil.polyValArr(PolyDiffUtil.getPolyCoefficients(this.preFilledArray, diffLevel), t);
-        double[] output = new double[unmappedOutput.length];
-        System.arraycopy(unmappedOutput, 0, output, diffLevel, unmappedOutput.length - diffLevel);
-        return output;
-    }
+        int[] degrees = this.diffPowers[diffLevel];
+        double[] powers = new double[this.controlPointCount];
 
-    /**
-     * Generates a matrix where each row is a differentiation level
-     * @param t t value
-     * @param diffs the array of differentiation levels (e.g. {0, 1, 2} for zeroth, first, and second differentiations)
-     * @return a matrix of t vectors
-     */
-    private double[][] getTArray(double t, int[] diffs){
-        double[][] coeff = new double[diffs.length][];
-        for (int i = 0; i < diffs.length; i++) {
-            coeff[i] = PolyDiffUtil.getPolyCoefficients(this.preFilledArray, diffs[i]);
+        powers[0] = 1;
+        for (int i = 1; i < powers.length; i++) {
+            powers[i] = t * powers[i - 1];
         }
 
-        double[][] unmappedOutputs = new double[coeff.length][];
-        for (int i = 0; i < coeff.length; i++) {
-            unmappedOutputs[i] = PolyDiffUtil.polyValArr(coeff[i], t);
-        }
+        double[] output = new double[powers.length];
 
-        double[][] output = new double[unmappedOutputs.length][this.preFilledArray.length];
-        for (int i = 0; i < output.length; i++) {
-            System.arraycopy(unmappedOutputs[i], 0, output[i], diffs[i], unmappedOutputs[i].length - diffs[i]);
+        for (int i = 0; i < degrees.length; i++) {
+            output[i] = powers[degrees[i]] * this.diffCoefficients[diffLevel][i];
         }
-
         return output;
     }
 
@@ -82,35 +133,36 @@ public class TVector {
      * @return a matrix of t vectors
      */
     public Matrix getTMatrix(double t, int diffTo){
-        int[] differentiations = new int[diffTo + 1];
-        for (int i = 1; i < differentiations.length; i++) {
-            differentiations[i] = i;
+        double[][] output = new double[diffTo + 1][this.controlPointCount];
+        for (int i = 0; i < output.length; i++) {
+            output[i] = getTArray(t, i);
         }
-
-        return getTMatrix(t, differentiations);
+        return new Matrix(output);
     }
 
-    /**
-     * Generates a matrix where each row is a differentiation level
-     * @param t t value
-     * @param differentiations the array of differentiation levels (e.g. {0, 1, 2} for zeroth, first, and second differentiations)
-     * @return a matrix of t vectors
-     */
-    public Matrix getTMatrix(double t, int[] differentiations){
-        return new Matrix(getTArray(t, differentiations));
+    public int[][] getDiffPowers() {
+        return diffPowers;
     }
 
-    /**
-     * This method resizes the internal polynomial coefficient array based on the new number of control points the polynomial spline has
-     * @param controlPointCount new amount of control points
-     */
-    public void resizePoly(int controlPointCount){
-        this.controlPointCount = controlPointCount;
-        this.preFilledArray = new double[this.controlPointCount];
-        Arrays.fill(this.preFilledArray, 1);
+    public int[][] getDiffCoefficients() {
+        return diffCoefficients;
     }
 
     public int getControlPointCount() {
         return controlPointCount;
+    }
+
+    public void setControlPointCount(int controlPointCount) {
+        this.controlPointCount = controlPointCount;
+        this.reload();
+    }
+
+    public int getDifferentiationLevel() {
+        return differentiationLevel;
+    }
+
+    public void setDifferentiationLevel(int differentiationLevel) {
+        this.differentiationLevel = differentiationLevel;
+        this.reload();
     }
 }

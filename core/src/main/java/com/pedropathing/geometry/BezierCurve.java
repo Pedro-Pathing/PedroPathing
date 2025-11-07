@@ -628,10 +628,10 @@ public class BezierCurve implements Curve {
             tValues[i] = tValues[i - 1] + increment;
         }
 
-        TVector tVectorGen = new TVector(points.length);
+        PolynomialMatrixSupplier polynomialMatrixSupplierGen = new PolynomialMatrixSupplier(points.length);
         Matrix tMatrix = new Matrix(points.length, points.length);
         for (int i = 0; i < tMatrix.getRows(); i++) {
-            tMatrix.setRow(i, tVectorGen.getRowVector(tValues[i], 0).getRow(0));
+            tMatrix.setRow(i, polynomialMatrixSupplierGen.getRowVector(tValues[i], 0).getRow(0));
         }
 
         Matrix bezier = CharacteristicMatrixSupplier.getBezierCharacteristicMatrix(points.length - 1);
