@@ -1,10 +1,8 @@
 package com.pedropathing.follower;
 
-import com.pedropathing.ErrorCalculator;
-import com.pedropathing.VectorCalculator;
 import com.pedropathing.control.FilteredPIDFCoefficients;
 import com.pedropathing.control.PIDFCoefficients;
-import com.pedropathing.Drivetrain;
+import com.pedropathing.drivetrain.Drivetrain;
 import com.pedropathing.paths.PathConstraints;
 import com.pedropathing.paths.PathPoint;
 import com.pedropathing.util.PoseHistory;
