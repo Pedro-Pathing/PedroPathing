@@ -1,8 +1,7 @@
-package com.pedropathing;
+package com.pedropathing.follower;
 
 import com.pedropathing.control.KalmanFilter;
 import com.pedropathing.control.KalmanFilterParameters;
-import com.pedropathing.follower.FollowerConstants;
 import com.pedropathing.math.Kinematics;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
