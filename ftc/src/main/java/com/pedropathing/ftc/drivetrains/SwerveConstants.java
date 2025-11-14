@@ -5,6 +5,10 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 public class SwerveConstants {
+
+    public double xVelocity = 80.0; //TODO: Change based on your robot
+    public double yVelocity = 80.0; //TODO: Change based on your robot
+
     public String leftFrontMotorName = "frontLeftDrive";
     public String leftFrontServoName = "frontLeftTurnServo";
     public String leftFrontEncoderName = "frontLeftTurnEncoder";
@@ -59,6 +63,26 @@ public class SwerveConstants {
         defaults();
     }
 
+
+    /**
+     * @param velocity the max speed in ANY direction because swerve can do that :)
+     * @return
+     */
+    public SwerveConstants velocity(double velocity) {
+        this.xVelocity = velocity;
+        this.yVelocity = velocity;
+        return this;
+    }
+
+    public SwerveConstants xVelocity(double xVelocity) {
+        this.xVelocity = xVelocity;
+        return this;
+    }
+
+    public SwerveConstants yVelocity(double yVelocity) {
+        this.yVelocity = yVelocity;
+        return this;
+    }
 
     public SwerveConstants leftFrontMotorName(String leftFrontMotorName) {
         this.leftFrontMotorName = leftFrontMotorName;
@@ -220,6 +244,18 @@ public class SwerveConstants {
         return this;
     }
 
+    public double getVelocity() {
+        return xVelocity; //almost certainly for swerve xVel = yVel
+    }
+
+    public double getXVelocity() {
+        return xVelocity;
+    }
+
+    public double getYVelocity() {
+        return yVelocity;
+    }
+
     public String getLeftFrontMotorName() {
         return leftFrontMotorName;
     }
@@ -346,6 +382,19 @@ public class SwerveConstants {
 
     public double[] getRightRearPodXYOffsets() {
         return rightRearPodXYOffsets;
+    }
+
+    public void setVelocity(double velocity) {
+        this.xVelocity = velocity;
+        this.yVelocity = velocity;
+    }
+
+    public void setXVelocity(double xVelocity) {
+        this.xVelocity = xVelocity;
+    }
+
+    public void setYVelocity(double yVelocity) {
+        this.yVelocity = yVelocity;
     }
 
     public void setLeftFrontMotorName(String leftFrontMotorName) {
@@ -480,6 +529,8 @@ public class SwerveConstants {
 
 
     public void defaults() {
+        xVelocity = 80.0;
+        yVelocity = 80.0;
         leftFrontMotorName = "frontLeftDrive";
         leftFrontServoName = "frontLeftTurnServo";
         leftFrontEncoderName = "frontLeftTurnEncoder";
