@@ -5,9 +5,6 @@ import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-
-
 
 /**
  * Swerve drivetrain implementation
@@ -28,25 +25,25 @@ public class Swerve extends CustomDrivetrain {
     public Swerve(HardwareMap hardwareMap, SwerveConstants swerveConstants)  {
         pods = new SwervePod[4];
 
-        frontLeftPod = new SwervePod(hardwareMap, swerveConstants.frontLeftServoName, swerveConstants.frontLeftEncoderName,
-                swerveConstants.frontLeftMotorName, swerveConstants.frontLeftTurnPID,
-                swerveConstants.frontLeftMotorDirection, swerveConstants.frontLeftServoReversed,
-                swerveConstants.frontLeftPodAngleOffsetDeg, swerveConstants.frontLeftPodXYOffsets);
+        frontLeftPod = new SwervePod(hardwareMap, swerveConstants.leftFrontServoName, swerveConstants.leftFrontEncoderName,
+                swerveConstants.leftFrontMotorName, swerveConstants.leftFrontTurnPID,
+                swerveConstants.leftFrontMotorDirection, swerveConstants.leftFrontServoReversed,
+                swerveConstants.leftFrontPodAngleOffsetDeg, swerveConstants.leftFrontPodXYOffsets);
 
-        frontRightPod = new SwervePod(hardwareMap, swerveConstants.frontRightServoName, swerveConstants.frontRightEncoderName,
-                swerveConstants.frontRightMotorName, swerveConstants.frontRightTurnPID,
-                swerveConstants.frontRightMotorDirection, swerveConstants.frontRightServoReversed,
-                swerveConstants.frontRightPodAngleOffsetDeg, swerveConstants.frontRightPodXYOffsets);
+        frontRightPod = new SwervePod(hardwareMap, swerveConstants.rightFrontServoName, swerveConstants.rightFrontEncoderName,
+                swerveConstants.rightFrontMotorName, swerveConstants.rightFrontTurnPID,
+                swerveConstants.rightFrontMotorDirection, swerveConstants.rightFrontServoReversed,
+                swerveConstants.rightFrontPodAngleOffsetDeg, swerveConstants.rightFrontPodXYOffsets);
 
-        backLeftPod = new SwervePod(hardwareMap, swerveConstants.backLeftServoName, swerveConstants.backLeftEncoderName,
-                swerveConstants.backLeftMotorName, swerveConstants.backLeftTurnPID,
-                swerveConstants.backLeftMotorDirection, swerveConstants.backLeftServoReversed,
-                swerveConstants.backLeftPodAngleOffsetDeg, swerveConstants.backLeftPodXYOffsets);
+        backLeftPod = new SwervePod(hardwareMap, swerveConstants.leftRearServoName, swerveConstants.leftRearEncoderName,
+                swerveConstants.leftRearMotorName, swerveConstants.leftRearTurnPID,
+                swerveConstants.leftRearMotorDirection, swerveConstants.leftRearServoReversed,
+                swerveConstants.leftRearPodAngleOffsetDeg, swerveConstants.leftRearPodXYOffsets);
 
-        backRightPod = new SwervePod(hardwareMap, swerveConstants.backRightServoName, swerveConstants.backRightEncoderName,
-                swerveConstants.backRightMotorName, swerveConstants.backRightTurnPID,
-                swerveConstants.backRightMotorDirection, swerveConstants.backRightServoReversed,
-                swerveConstants.backRightPodAngleOffsetDeg, swerveConstants.backRightPodXYOffsets);
+        backRightPod = new SwervePod(hardwareMap, swerveConstants.rightRearServoName, swerveConstants.rightRearEncoderName,
+                swerveConstants.rightRearMotorName, swerveConstants.rightRearTurnPID,
+                swerveConstants.rightRearMotorDirection, swerveConstants.rightRearServoReversed,
+                swerveConstants.rightRearPodAngleOffsetDeg, swerveConstants.rightRearPodXYOffsets);
 
         pods[0] = frontLeftPod;
         pods[1] = frontRightPod;
