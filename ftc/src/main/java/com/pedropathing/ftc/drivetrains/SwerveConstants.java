@@ -1,13 +1,26 @@
 package com.pedropathing.ftc.drivetrains;
 
 import com.pedropathing.control.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
+/**
+ * Constants for swerve drive configuration
+ * @author Kabir Goyal - 365 MOE
+ */
 public class SwerveConstants {
 
     public double xVelocity = 80.0; //TODO: Change based on your robot
     public double yVelocity = 80.0; //TODO: Change based on your robot
+
+    public boolean useBrakeModeInTeleOp = false;
+    public double maxPower = 1.0;
+    public double motorCachingThreshold = 0.01;
+    public double servoCachingThreshold = 0.01;
+    public boolean useVoltageCompensation = false;
+    public double nominalVoltage = 12.0;
+    public double staticFrictionCoefficient = 0.1;
 
     public String leftFrontMotorName = "frontLeftDrive";
     public String leftFrontServoName = "frontLeftTurnServo";
@@ -38,10 +51,10 @@ public class SwerveConstants {
     public DcMotorEx.Direction rightRearMotorDirection = DcMotorSimple.Direction.FORWARD;
 
     //TODO: Reverse servos if needed
-    public boolean leftFrontServoReversed = false;
-    public boolean rightFrontServoReversed = false;
-    public boolean leftRearServoReversed = false;
-    public boolean rightRearServoReversed = false;
+    public CRServo.Direction leftFrontServoDirection = CRServo.Direction.FORWARD;
+    public CRServo.Direction rightFrontServoDirection = CRServo.Direction.FORWARD;
+    public CRServo.Direction leftRearServoDirection = CRServo.Direction.FORWARD;
+    public CRServo.Direction rightRearServoDirection = CRServo.Direction.FORWARD;
 
     //TODO: These are the negatives of the reported angle of each pod when facing forward, in degrees
     public double leftFrontPodAngleOffsetDeg = 0.0;
@@ -81,6 +94,41 @@ public class SwerveConstants {
 
     public SwerveConstants yVelocity(double yVelocity) {
         this.yVelocity = yVelocity;
+        return this;
+    }
+
+    public SwerveConstants useBrakeModeInTeleOp(boolean useBrakeModeInTeleOp) {
+        this.useBrakeModeInTeleOp = useBrakeModeInTeleOp;
+        return this;
+    }
+
+    public SwerveConstants maxPower(double maxPower) {
+        this.maxPower = maxPower;
+        return this;
+    }
+
+    public SwerveConstants motorCachingThreshold(double motorCachingThreshold) {
+        this.motorCachingThreshold = motorCachingThreshold;
+        return this;
+    }
+
+    public SwerveConstants servoCachingThreshold(double servoCachingThreshold) {
+        this.servoCachingThreshold = servoCachingThreshold;
+        return this;
+    }
+
+    public SwerveConstants useVoltageCompensation(boolean useVoltageCompensation) {
+        this.useVoltageCompensation = useVoltageCompensation;
+        return this;
+    }
+
+    public SwerveConstants nominalVoltage(double nominalVoltage) {
+        this.nominalVoltage = nominalVoltage;
+        return this;
+    }
+
+    public SwerveConstants staticFrictionCoefficient(double staticFrictionCoefficient) {
+        this.staticFrictionCoefficient = staticFrictionCoefficient;
         return this;
     }
 
@@ -184,23 +232,23 @@ public class SwerveConstants {
         return this;
     }
 
-    public SwerveConstants leftFrontServoReversed(boolean leftFrontServoReversed) {
-        this.leftFrontServoReversed = leftFrontServoReversed;
+    public SwerveConstants leftFrontServoDirection(CRServo.Direction leftFrontServoDirection) {
+        this.leftFrontServoDirection = leftFrontServoDirection;
         return this;
     }
 
-    public SwerveConstants rightFrontServoReversed(boolean rightFrontServoReversed) {
-        this.rightFrontServoReversed = rightFrontServoReversed;
+    public SwerveConstants rightFrontServoDirection(CRServo.Direction rightFrontServoDirection) {
+        this.rightFrontServoDirection = rightFrontServoDirection;
         return this;
     }
 
-    public SwerveConstants leftRearServoReversed(boolean leftRearServoReversed) {
-        this.leftRearServoReversed = leftRearServoReversed;
+    public SwerveConstants leftRearServoDirection(CRServo.Direction leftRearServoDirection) {
+        this.leftRearServoDirection = leftRearServoDirection;
         return this;
     }
 
-    public SwerveConstants rightRearServoReversed(boolean rightRearServoReversed) {
-        this.rightRearServoReversed = rightRearServoReversed;
+    public SwerveConstants rightRearServoDirection(CRServo.Direction rightRearServoDirection) {
+        this.rightRearServoDirection = rightRearServoDirection;
         return this;
     }
 
@@ -254,6 +302,34 @@ public class SwerveConstants {
 
     public double getYVelocity() {
         return yVelocity;
+    }
+
+    public boolean getUseBrakeModeInTeleOp() {
+        return useBrakeModeInTeleOp;
+    }
+
+    public double getMaxPower() {
+        return maxPower;
+    }
+
+    public double getMotorCachingThreshold() {
+        return motorCachingThreshold;
+    }
+
+    public double getServoCachingThreshold() {
+        return servoCachingThreshold;
+    }
+
+    public boolean getUseVoltageCompensation() {
+        return useVoltageCompensation;
+    }
+
+    public double getNominalVoltage() {
+        return nominalVoltage;
+    }
+
+    public double getStaticFrictionCoefficient() {
+        return staticFrictionCoefficient;
     }
 
     public String getLeftFrontMotorName() {
@@ -336,20 +412,20 @@ public class SwerveConstants {
         return rightRearMotorDirection;
     }
 
-    public boolean getLeftFrontServoReversed() {
-        return leftFrontServoReversed;
+    public CRServo.Direction getLeftFrontServoDirection() {
+        return leftFrontServoDirection;
     }
 
-    public boolean getRightFrontServoReversed() {
-        return rightFrontServoReversed;
+    public CRServo.Direction getRightFrontServoDirection() {
+        return rightFrontServoDirection;
     }
 
-    public boolean getLeftRearServoReversed() {
-        return leftRearServoReversed;
+    public CRServo.Direction getLeftRearServoDirection() {
+        return leftRearServoDirection;
     }
 
-    public boolean getRightRearServoReversed() {
-        return rightRearServoReversed;
+    public CRServo.Direction getRightRearServoDirection() {
+        return rightRearServoDirection;
     }
 
     public double getLeftFrontPodAngleOffsetDeg() {
@@ -395,6 +471,34 @@ public class SwerveConstants {
 
     public void setYVelocity(double yVelocity) {
         this.yVelocity = yVelocity;
+    }
+
+    public void setUseBrakeModeInTeleOp(boolean useBrakeModeInTeleOp) {
+        this.useBrakeModeInTeleOp = useBrakeModeInTeleOp;
+    }
+
+    public void setMaxPower(double maxPower) {
+        this.maxPower = maxPower;
+    }
+
+    public void setMotorCachingThreshold(double motorCachingThreshold) {
+        this.motorCachingThreshold = motorCachingThreshold;
+    }
+
+    public void setServoCachingThreshold(double servoCachingThreshold) {
+        this.servoCachingThreshold = servoCachingThreshold;
+    }
+
+    public void setUseVoltageCompensation(boolean useVoltageCompensation) {
+        this.useVoltageCompensation = useVoltageCompensation;
+    }
+
+    public void setNominalVoltage(double nominalVoltage) {
+        this.nominalVoltage = nominalVoltage;
+    }
+
+    public void setStaticFrictionCoefficient(double staticFrictionCoefficient) {
+        this.staticFrictionCoefficient = staticFrictionCoefficient;
     }
 
     public void setLeftFrontMotorName(String leftFrontMotorName) {
@@ -477,20 +581,20 @@ public class SwerveConstants {
         this.rightRearMotorDirection = rightRearMotorDirection;
     }
 
-    public void setLeftFrontServoReversed(boolean leftFrontServoReversed) {
-        this.leftFrontServoReversed = leftFrontServoReversed;
+    public void setLeftFrontServoDirection(CRServo.Direction leftFrontServoDirection) {
+        this.leftFrontServoDirection = leftFrontServoDirection;
     }
 
-    public void setRightFrontServoReversed(boolean rightFrontServoReversed) {
-        this.rightFrontServoReversed = rightFrontServoReversed;
+    public void setRightFrontServoDirection(CRServo.Direction rightFrontServoDirection) {
+        this.rightFrontServoDirection = rightFrontServoDirection;
     }
 
-    public void setLeftRearServoReversed(boolean leftRearServoReversed) {
-        this.leftRearServoReversed = leftRearServoReversed;
+    public void setLeftRearServoDirection(CRServo.Direction leftRearServoDirection) {
+        this.leftRearServoDirection = leftRearServoDirection;
     }
 
-    public void setRightRearServoReversed(boolean rightRearServoReversed) {
-        this.rightRearServoReversed = rightRearServoReversed;
+    public void setRightRearServoDirection(CRServo.Direction rightRearServoDirection) {
+        this.rightRearServoDirection = rightRearServoDirection;
     }
 
     public void setLeftFrontPodAngleOffsetDeg(double leftFrontPodAngleOffsetDeg) {
@@ -531,6 +635,13 @@ public class SwerveConstants {
     public void defaults() {
         xVelocity = 80.0;
         yVelocity = 80.0;
+        useBrakeModeInTeleOp = false;
+        maxPower = 1.0;
+        motorCachingThreshold = 0.01;
+        servoCachingThreshold = 0.01;
+        useVoltageCompensation = false;
+        nominalVoltage = 12.0;
+        staticFrictionCoefficient = 0.1;
         leftFrontMotorName = "frontLeftDrive";
         leftFrontServoName = "frontLeftTurnServo";
         leftFrontEncoderName = "frontLeftTurnEncoder";
@@ -551,10 +662,10 @@ public class SwerveConstants {
         rightFrontMotorDirection = DcMotorSimple.Direction.FORWARD;
         leftRearMotorDirection = DcMotorSimple.Direction.REVERSE;
         rightRearMotorDirection = DcMotorSimple.Direction.FORWARD;
-        leftFrontServoReversed = false;
-        rightFrontServoReversed = false;
-        leftRearServoReversed = false;
-        rightRearServoReversed = false;
+        leftFrontServoDirection = CRServo.Direction.FORWARD;
+        rightFrontServoDirection = CRServo.Direction.FORWARD;
+        leftRearServoDirection = CRServo.Direction.FORWARD;
+        rightRearServoDirection = CRServo.Direction.FORWARD;
         leftFrontPodAngleOffsetDeg = 0.0;
         rightFrontPodAngleOffsetDeg = 0.0;
         leftRearPodAngleOffsetDeg = 0.0;

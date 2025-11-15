@@ -3,6 +3,7 @@ package com.pedropathing.ftc.drivetrains;
 import com.pedropathing.drivetrain.CustomDrivetrain;
 import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.Range;
 
 
@@ -11,44 +12,30 @@ import com.qualcomm.robotcore.util.Range;
  * @author Kabir Goyal - 365 MOE
  */
 public class Swerve extends CustomDrivetrain {
-    SwervePod[] pods;
-    SwervePod frontLeftPod;
-    SwervePod frontRightPod;
-    SwervePod backLeftPod;
-    SwervePod backRightPod;
+    public SwerveConstants constants;
 
+    private boolean useBrakeModeInTeleOp; //implemented
+    private double motorCachingThreshold;
+    private double servoCachingThreshold;
+    private double staticFrictionCoefficient;
 
-    /**
-     * Constructs a SwerveDrive with the specified pods.
-     * @param swerveConstants Fill out your SwerveConstants class!
-     */
-    public Swerve(HardwareMap hardwareMap, SwerveConstants swerveConstants)  {
+    private SwervePod leftFrontPod;
+    private SwervePod rightFrontPod;
+    private SwervePod leftRearPod;
+    private SwervePod rightRearPod;
+
+    private final VoltageSensor voltageSensor;
+
+    private final SwervePod[] pods;
+
+    private final HardwareMap hardwareMap;
+
+    public Swerve(HardwareMap hardwareMap, SwerveConstants constants)  {
+        this.hardwareMap = hardwareMap;
+        this.constants = constants;
+        this.voltageSensor = hardwareMap.voltageSensor.iterator().next();
         pods = new SwervePod[4];
-
-        frontLeftPod = new SwervePod(hardwareMap, swerveConstants.leftFrontServoName, swerveConstants.leftFrontEncoderName,
-                swerveConstants.leftFrontMotorName, swerveConstants.leftFrontTurnPID,
-                swerveConstants.leftFrontMotorDirection, swerveConstants.leftFrontServoReversed,
-                swerveConstants.leftFrontPodAngleOffsetDeg, swerveConstants.leftFrontPodXYOffsets);
-
-        frontRightPod = new SwervePod(hardwareMap, swerveConstants.rightFrontServoName, swerveConstants.rightFrontEncoderName,
-                swerveConstants.rightFrontMotorName, swerveConstants.rightFrontTurnPID,
-                swerveConstants.rightFrontMotorDirection, swerveConstants.rightFrontServoReversed,
-                swerveConstants.rightFrontPodAngleOffsetDeg, swerveConstants.rightFrontPodXYOffsets);
-
-        backLeftPod = new SwervePod(hardwareMap, swerveConstants.leftRearServoName, swerveConstants.leftRearEncoderName,
-                swerveConstants.leftRearMotorName, swerveConstants.leftRearTurnPID,
-                swerveConstants.leftRearMotorDirection, swerveConstants.leftRearServoReversed,
-                swerveConstants.leftRearPodAngleOffsetDeg, swerveConstants.leftRearPodXYOffsets);
-
-        backRightPod = new SwervePod(hardwareMap, swerveConstants.rightRearServoName, swerveConstants.rightRearEncoderName,
-                swerveConstants.rightRearMotorName, swerveConstants.rightRearTurnPID,
-                swerveConstants.rightRearMotorDirection, swerveConstants.rightRearServoReversed,
-                swerveConstants.rightRearPodAngleOffsetDeg, swerveConstants.rightRearPodXYOffsets);
-
-        pods[0] = frontLeftPod;
-        pods[1] = frontRightPod;
-        pods[2] = backLeftPod;
-        pods[3] = backRightPod;
+        updateConstants();
     }
 
     @Override
@@ -79,69 +66,136 @@ public class Swerve extends CustomDrivetrain {
             podVectors[i] = translationVector.plus(rotationVector);
         }
 
-        //finding if any vector has magnitude > 1
-        double maxMagnitude = 1;
-        for (int i = 0; i < podVectors.length; i++) {
-            maxMagnitude = Math.max(maxMagnitude, podVectors[i].getMagnitude());
+        //finding if any vector has magnitude > maxPowerScaling
+        double maxMagnitude = maxPowerScaling;
+        for (Vector podVector : podVectors) {
+            //voltage compensation impl copied straight from mecanum basically
+            if (voltageCompensation) {
+                double voltageNormalized = getVoltageNormalized();
+                podVector.times(voltageNormalized);
+            }
+            maxMagnitude = Math.max(maxMagnitude, podVector.getMagnitude());
         }
 
         for (int podNum = 0; podNum < pods.length; podNum++) {
-            Vector finalVector = podVectors[podNum].times(1.0 / maxMagnitude); //Normalizing if necessary while preserving relative sizes
+            Vector finalVector = podVectors[podNum].times(maxPowerScaling / maxMagnitude); //Normalizing if necessary while preserving relative sizes
+
             //2*Pi-theta because servos have positive clockwise rotation, while our angles are counterclockwise
             pods[podNum].move(2 * Math.PI - finalVector.getTheta(), finalVector.getMagnitude(),
-                    ignoreTrans && ignoreRotation);
+                    ignoreTrans && ignoreRotation, motorCachingThreshold, servoCachingThreshold);
         }
     }
 
     @Override
     public void updateConstants() {
-        //TODO
+        this.useBrakeModeInTeleOp = constants.useBrakeModeInTeleOp;
+        this.maxPowerScaling = constants.maxPower; //inherited from Drivetrain, used by CustomDrivetrain
+        this.motorCachingThreshold = constants.motorCachingThreshold;
+        this.servoCachingThreshold = constants.servoCachingThreshold;
+        this.voltageCompensation = constants.useVoltageCompensation; //inherited from Drivetrain
+        this.nominalVoltage = constants.nominalVoltage; //inherited from Drivetrain
+        this.staticFrictionCoefficient = constants.staticFrictionCoefficient;
+
+        leftFrontPod = new SwervePod(hardwareMap, constants.leftFrontServoName, constants.leftFrontEncoderName,
+                constants.leftFrontMotorName, constants.leftFrontTurnPID,
+                constants.leftFrontMotorDirection, constants.leftFrontServoDirection,
+                constants.leftFrontPodAngleOffsetDeg, constants.leftFrontPodXYOffsets);
+
+        rightFrontPod = new SwervePod(hardwareMap, constants.rightFrontServoName, constants.rightFrontEncoderName,
+                constants.rightFrontMotorName, constants.rightFrontTurnPID,
+                constants.rightFrontMotorDirection, constants.rightFrontServoDirection,
+                constants.rightFrontPodAngleOffsetDeg, constants.rightFrontPodXYOffsets);
+
+        leftRearPod = new SwervePod(hardwareMap, constants.leftRearServoName, constants.leftRearEncoderName,
+                constants.leftRearMotorName, constants.leftRearTurnPID,
+                constants.leftRearMotorDirection, constants.leftRearServoDirection,
+                constants.leftRearPodAngleOffsetDeg, constants.leftRearPodXYOffsets);
+
+        rightRearPod = new SwervePod(hardwareMap, constants.rightRearServoName, constants.rightRearEncoderName,
+                constants.rightRearMotorName, constants.rightRearTurnPID,
+                constants.rightRearMotorDirection, constants.rightRearServoDirection,
+                constants.rightRearPodAngleOffsetDeg, constants.rightRearPodXYOffsets);
+
+        pods[0] = leftFrontPod;
+        pods[1] = rightFrontPod;
+        pods[2] = leftRearPod;
+        pods[3] = rightRearPod;
     }
 
     @Override
     public void breakFollowing() {
-        //TODO
+        for (SwervePod pod : pods) {
+            pod.setMotorPower(0);
+            pod.setMotorToFloat();
+            pod.disableServo();
+        }
     }
 
     @Override
     public void startTeleopDrive() {
-        //TODO
+        if (useBrakeModeInTeleOp) {
+            for (SwervePod pod : pods) {
+                pod.setMotorToBreak();
+            }
+        }
     }
 
     @Override
     public void startTeleopDrive(boolean brakeMode) {
-
-        //TODO
-
+        if (brakeMode) {
+            for (SwervePod pod : pods) {
+                pod.setMotorToBreak();
+            }
+        } else {
+            for (SwervePod pod : pods) {
+                pod.setMotorToFloat();
+            }
+        }
     }
 
     @Override
     public double xVelocity() {
-        return 0;
+        return constants.getXVelocity();
     }
 
     @Override
     public double yVelocity() {
-        return 0;
+        return constants.getYVelocity();
     }
 
     @Override
     public void setXVelocity(double xMovement) {
-        //TODO
+        constants.setXVelocity(xMovement);
     }
 
     @Override
     public void setYVelocity(double yMovement) {
-        //TODO
+        constants.setYVelocity(yMovement);
+    }
+
+    public double getStaticFrictionCoefficient() {
+        return staticFrictionCoefficient;
     }
 
     @Override
     public double getVoltage() {
-        return 0;
+        return voltageSensor.getVoltage();
+    }
+
+    private double getVoltageNormalized() {
+        double voltage = getVoltage();
+        return (nominalVoltage - (nominalVoltage * staticFrictionCoefficient)) / (voltage - ((nominalVoltage * nominalVoltage / voltage) * staticFrictionCoefficient));
     }
 
     @Override
     public String debugString() {
-        return "";
+        return "Mecanum{" +
+                " leftFront=" + leftFrontPod.debugString() +
+                ", leftRear=" + leftRearPod.debugString() +
+                ", rightFront=" + rightFrontPod.debugString() +
+                ", rightRear=" + rightRearPod.debugString() +
+                ", motorCachingThreshold=" + motorCachingThreshold +
+                ", useBrakeModeInTeleOp=" + useBrakeModeInTeleOp +
+                '}';
     }
 }

@@ -39,12 +39,12 @@ public class SwervePod {
      * @param motorName Name of the pod's drive motor
      * @param pidfCoefficients PIDF coefficients for the pod's rotation control
      * @param driveDirection Direction of the drive motor
-     * @param servoReversed Whether the rotation servo is reversed
+     * @param servoDirection Direction of the servo
      * @param angleOffsetDeg In degrees, the negative of what the encoder reads when the pod is facing forward
      * @param offsets Array of the pod's x and y offsets from the robot center (units don't matter, just relative size of x and y)
      */
     public SwervePod(HardwareMap hardwareMap, String servoName, String encoderName, String motorName,
-                 PIDFCoefficients pidfCoefficients, DcMotorSimple.Direction driveDirection, boolean servoReversed,
+                 PIDFCoefficients pidfCoefficients, DcMotorSimple.Direction driveDirection, CRServo.Direction servoDirection,
                  double angleOffsetDeg, double[] offsets) {
         this.turnServo = hardwareMap.get(CRServo.class, servoName);
         this.turnEncoder = hardwareMap.get(AnalogInput.class, encoderName);
@@ -58,13 +58,14 @@ public class SwervePod {
         this.servoLabel = servoName;
 
         //I think we want float for pathing?
-        driveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        setMotorToFloat();
 //        driveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         driveMotor.setDirection(driveDirection);
 
-        if (servoReversed)
-            turnServo.setDirection(CRServo.Direction.REVERSE);
+        turnServo.setDirection(servoDirection);
+
+        enableServo();
     }
 
 
@@ -72,10 +73,31 @@ public class SwervePod {
         turnServo.setPower(power);
     }
 
+    public void setMotorPower(double power) {
+        driveMotor.setPower(power);
+    }
+
+    public void setMotorToFloat() {
+        driveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+    }
+
+    public void setMotorToBreak() {
+        driveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    }
+
+
+    public void disableServo() {
+        turnServo.getController().pwmDisable();
+    }
+
+    public void enableServo() {
+        turnServo.getController().pwmEnable();
+    }
+
     /**
      * Commands pod to a wheel heading (degrees) with a drive power [0, 1]
      */
-    public void move(double targetAngleRad, double drivePower, boolean ignoreServoAngleChanges) {
+    public void move(double targetAngleRad, double drivePower, boolean ignoreServoAngleChanges, double motorCachingThreshold, double servoCachingThreshold) {
         double actualDeg = normalizeNeg180To180(getRawAngleDeg() - angleOffsetDeg);
         //add 90 because servo 0s are facing forward, not to the right
         double desiredDeg = normalizeNeg180To180(Math.toDegrees(targetAngleRad) + 90);
@@ -99,10 +121,14 @@ public class SwervePod {
         turnPID.updateError(setpointDeg - actualDeg);
         double turnPower = -clamp(turnPID.run(), -1.0, 1.0);
 
+        if (ignoreServoAngleChanges || Math.abs(turnPower - turnServo.getPower()) > servoCachingThreshold)
+            turnServo.setPower(turnPower);
 
-        turnServo.setPower(ignoreServoAngleChanges ? 0 : turnPower); //don't change servo angle if power is 0
 
-        driveMotor.setPower(drivePower);
+
+
+        if (Math.abs(drivePower - driveMotor.getPower()) > motorCachingThreshold)
+            driveMotor.setPower(drivePower);
     }
 
     public double getXOffset() {
@@ -157,5 +183,13 @@ public class SwervePod {
 
     private static double clamp(double v, double lo, double hi) {
         return Math.max(lo, Math.min(v, hi));
+    }
+
+    public String debugString() {
+        return servoLabel + "{" +
+                " motor=" + driveMotor +
+                ", servo=" + turnServo +
+                ", encoder=" + turnEncoder +
+                " }";
     }
 }
