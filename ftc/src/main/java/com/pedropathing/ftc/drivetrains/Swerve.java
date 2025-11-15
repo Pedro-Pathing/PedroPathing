@@ -189,7 +189,7 @@ public class Swerve extends CustomDrivetrain {
 
     @Override
     public String debugString() {
-        return "Mecanum{" +
+        return "Swerve{" +
                 " leftFront=" + leftFrontPod.debugString() +
                 ", leftRear=" + leftRearPod.debugString() +
                 ", rightFront=" + rightFrontPod.debugString() +
