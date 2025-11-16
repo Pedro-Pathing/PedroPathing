@@ -19,10 +19,14 @@ public class Swerve extends CustomDrivetrain {
     private double servoCachingThreshold;
     private double staticFrictionCoefficient;
 
-    private SwervePod leftFrontPod;
-    private SwervePod rightFrontPod;
-    private SwervePod leftRearPod;
-    private SwervePod rightRearPod;
+    private final SwervePod leftFrontPod;
+    private final SwervePod rightFrontPod;
+    private final SwervePod leftRearPod;
+    private final SwervePod rightRearPod;
+
+    private double lastForward = 0;
+    private double lastStrafe = 0;
+    private double lastRotation = 0;
 
     private final VoltageSensor voltageSensor;
 
@@ -36,65 +40,6 @@ public class Swerve extends CustomDrivetrain {
         this.voltageSensor = hardwareMap.voltageSensor.iterator().next();
         pods = new SwervePod[4];
         updateConstants();
-    }
-
-    @Override
-    public void arcadeDrive(double forward, double strafe, double rotation) {
-
-        //stores forward and strafe values as the translation vector with max magnitude of 1
-        Vector rawTrans = new Vector(Range.clip(Math.hypot(strafe, forward), 0, 1), Math.atan2(forward, strafe));
-
-        boolean ignoreTrans = rawTrans.getMagnitude() < 0.05;
-        boolean ignoreRotation = Math.abs(rotation) < 0.05;
-
-        double rotationScalar = (ignoreRotation) ? 0 : rotation;
-
-        Vector[] podVectors = new Vector[pods.length];
-
-        for (int i = 0; i < pods.length; i++) {
-            SwervePod pod = pods[i];
-
-            Vector translationVector = ignoreTrans ? new Vector(0, 0) : rawTrans;
-
-            //we want -rotationScalar because after the vector rotation, the vectors will be pointing counterclockwise,
-            // which is what we want when rotation < 0 (joystick to left)
-            Vector rotationVector = new Vector(-rotationScalar, Math.atan2(pod.getYOffset(), pod.getXOffset()));
-
-            //this gets the perpendicular vector for the wheel
-            rotationVector.rotateVector(Math.PI / 2);
-
-            podVectors[i] = translationVector.plus(rotationVector);
-        }
-
-        //finding if any vector has magnitude > maxPowerScaling
-        double maxMagnitude = maxPowerScaling;
-        for (Vector podVector : podVectors) {
-            //voltage compensation impl copied straight from mecanum basically
-            if (voltageCompensation) {
-                double voltageNormalized = getVoltageNormalized();
-                podVector.times(voltageNormalized);
-            }
-            maxMagnitude = Math.max(maxMagnitude, podVector.getMagnitude());
-        }
-
-        for (int podNum = 0; podNum < pods.length; podNum++) {
-            Vector finalVector = podVectors[podNum].times(maxPowerScaling / maxMagnitude); //Normalizing if necessary while preserving relative sizes
-
-            //2*Pi-theta because servos have positive clockwise rotation, while our angles are counterclockwise
-            pods[podNum].move(2 * Math.PI - finalVector.getTheta(), finalVector.getMagnitude(),
-                    ignoreTrans && ignoreRotation, motorCachingThreshold, servoCachingThreshold);
-        }
-    }
-
-    @Override
-    public void updateConstants() {
-        this.useBrakeModeInTeleOp = constants.useBrakeModeInTeleOp;
-        this.maxPowerScaling = constants.maxPower; //inherited from Drivetrain, used by CustomDrivetrain
-        this.motorCachingThreshold = constants.motorCachingThreshold;
-        this.servoCachingThreshold = constants.servoCachingThreshold;
-        this.voltageCompensation = constants.useVoltageCompensation; //inherited from Drivetrain
-        this.nominalVoltage = constants.nominalVoltage; //inherited from Drivetrain
-        this.staticFrictionCoefficient = constants.staticFrictionCoefficient;
 
         leftFrontPod = new SwervePod(hardwareMap, constants.leftFrontServoName, constants.leftFrontEncoderName,
                 constants.leftFrontMotorName, constants.leftFrontTurnPID,
@@ -120,6 +65,67 @@ public class Swerve extends CustomDrivetrain {
         pods[1] = rightFrontPod;
         pods[2] = leftRearPod;
         pods[3] = rightRearPod;
+    }
+
+    @Override
+    public void arcadeDrive(double forward, double strafe, double rotation) {
+        lastForward = forward;
+        lastStrafe = strafe;
+        lastRotation = rotation;
+
+        //stores forward and strafe values as the translation vector with max magnitude of 1
+        Vector rawTrans = new Vector(Range.clip(Math.hypot(strafe, forward), 0, 1), Math.atan2(forward, strafe));
+
+        boolean ignoreTrans = rawTrans.getMagnitude() < 0.05;
+        boolean ignoreRotation = Math.abs(rotation) < 0.05;
+
+        double rotationScalar = (ignoreRotation) ? 0 : rotation;
+
+        Vector[] podVectors = new Vector[pods.length];
+
+        for (int i = 0; i < pods.length; i++) {
+            SwervePod pod = pods[i];
+
+            Vector translationVector = ignoreTrans ? new Vector(0, 0) : rawTrans;
+
+            //actually positive rotation scalar because positive turning is to the left
+            Vector rotationVector = new Vector(rotationScalar, Math.atan2(pod.getYOffset(), pod.getXOffset()));
+
+            //this gets the perpendicular vector for the wheel
+            rotationVector.rotateVector(Math.PI / 2);
+
+            podVectors[i] = translationVector.plus(rotationVector);
+        }
+
+        //finding if any vector has magnitude > maxPowerScaling
+        double maxMagnitude = maxPowerScaling;
+        for (Vector podVector : podVectors) {
+            //voltage compensation impl copied straight from mecanum basically
+            if (voltageCompensation) {
+                double voltageNormalized = getVoltageNormalized();
+                podVector.times(voltageNormalized);
+            }
+            maxMagnitude = Math.max(maxMagnitude, podVector.getMagnitude());
+        }
+
+        for (int podNum = 0; podNum < pods.length; podNum++) {
+            Vector finalVector = podVectors[podNum].times(maxPowerScaling / maxMagnitude); //Normalizing if necessary while preserving relative sizes
+
+            //2*Pi-theta because servos have positive clockwise rotation, while our angles are counterclockwise
+            pods[podNum].move(2 * Math.PI - finalVector.getTheta(), finalVector.getMagnitude(),
+                    ignoreTrans && ignoreRotation, 0, 0); //seing if motor / servo caching is an issue
+        }
+    }
+
+    @Override
+    public void updateConstants() {
+        this.useBrakeModeInTeleOp = constants.useBrakeModeInTeleOp;
+        this.maxPowerScaling = constants.maxPower; //inherited from Drivetrain, used by CustomDrivetrain
+        this.motorCachingThreshold = constants.motorCachingThreshold;
+        this.servoCachingThreshold = constants.servoCachingThreshold;
+        this.voltageCompensation = constants.useVoltageCompensation; //inherited from Drivetrain
+        this.nominalVoltage = constants.nominalVoltage; //inherited from Drivetrain
+        this.staticFrictionCoefficient = constants.staticFrictionCoefficient;
     }
 
     @Override
@@ -190,12 +196,21 @@ public class Swerve extends CustomDrivetrain {
     @Override
     public String debugString() {
         return "Swerve{" +
-                " leftFront=" + leftFrontPod.debugString() +
-                ", leftRear=" + leftRearPod.debugString() +
-                ", rightFront=" + rightFrontPod.debugString() +
-                ", rightRear=" + rightRearPod.debugString() +
-                ", motorCachingThreshold=" + motorCachingThreshold +
-                ", useBrakeModeInTeleOp=" + useBrakeModeInTeleOp +
-                '}';
+                "\nforward input=" + lastForward +
+                "\n, strafe input=" + lastStrafe +
+                "\n, rotation input=" + lastRotation +
+                "\n, unrotated translationVector x" + lastTranslationalVector.getXComponent() +
+                "\n, unrotated translationVector y" + lastTranslationalVector.getYComponent() +
+                "\n, correctivePower x" + lastCorrectivePower.getXComponent() +
+                "\n, correctivePower y" + lastCorrectivePower.getYComponent() +
+                "\n, pathingPower x" + lastPathingPower.getXComponent() +
+                "\n, pathingPower y" + lastPathingPower.getYComponent() +
+                "\n, headingPower magnitude" + lastHeadingPower.getMagnitude() +
+                "\n, headingPower direction" + lastHeadingPower.getTheta() +
+                "\nrobot heading" + lastHeading +
+//                ", leftFront=" + leftFrontPod.debugString() +
+//                ", rightFront=" + rightFrontPod.debugString() +
+//                ", rightRear=" + rightRearPod.debugString() +
+                "\n}";
     }
 }

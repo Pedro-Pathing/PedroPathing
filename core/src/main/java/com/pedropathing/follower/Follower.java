@@ -428,6 +428,8 @@ public class Follower {
     public void updateErrorAndVectors() {updateErrors(); updateVectors();}
 
 
+
+
     /**
      * This calls an update to the PoseTracker, which updates the robot's current position estimate.
      * This also updates all the Follower's PIDFs, which updates the motor powers.
@@ -1053,6 +1055,7 @@ public class Follower {
         }
         return currentPath.getDistanceRemaining();
     }
+
 
     /**
      * This is a debugging method that returns a String array of debug information.

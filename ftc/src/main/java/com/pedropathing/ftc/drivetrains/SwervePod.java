@@ -187,9 +187,9 @@ public class SwervePod {
 
     public String debugString() {
         return servoLabel + "{" +
-                " motor=" + driveMotor +
-                ", servo=" + turnServo +
-                ", encoder=" + turnEncoder +
+                "current Angle=" + getRawAngleDeg() +
+                ", servo Power=" + turnServo.getPower() +
+                ", drive Power=" + driveMotor.getPower() +
                 " }";
     }
 }

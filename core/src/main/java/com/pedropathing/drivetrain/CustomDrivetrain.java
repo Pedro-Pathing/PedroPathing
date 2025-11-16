@@ -1,6 +1,7 @@
 package com.pedropathing.drivetrain;
 
 import static com.pedropathing.math.MathFunctions.findNormalizingScaling;
+import static com.pedropathing.math.MathFunctions.normalizeAngle;
 
 import com.pedropathing.math.Vector;
 
@@ -11,6 +12,12 @@ import com.pedropathing.math.Vector;
  * @author Havish Sripada - 12808 RevAmped Robotics
  */
 public abstract class CustomDrivetrain extends Drivetrain {
+    protected Vector lastTranslationalVector = new Vector();
+    protected Vector lastHeadingPower = new Vector();
+    protected Vector lastCorrectivePower = new Vector();
+    protected Vector lastPathingPower = new Vector();
+    protected double lastHeading = 0;
+
     /**
      * This method takes in forward, strafe, and rotation values and applies them to the drivetrain.
      * Intended to work exactly like an arcade drive would in a typical TeleOp, this method can be a copy pasted from
@@ -44,7 +51,7 @@ public abstract class CustomDrivetrain extends Drivetrain {
             return new double[] {
                     correctivePower.getXComponent(),
                     correctivePower.getYComponent(),
-                    headingPower.getMagnitude()
+                    headingPower.dot(new Vector(1, robotHeading))
             };
         } else {
             Vector combinedStatic = correctivePower.plus(headingPower);
@@ -54,14 +61,14 @@ public abstract class CustomDrivetrain extends Drivetrain {
                 return new double[] {
                         combinedMovement.getXComponent(),
                         combinedMovement.getYComponent(),
-                        headingPower.getMagnitude()
+                        headingPower.dot(new Vector(1, robotHeading))
                 };
             } else {
                 Vector combinedMovement = correctivePower.plus(pathingPower);
                 return new double[] {
                         combinedMovement.getXComponent(),
                         combinedMovement.getYComponent(),
-                        headingPower.getMagnitude()
+                        headingPower.dot(new Vector(1, robotHeading))
                 };
             }
         }
@@ -82,8 +89,16 @@ public abstract class CustomDrivetrain extends Drivetrain {
     @Override
     public void runDrive(Vector correctivePower, Vector headingPower, Vector pathingPower, double robotHeading) {
         double[] calculatedDrive = calculateDrive(correctivePower, headingPower, pathingPower, robotHeading);
-        Vector translationalVector = new Vector(calculatedDrive[0], calculatedDrive[1]);
-        translationalVector.rotateVector(robotHeading);
+        Vector translationalVector = new Vector();
+        translationalVector.setOrthogonalComponents(calculatedDrive[0], calculatedDrive[1]);
+        lastPathingPower = pathingPower;
+        lastCorrectivePower = correctivePower;
+
+        lastTranslationalVector = translationalVector; //before rotation
+        lastHeadingPower = headingPower;
+        lastHeading = robotHeading;
+
+//        translationalVector.rotateVector(-robotHeading); // this should make it field centric when field centric is desired and robot centric otherwise
         arcadeDrive(translationalVector.getXComponent(), translationalVector.getYComponent(), calculatedDrive[2]);
     }
 
