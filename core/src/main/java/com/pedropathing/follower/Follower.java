@@ -1101,18 +1101,17 @@ public class Follower {
     }
 
     /**
-     * This locks the heading in place when not powered.
+     * This toggles heading and position locking during TeleOp
      */
-    public void startHeadingLock() {
-        lockHeading = true;
-        vectorCalculator.updateLockingPose();
-        vectorCalculator.startHeadingLock();
-    }
+    public void teleOpLock() {
+        lockHeading = !lockHeading;
 
-    /**
-     * This stops locking the heading when not powered.
-     */
-    public void stopHeadingLock() {
-        lockHeading = false;
+        if (lockHeading) {
+            vectorCalculator.updateLockingPose();
+            vectorCalculator.startHeadingLock();
+        }
+        else {
+            vectorCalculator.stopHeadingLock();
+        }
     }
 }

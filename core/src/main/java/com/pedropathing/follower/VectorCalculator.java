@@ -42,7 +42,7 @@ public class VectorCalculator {
     public static boolean useSecondaryDrivePID, useSecondaryHeadingPID, useSecondaryTranslationalPID;
     private double[] teleopDriveValues;
 
-    private boolean useDrive = true, useHeading = true, useTranslational = true, useCentripetal = true, teleopDrive = false, followingPathChain = false, lockHeading = false;
+    private boolean useDrive = true, useHeading = true, useTranslational = true, useCentripetal = true, teleopDrive = false, followingPathChain = false;
     private double maxPowerScaling = 1.0, mass = 10.65;
     private boolean scaleDriveFeedforward;
 
@@ -458,7 +458,6 @@ public class VectorCalculator {
     }
 
     public void startHeadingLock() {
-        lockHeading = true;
         headingPIDF.setTargetPosition(lockingPose.getHeading());
     }
 
@@ -471,6 +470,6 @@ public class VectorCalculator {
     }
 
     public void stopHeadingLock() {
-        lockHeading = false;
+        headingPIDF.reset();
     }
 }
