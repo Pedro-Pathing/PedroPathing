@@ -22,7 +22,7 @@ public class VectorCalculator {
 
     private Path currentPath;
     private PathChain currentPathChain;
-    private Pose currentPose, closestPose;
+    private Pose currentPose, closestPose, lockingPose;
     private double headingError, driveError;
     private double headingGoal;
 
@@ -42,7 +42,7 @@ public class VectorCalculator {
     public static boolean useSecondaryDrivePID, useSecondaryHeadingPID, useSecondaryTranslationalPID;
     private double[] teleopDriveValues;
 
-    private boolean useDrive = true, useHeading = true, useTranslational = true, useCentripetal = true, teleopDrive = false, followingPathChain = false;
+    private boolean useDrive = true, useHeading = true, useTranslational = true, useCentripetal = true, teleopDrive = false, followingPathChain = false, lockHeading = false;
     private double maxPowerScaling = 1.0, mass = 10.65;
     private boolean scaleDriveFeedforward;
 
@@ -455,5 +455,22 @@ public class VectorCalculator {
                 "Corrective Vector: " + getCorrectiveVector().toString() + "\n" +
                 "Teleop Drive Vector: " + getTeleopDriveVector().toString() + "\n" +
                 "Teleop Heading Vector: " + getTeleopHeadingVector().toString();
+    }
+
+    public void startHeadingLock() {
+        lockHeading = true;
+        headingPIDF.setTargetPosition(lockingPose.getHeading());
+    }
+
+    public double runHeadingLock() {
+        return MathFunctions.clamp(headingPIDF.run(), -maxPowerScaling, maxPowerScaling);
+    }
+
+    public void updateLockingPose() {
+        lockingPose = currentPose.copy();
+    }
+
+    public void stopHeadingLock() {
+        lockHeading = false;
     }
 }
