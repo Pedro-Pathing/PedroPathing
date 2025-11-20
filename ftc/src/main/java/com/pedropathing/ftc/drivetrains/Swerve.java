@@ -69,6 +69,8 @@ public class Swerve extends CustomDrivetrain {
 
     @Override
     public void arcadeDrive(double forward, double strafe, double rotation) {
+        strafe*=-1;
+
         lastForward = forward;
         lastStrafe = strafe;
         lastRotation = rotation;
@@ -113,7 +115,7 @@ public class Swerve extends CustomDrivetrain {
 
             //2*Pi-theta because servos have positive clockwise rotation, while our angles are counterclockwise
             pods[podNum].move(2 * Math.PI - finalVector.getTheta(), finalVector.getMagnitude(),
-                    ignoreTrans && ignoreRotation, 0, 0); //seing if motor / servo caching is an issue
+                    ignoreTrans && ignoreRotation, motorCachingThreshold, servoCachingThreshold); //seing if motor / servo caching is an issue
         }
     }
 

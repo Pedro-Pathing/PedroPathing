@@ -98,7 +98,7 @@ public abstract class CustomDrivetrain extends Drivetrain {
         lastHeadingPower = headingPower;
         lastHeading = robotHeading;
 
-//        translationalVector.rotateVector(-robotHeading); // this should make it field centric when field centric is desired and robot centric otherwise
+        translationalVector.rotateVector(-robotHeading); // this should make it field centric when field centric is desired and robot centric otherwise
         arcadeDrive(translationalVector.getXComponent(), translationalVector.getYComponent(), calculatedDrive[2]);
     }
 
