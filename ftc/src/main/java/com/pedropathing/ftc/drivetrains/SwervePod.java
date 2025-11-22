@@ -65,7 +65,7 @@ public class SwervePod {
 
         turnServo.setDirection(servoDirection);
 
-        enableServo();
+//        enableServo();
     }
 
 
@@ -86,13 +86,13 @@ public class SwervePod {
     }
 
 
-    public void disableServo() {
-        turnServo.getController().pwmDisable();
-    }
+//    public void disableServo() {
+//        turnServo.getController().pwmDisable();
+//    }
 
-    public void enableServo() {
-        turnServo.getController().pwmEnable();
-    }
+//    public void enableServo() {
+//        turnServo.getController().pwmEnable();
+//    }
 
     /**
      * Commands pod to a wheel heading (degrees) with a drive power [0, 1]
@@ -121,7 +121,7 @@ public class SwervePod {
         turnPID.updateError(setpointDeg - actualDeg);
         double turnPower = -clamp(turnPID.run(), -1.0, 1.0);
 
-        if (!ignoreServoAngleChanges || Math.abs(turnPower - turnServo.getPower()) > servoCachingThreshold)
+        if (!ignoreServoAngleChanges && Math.abs(turnPower - turnServo.getPower()) > servoCachingThreshold)
             turnServo.setPower(turnPower);
 
 
