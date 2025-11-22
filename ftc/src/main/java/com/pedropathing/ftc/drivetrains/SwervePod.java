@@ -121,8 +121,11 @@ public class SwervePod {
         turnPID.updateError(setpointDeg - actualDeg);
         double turnPower = -clamp(turnPID.run(), -1.0, 1.0);
 
-        if (!ignoreServoAngleChanges && Math.abs(turnPower - turnServo.getPower()) > servoCachingThreshold)
+        if (!ignoreServoAngleChanges) {
+           turnServo.setPower(0);
+        } else if (Math.abs(turnPower - turnServo.getPower()) > servoCachingThreshold) {
             turnServo.setPower(turnPower);
+        }
 
 
 
