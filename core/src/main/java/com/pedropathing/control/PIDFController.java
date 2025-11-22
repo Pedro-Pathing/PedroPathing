@@ -32,8 +32,9 @@ public class PIDFController {
      *
      * @param set the coefficients to use.
      */
-    public PIDFController(PIDFCoefficients set) {
-        setCoefficients(set);
+    public PIDFController(PIDFCoefficientSupplier set) {
+        coefficientSupplier = set;
+        setCoefficients(set.get(0.0));
         reset();
     }
 

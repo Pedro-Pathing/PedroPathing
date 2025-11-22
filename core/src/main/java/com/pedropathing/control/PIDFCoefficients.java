@@ -12,7 +12,7 @@ import java.util.function.Function;
  * @author Havish Sripada - 12808 RevAmped Robotics
  * @version 1.0, 3/5/2024
  */
-public class PIDFCoefficients {
+public class PIDFCoefficients implements PIDFCoefficientSupplier {
     public double P;
     public double I;
     public double D;
@@ -54,5 +54,10 @@ public class PIDFCoefficients {
     @Override
     public String toString() {
         return "P: " + P + ", I: " + I + ", D: " + D + ", F: " + F;
+    }
+
+    @Override
+    public PIDFCoefficients get(double error) {
+        return this;
     }
 }
