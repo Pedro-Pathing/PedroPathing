@@ -3,7 +3,6 @@ package com.pedropathing.paths;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.Curve;
-import com.pedropathing.geometry.FuturePose;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.callbacks.ParametricCallback;
 import com.pedropathing.paths.callbacks.PathCallback;
@@ -248,37 +247,6 @@ public class PathBuilder {
     public PathBuilder setGlobalLinearHeadingInterpolation(double startHeading, double endHeading, double endTime) {
         headingInterpolator = HeadingInterpolator.linear(startHeading, endHeading, endTime);
         return this;
-    }
-
-    public PathBuilder linearHeadingInterpol() {
-        return linearHeadingInterpol(1.0);
-    }
-
-    public PathBuilder linearHeadingInterpol(double t) {
-        Path path = this.paths.get(paths.size() - 1);
-
-        if (path.getCurve().isInitialized()) {
-            double heading0 = path.getControlPoints().get(0).getHeading();
-            double heading1 = path.getControlPoints().get(path.getControlPoints().size() - 1).getHeading();
-            return setLinearHeadingInterpolation(heading0, heading1, t);
-        } else {
-            List<FuturePose> poses = path.getCurve().getFutureControlPoints();
-            FuturePose initial = poses.get(0);
-            FuturePose last = poses.get(poses.size() - 1);
-            HeadingInterpolator.FutureDouble heading0 = () -> initial.getPose().getHeading();
-            HeadingInterpolator.FutureDouble heading1 = () -> last.getPose().getHeading();
-            return setHeadingInterpolation(HeadingInterpolator.reversedLinearFromPoint(heading0, heading1, t));
-        }
-    }
-
-    public PathBuilder constantHeadingInterpol() {
-        Path path = this.paths.get(paths.size() - 1);
-        if (path.getCurve().isInitialized()) return setConstantHeadingInterpolation(path.getControlPoints().get(path.getControlPoints().size() - 1).getHeading());
-        else {
-            FuturePose pose = path.getCurve().getFutureControlPoints().get(path.getCurve().getFutureControlPoints().size() - 1);
-            HeadingInterpolator.FutureDouble goal = () -> pose.getPose().getHeading();
-            return setHeadingInterpolation(HeadingInterpolator.constant(goal));
-        }
     }
 
     /**
