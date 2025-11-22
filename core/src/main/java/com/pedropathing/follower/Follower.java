@@ -27,6 +27,7 @@ import com.pedropathing.util.Timer;
  * @author Anyi Lin - 10158 Scott's Bots
  * @author Aaron Yang - 10158 Scott's Bots
  * @author Harrison Womack - 10158 Scott's Bots
+ * @author Atharv Gurnani - 13085 Bionic Dutch
  * @version 1.1.0, 5/1/2025
  */
 public class Follower {
@@ -58,6 +59,7 @@ public class Follower {
     public boolean useDrive = true;
     private Timer zeroVelocityDetectedTimer = null;
     private Runnable resetFollowing = null;
+    private boolean lockX = false, lockY = false, lockHeading = false;
 
     /**
      * This creates a new Follower given a HardwareMap.
@@ -364,7 +366,11 @@ public class Follower {
      * @param offsetHeading the offset heading for field centric control, will face the direction of such heading in radians in the field coordinate system when driving forward
      */
     public void setTeleOpDrive(double forward, double strafe, double turn, boolean isRobotCentric, double offsetHeading) {
-        vectorCalculator.setTeleOpMovementVectors(forward, strafe, turn, isRobotCentric, offsetHeading);
+            vectorCalculator.setTeleOpMovementVectors(
+                    lockY && forward == 0 ? vectorCalculator.runTranslationalLock(lockX, true).getYComponent() : forward,
+                    lockX && strafe == 0 ? vectorCalculator.runTranslationalLock(true, lockY).getXComponent() : strafe,
+                    lockHeading && turn == 0 ? vectorCalculator.runHeadingLock() : turn,
+                    isRobotCentric, offsetHeading);
     }
 
     /**
@@ -376,7 +382,10 @@ public class Follower {
      * @param offsetHeading the offset heading for field centric control, will face the direction of such heading in radians in the field coordinate system when driving forward
      */
     public void setTeleOpDrive(double forward, double strafe, double turn, double offsetHeading) {
-        vectorCalculator.setTeleOpMovementVectors(forward, strafe, turn, true, offsetHeading);
+        vectorCalculator.setTeleOpMovementVectors(
+                lockY && forward == 0 ? vectorCalculator.runTranslationalLock(lockX, true).getYComponent() : forward,
+                lockX && strafe == 0 ? vectorCalculator.runTranslationalLock(true, lockY).getXComponent() : strafe,
+                lockHeading && turn == 0 ? vectorCalculator.runHeadingLock() : turn, true, offsetHeading);
     }
 
     /**
@@ -388,7 +397,10 @@ public class Follower {
      * @param isRobotCentric true if robot centric control, false if field centric
      */
     public void setTeleOpDrive(double forward, double strafe, double turn, boolean isRobotCentric) {
-        vectorCalculator.setTeleOpMovementVectors(forward, strafe, turn, isRobotCentric);
+        vectorCalculator.setTeleOpMovementVectors(
+                lockY && forward == 0 ? vectorCalculator.runTranslationalLock(lockX, true).getYComponent() : forward,
+                lockX && strafe == 0 ? vectorCalculator.runTranslationalLock(true, lockY).getXComponent() : strafe,
+                lockHeading && turn == 0 ? vectorCalculator.runHeadingLock() : turn, isRobotCentric);
     }
 
     /**
@@ -400,7 +412,10 @@ public class Follower {
      * @param turn the turn movement
      */
     public void setTeleOpDrive(double forward, double strafe, double turn) {
-        vectorCalculator.setTeleOpMovementVectors(forward, strafe, turn);
+        vectorCalculator.setTeleOpMovementVectors(
+                lockY && forward == 0 ? vectorCalculator.runTranslationalLock(lockX, true).getYComponent() : forward,
+                lockX && strafe == 0 ? vectorCalculator.runTranslationalLock(true, lockY).getXComponent() : strafe,
+                lockHeading && turn == 0 ? vectorCalculator.runHeadingLock() : turn);
     }
 
     /** Updates the Mecanum constants */
@@ -1096,5 +1111,22 @@ public class Follower {
 
     public double getHeading() {
         return getPose().getHeading();
+    }
+
+    /**
+     * This toggles heading and position locking during TeleOp
+     */
+    public void teleOpLock (boolean x, boolean y, boolean heading) {
+        lockX = x;
+        lockY = y;
+        lockHeading = heading;
+
+        if (x || y || heading)  vectorCalculator.updateLockingPose();
+
+        if (x || y)         vectorCalculator.startTranslationalLock();
+        else                vectorCalculator.stopTranslationalLock();
+
+        if (lockHeading)    vectorCalculator.startHeadingLock();
+        else                vectorCalculator.stopHeadingLock();
     }
 }

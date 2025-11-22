@@ -22,7 +22,8 @@ public class VectorCalculator {
 
     private Path currentPath;
     private PathChain currentPathChain;
-    private Pose currentPose, closestPose;
+    private Pose currentPose, closestPose, lockingPose;
+    private double translationalTargetTheta;
     private double headingError, driveError;
     private double headingGoal;
 
@@ -455,5 +456,40 @@ public class VectorCalculator {
                 "Corrective Vector: " + getCorrectiveVector().toString() + "\n" +
                 "Teleop Drive Vector: " + getTeleopDriveVector().toString() + "\n" +
                 "Teleop Heading Vector: " + getTeleopHeadingVector().toString();
+    }
+
+    public void startHeadingLock() {
+        headingPIDF.setTargetPosition(lockingPose.getHeading());
+    }
+    public void startTranslationalLock() {
+        translationalPIDF.setTargetPosition(Math.sqrt(Math.pow(lockingPose.getX(), 2) + Math.pow(lockingPose.getY(), 2)));  //Magnitude of polar coordinate
+        translationalTargetTheta = Math.atan(lockingPose.getY()/lockingPose.getX());
+    }
+
+    public Vector runTranslationalLock(boolean x, boolean y) {
+        translationalPIDF.updatePosition(
+                Math.sqrt(
+                        Math.pow(x ? currentPose.getX() : lockingPose.getX(), 2) + Math.pow(x ? currentPose.getY() : lockingPose.getY(), 2)
+                ));
+        return new Vector(
+                translationalPIDF.run(),
+                Math.atan((
+                        x ? currentPose.getX() : lockingPose.getX()) / (y ? currentPose.getY() : lockingPose.getY())
+                ));
+    }
+
+    public double runHeadingLock() {
+        return MathFunctions.clamp(headingPIDF.run(), -maxPowerScaling, maxPowerScaling);
+    }
+
+    public void updateLockingPose() {
+        lockingPose = currentPose.copy();
+    }
+
+    public void stopTranslationalLock() {
+        translationalPIDF.reset();
+    }
+    public void stopHeadingLock() {
+        headingPIDF.reset();
     }
 }
