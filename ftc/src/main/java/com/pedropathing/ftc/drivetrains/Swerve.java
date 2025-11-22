@@ -135,7 +135,7 @@ public class Swerve extends CustomDrivetrain {
         for (SwervePod pod : pods) {
             pod.setMotorPower(0);
             pod.setMotorToFloat();
-            pod.disableServo();
+//            pod.disableServo(); yea we don't want to do this lmao
         }
     }
 
