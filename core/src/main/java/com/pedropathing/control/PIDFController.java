@@ -14,6 +14,7 @@ package com.pedropathing.control;
  */
 public class PIDFController {
     private PIDFCoefficients coefficients;
+    private PIDFCoefficientSupplier coefficientSupplier;
 
     private double previousError;
     private double error;
@@ -42,6 +43,7 @@ public class PIDFController {
      * @return this returns the value of the PIDF from the current error.
      */
     public double run() {
+        coefficients = coefficientSupplier.get(error);
         return error * P() + errorDerivative * D() + errorIntegral * I() + feedForwardInput * F();
     }
 
