@@ -4,6 +4,8 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.FollowerConstants;
 import com.pedropathing.ftc.drivetrains.Mecanum;
 import com.pedropathing.ftc.drivetrains.MecanumConstants;
+import com.pedropathing.ftc.drivetrains.Swerve;
+import com.pedropathing.ftc.drivetrains.SwerveConstants;
 import com.pedropathing.ftc.localization.constants.DriveEncoderConstants;
 import com.pedropathing.ftc.localization.constants.OTOSConstants;
 import com.pedropathing.ftc.localization.constants.PinpointConstants;
@@ -74,6 +76,10 @@ public class FollowerBuilder {
 
     public FollowerBuilder mecanumDrivetrain(MecanumConstants mecanumConstants) {
         return setDrivetrain(new Mecanum(hardwareMap, mecanumConstants));
+    }
+
+    public FollowerBuilder swerveDrivetrain(SwerveConstants swerveConstants) {
+        return setDrivetrain(new Swerve(hardwareMap, swerveConstants));
     }
 
     public FollowerBuilder pathConstraints(PathConstraints pathConstraints) {
