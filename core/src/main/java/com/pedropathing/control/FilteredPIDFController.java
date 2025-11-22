@@ -8,7 +8,7 @@ package com.pedropathing.control;
  * @author Anyi Lin - 10158 Scott's Bots
  * @version 1.0, 7/15/2024
  */
-public class FilteredPIDFController implements Controller{
+public class FilteredPIDFController {
     private FilteredPIDFCoefficients coefficients;
 
     private double previousError;
@@ -107,11 +107,6 @@ public class FilteredPIDFController implements Controller{
         previousUpdateTimeNano = System.nanoTime();
     }
 
-    @Override
-    public double run() {
-        return runPIDF();
-    }
-
     /**
      * This is used to set the target position if the filtered PIDF is being run with current position and
      * target position inputs rather than error inputs.
@@ -147,15 +142,6 @@ public class FilteredPIDFController implements Controller{
      */
     public FilteredPIDFCoefficients getCoefficients() {
         return coefficients;
-    }
-
-    @Override
-    public void setCoefficients(Coefficients coefficients) {
-        if (coefficients instanceof FilteredPIDFCoefficients) {
-            setCoefficients((FilteredPIDFCoefficients) coefficients);
-        } else {
-            throw new IllegalArgumentException("Expected FilteredPIDFCoefficients");
-        }
     }
 
     /**
