@@ -1,7 +1,5 @@
 package com.pedropathing.follower;
 
-import com.pedropathing.control.Controller;
-import com.pedropathing.control.Controller.Coefficients;
 import com.pedropathing.control.FilteredPIDFCoefficients;
 import com.pedropathing.control.PIDFCoefficients;
 
@@ -20,10 +18,10 @@ import com.pedropathing.control.PIDFCoefficients;
 public class FollowerConstants {
 
     /**
-     * Translational  coefficients
-     * Default Value: new Coefficients(0.1,0,0,0);
+     * Translational PIDF coefficients
+     * Default Value: new PIDFCoefficients(0.1,0,0,0);
      */
-    public Controller.Coefficients coefficientsTranslational = new PIDFCoefficients(
+    public PIDFCoefficients coefficientsTranslationalPIDF = new PIDFCoefficients(
             0.1,
             0,
             0,
@@ -31,7 +29,7 @@ public class FollowerConstants {
 
     /**
      * Translational Integral
-     * Default Value: new Coefficients(0,0,0,0);
+     * Default Value: new PIDFCoefficients(0,0,0,0);
      */
     public PIDFCoefficients integralTranslational = new PIDFCoefficients(
             0,
@@ -40,10 +38,10 @@ public class FollowerConstants {
             0);
 
     /**
-     * Heading error  coefficients
-     * Default Value: new Coefficients(1,0,0,0);
+     * Heading error PIDF coefficients
+     * Default Value: new PIDFCoefficients(1,0,0,0);
      */
-    public Coefficients coefficientsHeading = new PIDFCoefficients(
+    public PIDFCoefficients coefficientsHeadingPIDF = new PIDFCoefficients(
             1,
             0,
             0,
@@ -51,10 +49,10 @@ public class FollowerConstants {
 
 
     /**
-     * Drive  coefficients
-     * Default Value: new Coefficients(0.025,0,0.00001,0.6,0);
+     * Drive PIDF coefficients
+     * Default Value: new FilteredPIDFCoefficients(0.025,0,0.00001,0.6,0);
      */
-    public Coefficients coefficientsDrive = new FilteredPIDFCoefficients(
+    public FilteredPIDFCoefficients coefficientsDrivePIDF = new FilteredPIDFCoefficients(
             0.025,
             0,
             0.00001,
@@ -62,10 +60,10 @@ public class FollowerConstants {
             0.01);
 
     /**
-     * Secondary translational  coefficients (don't use integral).
-     * Default Value: new Coefficients(0.3, 0, 0.01, 0)
+     * Secondary translational PIDF coefficients (don't use integral).
+     * Default Value: new PIDFCoefficients(0.3, 0, 0.01, 0)
      */
-    public Coefficients coefficientsSecondaryTranslational = new PIDFCoefficients(
+    public PIDFCoefficients coefficientsSecondaryTranslationalPIDF = new PIDFCoefficients(
             0.3,
             0,
             0.01,
@@ -73,7 +71,7 @@ public class FollowerConstants {
 
     /**
      * Secondary translational Integral value.
-     * Default Value: new Coefficients(0, 0, 0, 0)
+     * Default Value: new PIDFCoefficients(0, 0, 0, 0)
      */
     public PIDFCoefficients integralSecondaryTranslational = new PIDFCoefficients(
             0,
@@ -82,32 +80,32 @@ public class FollowerConstants {
             0.015);
 
     /**
-     * The limit at which the heading  switches between the main and secondary heading s.
+     * The limit at which the heading PIDF switches between the main and secondary heading PIDFs.
      * Default Value: Math.PI / 20
      */
-    public double headingSwitch = Math.PI / 20;
+    public double headingPIDFSwitch = Math.PI / 20;
 
     /**
-     * Secondary heading error  coefficients.
-     * Default Value: new Coefficients(5, 0, 0.08, 0)
+     * Secondary heading error PIDF coefficients.
+     * Default Value: new PIDFCoefficients(5, 0, 0.08, 0)
      */
-    public Coefficients coefficientsSecondaryHeading = new PIDFCoefficients(
+    public PIDFCoefficients coefficientsSecondaryHeadingPIDF = new PIDFCoefficients(
             5,
             0,
             0.08,
             0.01);
 
     /**
-     * The limit at which the heading  switches between the main and secondary drive s.
+     * The limit at which the heading PIDF switches between the main and secondary drive PIDFs.
      * Default Value: 20
      */
-    public double driveSwitch = 20;
+    public double drivePIDFSwitch = 20;
 
     /**
-     * Secondary drive  coefficients.
-     * Default Value: new Coefficients(0.02, 0, 0.000005, 0.6, 0)
+     * Secondary drive PIDF coefficients.
+     * Default Value: new FilteredPIDFCoefficients(0.02, 0, 0.000005, 0.6, 0)
      */
-    public Coefficients coefficientsSecondaryDrive = new FilteredPIDFCoefficients(
+    public FilteredPIDFCoefficients coefficientsSecondaryDrivePIDF = new FilteredPIDFCoefficients(
             0.02,
             0,
             0.000005,
@@ -134,35 +132,35 @@ public class FollowerConstants {
     public int BEZIER_CURVE_SEARCH_LIMIT = 10;
 
     /**
-     * This activates/deactivates the secondary translational . It takes over at a certain translational error
+     * This activates/deactivates the secondary translational PIDF. It takes over at a certain translational error
      *
-     * @see #translationalSwitch
+     * @see #translationalPIDFSwitch
      * Default Value: false
      */
-    public boolean useSecondaryTranslational = false;
+    public boolean useSecondaryTranslationalPIDF = false;
 
     /**
-     * Use the secondary heading . It takes over at a certain heading error
+     * Use the secondary heading PIDF. It takes over at a certain heading error
      *
-     * @see #headingSwitch
+     * @see #headingPIDFSwitch
      * Default Value: false
      */
-    public boolean useSecondaryHeading = false;
+    public boolean useSecondaryHeadingPIDF = false;
 
     /**
-     * Use the secondary drive . It takes over at a certain drive error
+     * Use the secondary drive PIDF. It takes over at a certain drive error
      *
-     * @see #driveSwitch
+     * @see #drivePIDFSwitch
      * Default Value: false
      */
-    public boolean useSecondaryDrive = false;
+    public boolean useSecondaryDrivePIDF = false;
 
     /**
-     * The limit at which the translational  switches between the main and secondary translational s,
+     * The limit at which the translational PIDF switches between the main and secondary translational PIDFs,
      * if the secondary PID is active.
      * Default Value: 3
      */
-    public double translationalSwitch = 3;
+    public double translationalPIDFSwitch = 3;
 
     /**
      * Threshold that the turn and turnTo methods will be considered to be finished
@@ -206,46 +204,46 @@ public class FollowerConstants {
         defaults();
     }
 
-    public FollowerConstants translationalCoefficients(Coefficients translationalCoefficients) {
-        this.coefficientsTranslational = translationalCoefficients;
+    public FollowerConstants translationalPIDFCoefficients(PIDFCoefficients translationalPIDFCoefficients) {
+        this.coefficientsTranslationalPIDF = translationalPIDFCoefficients;
         return this;
     }
 
-    public FollowerConstants headingCoefficients(Coefficients headingCoefficients) {
-        this.coefficientsHeading = headingCoefficients;
+    public FollowerConstants headingPIDFCoefficients(PIDFCoefficients headingPIDFCoefficients) {
+        this.coefficientsHeadingPIDF = headingPIDFCoefficients;
         return this;
     }
 
-    public FollowerConstants driveCoefficients(Coefficients driveCoefficients) {
-        this.coefficientsDrive = driveCoefficients;
+    public FollowerConstants drivePIDFCoefficients(FilteredPIDFCoefficients drivePIDFCoefficients) {
+        this.coefficientsDrivePIDF = drivePIDFCoefficients;
         return this;
     }
 
-    public FollowerConstants secondaryTranslationalCoefficients(Coefficients secondaryTranslationalCoefficients) {
-        this.coefficientsSecondaryTranslational = secondaryTranslationalCoefficients;
-        useSecondaryTranslational = true;
+    public FollowerConstants secondaryTranslationalPIDFCoefficients(PIDFCoefficients secondaryTranslationalPIDFCoefficients) {
+        this.coefficientsSecondaryTranslationalPIDF = secondaryTranslationalPIDFCoefficients;
+        useSecondaryTranslationalPIDF = true;
         return this;
     }
 
-    public FollowerConstants headingSwitch(double headingSwitch) {
-        this.headingSwitch = headingSwitch;
+    public FollowerConstants headingPIDFSwitch(double headingPIDFSwitch) {
+        this.headingPIDFSwitch = headingPIDFSwitch;
         return this;
     }
 
-    public FollowerConstants secondaryHeadingCoefficients(Coefficients secondaryHeadingCoefficients) {
-        this.coefficientsSecondaryHeading = secondaryHeadingCoefficients;
-        useSecondaryHeading = true;
+    public FollowerConstants secondaryHeadingPIDFCoefficients(PIDFCoefficients secondaryHeadingPIDFCoefficients) {
+        this.coefficientsSecondaryHeadingPIDF = secondaryHeadingPIDFCoefficients;
+        useSecondaryHeadingPIDF = true;
         return this;
     }
 
-    public FollowerConstants driveSwitch(double driveSwitch) {
-        this.driveSwitch = driveSwitch;
+    public FollowerConstants drivePIDFSwitch(double drivePIDFSwitch) {
+        this.drivePIDFSwitch = drivePIDFSwitch;
         return this;
     }
 
-    public FollowerConstants secondaryDriveCoefficients(Coefficients secondaryDriveCoefficients) {
-        this.coefficientsSecondaryDrive = secondaryDriveCoefficients;
-        useSecondaryDrive = true;
+    public FollowerConstants secondaryDrivePIDFCoefficients(FilteredPIDFCoefficients secondaryDrivePIDFCoefficients) {
+        this.coefficientsSecondaryDrivePIDF = secondaryDrivePIDFCoefficients;
+        useSecondaryDrivePIDF = true;
         return this;
     }
 
@@ -264,23 +262,23 @@ public class FollowerConstants {
         return this;
     }
 
-    public FollowerConstants useSecondaryTranslational(boolean useSecondaryTranslational) {
-        this.useSecondaryTranslational = useSecondaryTranslational;
+    public FollowerConstants useSecondaryTranslationalPIDF(boolean useSecondaryTranslationalPIDF) {
+        this.useSecondaryTranslationalPIDF = useSecondaryTranslationalPIDF;
         return this;
     }
 
-    public FollowerConstants useSecondaryHeading(boolean useSecondaryHeading) {
-        this.useSecondaryHeading = useSecondaryHeading;
+    public FollowerConstants useSecondaryHeadingPIDF(boolean useSecondaryHeadingPIDF) {
+        this.useSecondaryHeadingPIDF = useSecondaryHeadingPIDF;
         return this;
     }
 
-    public FollowerConstants useSecondaryDrive(boolean useSecondaryDrive) {
-        this.useSecondaryDrive = useSecondaryDrive;
+    public FollowerConstants useSecondaryDrivePIDF(boolean useSecondaryDrivePIDF) {
+        this.useSecondaryDrivePIDF = useSecondaryDrivePIDF;
         return this;
     }
 
-    public FollowerConstants translationalSwitch(double translationalSwitch) {
-        this.translationalSwitch = translationalSwitch;
+    public FollowerConstants translationalPIDFSwitch(double translationalPIDFSwitch) {
+        this.translationalPIDFSwitch = translationalPIDFSwitch;
         return this;
     }
 
@@ -314,15 +312,15 @@ public class FollowerConstants {
         return this;
     }
 
-    public Coefficients getCoefficientsTranslational() {
-        return coefficientsTranslational;
+    public PIDFCoefficients getCoefficientsTranslationalPIDF() {
+        return coefficientsTranslationalPIDF;
     }
 
-    public void setCoefficientsTranslational(Coefficients coefficientsTranslational) {
-        this.coefficientsTranslational = coefficientsTranslational;
+    public void setCoefficientsTranslationalPIDF(PIDFCoefficients coefficientsTranslationalPIDF) {
+        this.coefficientsTranslationalPIDF = coefficientsTranslationalPIDF;
     }
 
-    public Coefficients getIntegralTranslational() {
+    public PIDFCoefficients getIntegralTranslational() {
         return integralTranslational;
     }
 
@@ -330,28 +328,28 @@ public class FollowerConstants {
         this.integralTranslational = integralTranslational;
     }
 
-    public Coefficients getCoefficientsHeading() {
-        return coefficientsHeading;
+    public PIDFCoefficients getCoefficientsHeadingPIDF() {
+        return coefficientsHeadingPIDF;
     }
 
-    public void setCoefficientsHeading(Coefficients coefficientsHeading) {
-        this.coefficientsHeading = coefficientsHeading;
+    public void setCoefficientsHeadingPIDF(PIDFCoefficients coefficientsHeadingPIDF) {
+        this.coefficientsHeadingPIDF = coefficientsHeadingPIDF;
     }
-    public Coefficients getCoefficientsDrive() {
-        return coefficientsDrive;
-    }
-
-    public void setCoefficientsDrive(Coefficients coefficientsDrive) {
-        this.coefficientsDrive = coefficientsDrive;
+    public FilteredPIDFCoefficients getCoefficientsDrivePIDF() {
+        return coefficientsDrivePIDF;
     }
 
-    public Coefficients getCoefficientsSecondaryTranslational() {
-        return coefficientsSecondaryTranslational;
+    public void setCoefficientsDrivePIDF(FilteredPIDFCoefficients coefficientsDrivePIDF) {
+        this.coefficientsDrivePIDF = coefficientsDrivePIDF;
     }
 
-    public void setCoefficientsSecondaryTranslational(Coefficients coefficientsSecondaryTranslational) {
-        this.coefficientsSecondaryTranslational = coefficientsSecondaryTranslational;
-        useSecondaryTranslational = true;
+    public PIDFCoefficients getCoefficientsSecondaryTranslationalPIDF() {
+        return coefficientsSecondaryTranslationalPIDF;
+    }
+
+    public void setCoefficientsSecondaryTranslationalPIDF(PIDFCoefficients coefficientsSecondaryTranslationalPIDF) {
+        this.coefficientsSecondaryTranslationalPIDF = coefficientsSecondaryTranslationalPIDF;
+        useSecondaryTranslationalPIDF = true;
     }
 
     public PIDFCoefficients getIntegralSecondaryTranslational() {
@@ -367,38 +365,38 @@ public class FollowerConstants {
         return this;
     }
 
-    public double getHeadingSwitch() {
-        return headingSwitch;
+    public double getHeadingPIDFSwitch() {
+        return headingPIDFSwitch;
     }
 
-    public void setHeadingSwitch(double headingSwitch) {
-        this.headingSwitch = headingSwitch;
+    public void setHeadingPIDFSwitch(double headingPIDFSwitch) {
+        this.headingPIDFSwitch = headingPIDFSwitch;
     }
 
-    public Coefficients getCoefficientsSecondaryHeading() {
-        return coefficientsSecondaryHeading;
+    public PIDFCoefficients getCoefficientsSecondaryHeadingPIDF() {
+        return coefficientsSecondaryHeadingPIDF;
     }
 
-    public void setCoefficientsSecondaryHeading(Coefficients coefficientsSecondaryHeading) {
-        this.coefficientsSecondaryHeading = coefficientsSecondaryHeading;
-        useSecondaryHeading = true;
+    public void setCoefficientsSecondaryHeadingPIDF(PIDFCoefficients coefficientsSecondaryHeadingPIDF) {
+        this.coefficientsSecondaryHeadingPIDF = coefficientsSecondaryHeadingPIDF;
+        useSecondaryHeadingPIDF = true;
     }
 
-    public double getDriveSwitch() {
-        return driveSwitch;
+    public double getDrivePIDFSwitch() {
+        return drivePIDFSwitch;
     }
 
-    public void setDriveSwitch(double driveSwitch) {
-        this.driveSwitch = driveSwitch;
+    public void setDrivePIDFSwitch(double drivePIDFSwitch) {
+        this.drivePIDFSwitch = drivePIDFSwitch;
     }
 
-    public Coefficients getCoefficientsSecondaryDrive() {
-        return coefficientsSecondaryDrive;
+    public FilteredPIDFCoefficients getCoefficientsSecondaryDrivePIDF() {
+        return coefficientsSecondaryDrivePIDF;
     }
 
-    public void setCoefficientsSecondaryDrive(Coefficients coefficientsSecondaryDrive) {
-        this.coefficientsSecondaryDrive = coefficientsSecondaryDrive;
-        useSecondaryDrive = true;
+    public void setCoefficientsSecondaryDrivePIDF(FilteredPIDFCoefficients coefficientsSecondaryDrivePIDF) {
+        this.coefficientsSecondaryDrivePIDF = coefficientsSecondaryDrivePIDF;
+        useSecondaryDrivePIDF = true;
     }
 
     public double getHoldPointTranslationalScaling() {
@@ -425,36 +423,36 @@ public class FollowerConstants {
         this.BEZIER_CURVE_SEARCH_LIMIT = BEZIER_CURVE_SEARCH_LIMIT;
     }
 
-    public boolean isUseSecondaryTranslational() {
-        return useSecondaryTranslational;
+    public boolean isUseSecondaryTranslationalPIDF() {
+        return useSecondaryTranslationalPIDF;
     }
 
-    public void setUseSecondaryTranslational(boolean useSecondaryTranslational) {
-        this.useSecondaryTranslational = useSecondaryTranslational;
+    public void setUseSecondaryTranslationalPIDF(boolean useSecondaryTranslationalPIDF) {
+        this.useSecondaryTranslationalPIDF = useSecondaryTranslationalPIDF;
     }
 
-    public boolean isUseSecondaryHeading() {
-        return useSecondaryHeading;
+    public boolean isUseSecondaryHeadingPIDF() {
+        return useSecondaryHeadingPIDF;
     }
 
-    public void setUseSecondaryHeading(boolean useSecondaryHeading) {
-        this.useSecondaryHeading = useSecondaryHeading;
+    public void setUseSecondaryHeadingPIDF(boolean useSecondaryHeadingPIDF) {
+        this.useSecondaryHeadingPIDF = useSecondaryHeadingPIDF;
     }
 
-    public boolean isUseSecondaryDrive() {
-        return useSecondaryDrive;
+    public boolean isUseSecondaryDrivePIDF() {
+        return useSecondaryDrivePIDF;
     }
 
-    public void setUseSecondaryDrive(boolean useSecondaryDrive) {
-        this.useSecondaryDrive = useSecondaryDrive;
+    public void setUseSecondaryDrivePIDF(boolean useSecondaryDrivePIDF) {
+        this.useSecondaryDrivePIDF = useSecondaryDrivePIDF;
     }
 
-    public double getTranslationalSwitch() {
-        return translationalSwitch;
+    public double getTranslationalPIDFSwitch() {
+        return translationalPIDFSwitch;
     }
 
-    public void setTranslationalSwitch(double translationalSwitch) {
-        this.translationalSwitch = translationalSwitch;
+    public void setTranslationalPIDFSwitch(double translationalPIDFSwitch) {
+        this.translationalPIDFSwitch = translationalPIDFSwitch;
     }
 
     public double getTurnHeadingErrorThreshold() {
@@ -506,31 +504,31 @@ public class FollowerConstants {
     }
 
     public void defaults() {
-        coefficientsTranslational.setCoefficients(0.1, 0, 0, 0);
+        coefficientsTranslationalPIDF.setCoefficients(0.1, 0, 0, 0);
         integralTranslational.setCoefficients(0, 0, 0, 0.015);
 
-        coefficientsHeading.setCoefficients(1, 0, 0, 0.01);
+        coefficientsHeadingPIDF.setCoefficients(1, 0, 0, 0.01);
 
-        coefficientsDrive.setCoefficients(0.025, 0, 0.00001, 0.6, 0.01);
+        coefficientsDrivePIDF.setCoefficients(0.025, 0, 0.00001, 0.6, 0.01);
 
-        coefficientsSecondaryTranslational.setCoefficients(0.3, 0, 0.01, 0.015);
+        coefficientsSecondaryTranslationalPIDF.setCoefficients(0.3, 0, 0.01, 0.015);
         integralSecondaryTranslational.setCoefficients(0, 0, 0, 0);
 
-        headingSwitch = Math.PI / 20;
-        coefficientsSecondaryHeading.setCoefficients(5, 0, 0.08, 0.01);
+        headingPIDFSwitch = Math.PI / 20;
+        coefficientsSecondaryHeadingPIDF.setCoefficients(5, 0, 0.08, 0.01);
 
-        driveSwitch = 20;
-        coefficientsSecondaryDrive.setCoefficients(0.02, 0, 0.000005, 0.6, 0.01);
+        drivePIDFSwitch = 20;
+        coefficientsSecondaryDrivePIDF.setCoefficients(0.02, 0, 0.000005, 0.6, 0.01);
         holdPointTranslationalScaling = 0.45;
         holdPointHeadingScaling = 0.35;
 
         BEZIER_CURVE_SEARCH_LIMIT = 10;
 
-        useSecondaryTranslational = false;
-        useSecondaryHeading = false;
-        useSecondaryDrive = false;
+        useSecondaryTranslationalPIDF = false;
+        useSecondaryHeadingPIDF = false;
+        useSecondaryDrivePIDF = false;
 
-        translationalSwitch = 3;
+        translationalPIDFSwitch = 3;
         turnHeadingErrorThreshold = 0.01;
         centripetalScaling = 0.0005;
 
