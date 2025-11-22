@@ -89,8 +89,10 @@ public class FusionLocalizer implements Localizer {
         if (!poseHistory.containsKey(timestamp)) return;
 
         // --- 1. Compute innovation ---
-        Pose pastPose = poseHistory.get(timestamp);
-        Matrix y = new Matrix(new double[][]{
+        Pose pastPose = interpolate(timestamp, poseHistory);
+        if (pastPose == null)
+            pastPose = getPose();
+        Matrix y = new Matrix(new double[][] {
                 {measuredPose.getX() - pastPose.getX()},
                 {measuredPose.getY() - pastPose.getY()},
                 {MathFunctions.normalizeAngle(measuredPose.getHeading() - pastPose.getHeading())}
@@ -114,7 +116,9 @@ public class FusionLocalizer implements Localizer {
         Pose previousPose = updatedPast;
         for (NavigableMap.Entry<Long, Pose> entry : poseHistory.tailMap(timestamp, false).entrySet()) {
             long t = entry.getKey();
-            Pose twist = twistHistory.get(previousTime); // use the twist applied at previous time
+            Pose twist = interpolate(timestamp, twistHistory); // use the twist applied at previous time
+            if (twist == null)
+                twist = getVelocity();
             double dt = (t - previousTime) / 1e9;
             Pose nextPose = integrate(previousPose, twist, dt);
             poseHistory.put(t, nextPose);
@@ -124,6 +128,30 @@ public class FusionLocalizer implements Localizer {
 
         // --- 5. Update current state ---
         currentPosition = poseHistory.lastEntry().getValue();
+    }
+
+    private static Pose interpolate(long timestamp, NavigableMap<Long, Pose> history) {
+        Long lowerKey = history.floorKey(timestamp);
+        Long upperKey = history.ceilingKey(timestamp);
+
+        if (lowerKey == null || upperKey == null) {
+            return null; // Cannot interpolate
+        }
+        if (lowerKey.equals(upperKey)) {
+            return history.get(lowerKey).copy(); // Exact match
+        }
+
+        Pose lowerPose = history.get(lowerKey);
+        Pose upperPose = history.get(upperKey);
+
+        double ratio = (double) (timestamp - lowerKey) / (upperKey - lowerKey);
+
+        double x = lowerPose.getX() + ratio * (upperPose.getX() - lowerPose.getX());
+        double y = lowerPose.getY() + ratio * (upperPose.getY() - lowerPose.getY());
+        double headingDiff = MathFunctions.getSmallestAngleDifference(upperPose.getHeading(), lowerPose.getHeading());
+        double heading = MathFunctions.normalizeAngle(lowerPose.getHeading() + ratio * headingDiff);
+
+        return new Pose(x, y, heading);
     }
 
     private Pose integrate(Pose previousPose, Pose twist, double dt) {
