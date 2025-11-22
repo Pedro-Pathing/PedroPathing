@@ -3,6 +3,7 @@ package com.pedropathing.drivetrain;
 import static com.pedropathing.math.MathFunctions.findNormalizingScaling;
 import static com.pedropathing.math.MathFunctions.normalizeAngle;
 
+import com.pedropathing.Drivetrain;
 import com.pedropathing.math.Vector;
 
 /**

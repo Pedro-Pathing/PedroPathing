@@ -12,7 +12,7 @@ package com.pedropathing.control;
  * @author Harrison Womack - 10158 Scott's Bots
  * @version 1.0, 3/5/2024
  */
-public class PIDFController implements Controller {
+public class PIDFController {
     private PIDFCoefficients coefficients;
     private PIDFCoefficientSupplier coefficientSupplier;
 
