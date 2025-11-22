@@ -1,5 +1,5 @@
 package com.pedropathing.ftc;
-import com.pedropathing.drivetrain.Drivetrain;
+import com.pedropathing.Drivetrain;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.FollowerConstants;
 import com.pedropathing.ftc.drivetrains.Mecanum;
@@ -19,6 +19,8 @@ import com.pedropathing.ftc.localization.localizers.TwoWheelLocalizer;
 import com.pedropathing.localization.Localizer;
 import com.pedropathing.paths.PathConstraints;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+
+import java.util.ArrayList;
 
 /** This is the FollowerBuilder.
  * It is used to create Followers with a specific drivetrain + localizer without having to use a full constructor

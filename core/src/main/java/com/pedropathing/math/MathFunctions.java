@@ -98,6 +98,9 @@ public class MathFunctions {
      * and it will scale up the variable Vector if the magnitude of the sum of the two input Vectors
      * isn't greater than maxPowerScaling.
      *
+     * I know that this is used outside of this class, however, I created this method so I get to
+     * use it if I want to.
+     *
      * @param staticVector the Vector that is held constant.
      * @param variableVector the Vector getting scaled to make the sum of the input Vectors have a
      *                       magnitude of maxPowerScaling.

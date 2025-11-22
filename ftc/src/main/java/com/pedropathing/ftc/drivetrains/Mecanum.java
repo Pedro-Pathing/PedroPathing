@@ -2,7 +2,7 @@ package com.pedropathing.ftc.drivetrains;
 
 import static com.pedropathing.math.MathFunctions.findNormalizingScaling;
 
-import com.pedropathing.drivetrain.Drivetrain;
+import com.pedropathing.Drivetrain;
 import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -133,7 +133,7 @@ public class Mecanum extends Drivetrain {
             Vector rightSideVector = correctivePower.plus(headingPower);
 
             if (leftSideVector.getMagnitude() > maxPowerScaling || rightSideVector.getMagnitude() > maxPowerScaling) {
-                //if the combined corrective and heading power is greater than maxPower, then scale down heading power
+                //if the combined corrective and heading power is greater than 1, then scale down heading power
                 double headingScalingFactor = Math.min(findNormalizingScaling(correctivePower, headingPower, maxPowerScaling), findNormalizingScaling(correctivePower, headingPower.times(-1), maxPowerScaling));
                 truePathingVectors[0] = correctivePower.minus(headingPower.times(headingScalingFactor));
                 truePathingVectors[1] = correctivePower.plus(headingPower.times(headingScalingFactor));
@@ -236,6 +236,10 @@ public class Mecanum extends Drivetrain {
         } else {
             setMotorsToFloat();
         }
+    }
+
+    public void getAndRunDrivePowers(Vector correctivePower, Vector headingPower, Vector pathingPower, double robotHeading) {
+        runDrive(calculateDrive(correctivePower, headingPower, pathingPower, robotHeading));
     }
 
     public double xVelocity() {

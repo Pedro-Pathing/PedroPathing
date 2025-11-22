@@ -1,4 +1,4 @@
-package com.pedropathing.drivetrain;
+package com.pedropathing;
 
 import com.pedropathing.math.Vector;
 import com.pedropathing.math.MathFunctions;
