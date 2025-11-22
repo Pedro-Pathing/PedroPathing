@@ -166,6 +166,9 @@ public class AbstractBijectiveMap<T, S> implements BijectiveMap<T, S> {
                 double lowerValue = lowerEntry.getValue();
                 double higherValue = higherEntry.getValue();
 
+                if (lowerKey == higherKey)
+                    return lowerValue; // Both keys are the same
+
                 // Linear interpolation
                 return lowerValue + (higherValue - lowerValue) * ((key - lowerKey) / (higherKey - lowerKey));
             }

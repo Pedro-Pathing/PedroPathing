@@ -1,5 +1,7 @@
 package com.pedropathing.control;
 
+import java.util.function.Function;
+
 /**
  * This is the PIDFCoefficients class. This class handles holding coefficients for PIDF
  * controllers.
@@ -10,7 +12,7 @@ package com.pedropathing.control;
  * @author Havish Sripada - 12808 RevAmped Robotics
  * @version 1.0, 3/5/2024
  */
-public class PIDFCoefficients implements PIDFCoefficientSupplier {
+public class PIDFCoefficients implements Controller.Coefficients {
     public double P;
     public double I;
     public double D;
@@ -55,7 +57,15 @@ public class PIDFCoefficients implements PIDFCoefficientSupplier {
     }
 
     @Override
-    public PIDFCoefficients get(double error) {
-        return this;
+    public PIDFController create() {
+        return new PIDFController(this);
+    }
+
+    @Override
+    public void setCoefficients(double... coefficients) {
+        if (coefficients.length != 4) {
+            throw new IllegalArgumentException("Expected 4 coefficients, got " + coefficients.length);
+        }
+        setCoefficients(coefficients[0], coefficients[1], coefficients[2], coefficients[3]);
     }
 }

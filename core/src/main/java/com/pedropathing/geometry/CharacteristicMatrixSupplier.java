@@ -69,7 +69,6 @@ public class CharacteristicMatrixSupplier {
         double[] sampledRow = output.getRow(output.getRows() - 1);
         for (int i = 1; i < output.getRows() - 1; i++) {
             for (int j = 0; j <= i; j++) {
-                // I wasn't sure if bitwise math to obtain an unsigned double is valid here since big endian vs little endian
                 output.set(i, j, output.get(i, j) * Math.abs(sampledRow[i]));
             }
         }
