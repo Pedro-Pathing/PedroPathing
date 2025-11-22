@@ -458,7 +458,7 @@ public class Follower {
             updateErrorAndVectors();
             drivetrain.runDrive(useHoldScaling? getTranslationalCorrection().times(holdPointTranslationalScaling) : getTranslationalCorrection(), useHoldScaling? getHeadingVector().times(holdPointHeadingScaling) : getHeadingVector(), new Vector(), poseTracker.getPose().getHeading());
 
-            if(getHeadingError() < turnHeadingErrorThreshold && isTurning) {
+            if(Math.abs(getHeadingError()) < turnHeadingErrorThreshold && isTurning) {
                 isTurning = false;
                 isBusy = false;
             }
@@ -784,14 +784,16 @@ public class Follower {
     public double getHeadingError() { return errorCalculator.getHeadingError(); }
 
     /**
-     * This returns the translational error, which is the difference between the robot's current position and the closest point's position.
+     * This returns the translational error, which is the distance between the robot's current position and the closest point's position.
      * @return returns the translational error as a Vector.
      */
     public Vector getTranslationalError() { return errorCalculator.getTranslationalError(); }
 
     /**
-     * This returns the drive error, which is the difference between the robot's current position and the closest point's position projected onto the tangent vector.
-     * @return returns the drive error as a double.
+     * This returns the drive error, which is computed by taking the distance to the goal. Using this distance,
+     * Pedro uses a predictive model to determine what the target velocity should be in order to reach the goal without overshooting.
+     * The drive error is taken to be a modified form of the difference between the target velocity and the current velocity, which is then infused with a Kalman Filter
+     * @return The drive error as a double.
      */
     public double getDriveError() { return errorCalculator.getDriveError(); }
 
@@ -963,7 +965,8 @@ public class Follower {
      */
     public double getClosestPointHeadingGoal() {
         if (currentPath == null) return 0;
-        if (currentPathChain != null) return currentPathChain.getClosestPointHeadingGoal(new PathChain.PathT(chainIndex, closestPose.tValue));
+        if (followingPathChain && currentPathChain != null)
+            return currentPathChain.getClosestPointHeadingGoal(new PathChain.PathT(chainIndex, closestPose.tValue));
         return currentPath.getHeadingGoal(closestPose);
     }
 
