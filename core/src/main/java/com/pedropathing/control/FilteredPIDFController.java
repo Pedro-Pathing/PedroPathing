@@ -107,6 +107,11 @@ public class FilteredPIDFController implements Controller{
         previousUpdateTimeNano = System.nanoTime();
     }
 
+    @Override
+    public double run() {
+        return runPIDF();
+    }
+
     /**
      * This is used to set the target position if the filtered PIDF is being run with current position and
      * target position inputs rather than error inputs.
@@ -142,6 +147,15 @@ public class FilteredPIDFController implements Controller{
      */
     public FilteredPIDFCoefficients getCoefficients() {
         return coefficients;
+    }
+
+    @Override
+    public void setCoefficients(Coefficients coefficients) {
+        if (coefficients instanceof FilteredPIDFCoefficients) {
+            setCoefficients((FilteredPIDFCoefficients) coefficients);
+        } else {
+            throw new IllegalArgumentException("Expected FilteredPIDFCoefficients");
+        }
     }
 
     /**
