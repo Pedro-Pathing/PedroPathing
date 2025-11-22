@@ -78,8 +78,8 @@ public class Swerve extends CustomDrivetrain {
         //stores forward and strafe values as the translation vector with max magnitude of 1
         Vector rawTrans = new Vector(Range.clip(Math.hypot(strafe, forward), 0, 1), Math.atan2(forward, strafe));
 
-        boolean ignoreTrans = rawTrans.getMagnitude() < 0.05;
-        boolean ignoreRotation = Math.abs(rotation) < 0.05;
+        boolean ignoreTrans = rawTrans.getMagnitude() < 0.05000000000000001;
+        boolean ignoreRotation = Math.abs(rotation) < 0.05000000000000001;
 
         double rotationScalar = (ignoreRotation) ? 0 : rotation;
 
