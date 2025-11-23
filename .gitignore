@@ -82,3 +82,9 @@ lint/tmp/
 
 # kls
 kls_database.db
+
+
+.project
+.settings/
+.classpath
+.project
