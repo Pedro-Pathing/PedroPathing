@@ -303,7 +303,11 @@ public class VectorCalculator {
             curvature = (yDoublePrime) / (Math.pow(Math.sqrt(1 + Math.pow(yPrime, 2)), 3));
         }
         if (Double.isNaN(curvature)) return new Vector();
-        centripetalVector = new Vector(MathFunctions.clamp(centripetalScaling * mass * Math.pow(velocity.dot(currentPath.getClosestPointTangentVector().normalize()), 2) * curvature, -maxPowerScaling, maxPowerScaling), currentPath.getClosestPointTangentVector().getTheta() + Math.PI / 2 * Math.signum(currentPath.getClosestPointNormalVector().getTheta()));
+        centripetalVector = new Vector(MathFunctions.clamp(
+                centripetalScaling * mass * Math.pow(velocity.dot(currentPath.getClosestPointTangentVector().normalize()), 2)
+                        * curvature, -maxPowerScaling, maxPowerScaling),
+                currentPath.getClosestPointTangentVector().getTheta() + Math.PI / 2 *
+                        Math.signum(currentPath.getClosestPointNormalVector().getTheta()));
         return centripetalVector;
     }
 

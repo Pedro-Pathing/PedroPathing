@@ -168,7 +168,8 @@ public abstract class CustomCurve implements Curve {
         Vector a = getSecondDerivative(t);   // acceleration
 
         double vMag = v.getMagnitude();
-        if (vMag == 0) return new Vector(0, 0); // no tangent direction
+        if (vMag == 0)
+            return new Vector(0, 0); // no tangent direction
 
         Vector tangent = v.normalize();
 
@@ -176,7 +177,8 @@ public abstract class CustomCurve implements Curve {
         Vector aNormal = a.minus(tangent.times(a.dot(tangent)));
 
         double aNormalMag = aNormal.getMagnitude();
-        if (aNormalMag == 0) return new Vector(0, 0); // straight line, no principal normal
+        if (aNormalMag == 0)
+            return new Vector(0, 0); // straight line, no principal normal
 
         return aNormal.normalize();
     }

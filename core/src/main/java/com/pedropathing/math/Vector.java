@@ -285,4 +285,12 @@ public class Vector {
         double scale = this.dot(other) / other.dot(other);
         return other.times(scale);
     }
+
+    /**
+     * Multiplies this vector by -1
+     * @return the resulting vector
+     */
+    public Vector flip() {
+        return new Vector(magnitude, theta + Math.PI);
+    }
 }

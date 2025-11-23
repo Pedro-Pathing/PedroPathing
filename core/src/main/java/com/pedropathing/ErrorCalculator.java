@@ -66,6 +66,17 @@ public class ErrorCalculator {
         double x = closestPose.getX() - currentPose.getX();
         double y = closestPose.getY() - currentPose.getY();
         error.setOrthogonalComponents(x, y);
+
+        if (currentPath.getConstraints().isGradientCorrection()) {
+            Vector derivative = currentPath.getClosestPointTangentVector();
+            Vector normalVector = new Vector(1.0, derivative.getTheta() + Math.PI / 2);
+
+            if (error.dot(normalVector) < 0)
+                normalVector = normalVector.flip();
+
+            error = error.projectOnto(normalVector);
+        }
+
         return error;
     }
 
