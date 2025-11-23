@@ -50,14 +50,14 @@ public class VectorCalculator {
     private int chainIndex;
     private double centripetalScaling;
 
-    private PIDFController secondaryTranslationalPIDF;
-    private PIDFController secondaryTranslationalIntegral;
-    private PIDFController translationalPIDF;
-    private PIDFController translationalIntegral;
-    private PIDFController secondaryHeadingPIDF;
+    public PIDFController secondaryTranslationalPIDF;
+    public PIDFController secondaryTranslationalIntegral;
+    public PIDFController translationalPIDF;
+    public PIDFController translationalIntegral;
+    public PIDFController secondaryHeadingPIDF;
 
-    private PIDFController headingPIDF;
-    private FilteredPIDFController secondaryDrivePIDF, drivePIDF;
+    public PIDFController headingPIDF;
+    public FilteredPIDFController secondaryDrivePIDF, drivePIDF;
 
     public VectorCalculator(FollowerConstants constants) {
         this.constants = constants;
@@ -447,35 +447,6 @@ public class VectorCalculator {
     public void setConstants(FollowerConstants constants) {
         this.constants = constants;
     }
-
-    public double getTranslationPIDFActualPosition()
-    {
-        return translationalPIDF.getActualPosition();
-    }
-    public double getTranslationalPIDFTargetPosition()
-    {
-        return translationalPIDF.getTargetPosition();
-    }
-
-    public double getHeadingPIDFActualPosition()
-    {
-        return headingPIDF.getActualPosition();
-    }
-    public double getHeadingPIDFTargetPosition()
-    {
-        return headingPIDF.getTargetPosition();
-    }
-
-    public double getDrivePIDFActualPosition()
-    {
-        return drivePIDF.getActualPosition();
-    }
-    public double getDrivePIDFTargetPosition()
-    {
-        return drivePIDF.getTargetPosition();
-    }
-
-
 
     public String debugString() {
         return "Drive Vector: " + getDriveVector().toString() + "\n" +

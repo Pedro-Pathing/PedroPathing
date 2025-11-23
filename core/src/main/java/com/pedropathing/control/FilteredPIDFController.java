@@ -13,8 +13,8 @@ public class FilteredPIDFController {
 
     private double previousError;
     private double error;
-    private double position;
-    private double targetPosition;
+    public double position;
+    public double targetPosition;
     private double errorIntegral;
     private double errorDerivative;
     private double previousDerivative;
@@ -125,13 +125,6 @@ public class FilteredPIDFController {
     public double getTargetPosition() {
         return targetPosition;
     }
-
-    /**
-     * This returns the actual position of the PIDF.
-     *
-     * @return this returns the actual position.
-     */
-    public double getActualPosition() { return position; }
 
     /**
      * This is used to set the coefficients of the filtered PIDF.

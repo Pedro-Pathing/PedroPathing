@@ -1102,28 +1102,28 @@ public class Follower {
 
     public double getTranslationPIDFActualPosition()
     {
-        return vectorCalculator.getTranslationPIDFActualPosition();
+        return vectorCalculator.translationalPIDF.position;
     }
     public double getTranslationalPIDFTargetPosition()
     {
-        return vectorCalculator.getTranslationalPIDFTargetPosition();
+        return vectorCalculator.translationalPIDF.targetPosition;
     }
 
     public double getHeadingPIDFActualPosition()
     {
-        return vectorCalculator.getHeadingPIDFActualPosition();
+        return vectorCalculator.headingPIDF.position;
     }
     public double getHeadingPIDFTargetPosition()
     {
-        return vectorCalculator.getHeadingPIDFTargetPosition();
+        return vectorCalculator.headingPIDF.targetPosition;
     }
 
     public double getDrivePIDFActualPosition()
     {
-        return vectorCalculator.getDrivePIDFActualPosition();
+        return vectorCalculator.drivePIDF.position;
     }
     public double getDrivePIDFTargetPosition()
     {
-        return vectorCalculator.getDrivePIDFTargetPosition();
+        return vectorCalculator.drivePIDF.targetPosition;
     }
 }
