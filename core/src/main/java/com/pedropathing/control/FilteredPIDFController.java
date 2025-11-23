@@ -127,6 +127,13 @@ public class FilteredPIDFController {
     }
 
     /**
+     * This returns the actual position of the PIDF.
+     *
+     * @return this returns the actual position.
+     */
+    public double getActualPosition() { return position; }
+
+    /**
      * This is used to set the coefficients of the filtered PIDF.
      *
      * @param set the coefficients that the filtered PIDF will use.

@@ -448,6 +448,35 @@ public class VectorCalculator {
         this.constants = constants;
     }
 
+    public double getTranslationPIDFActualPosition()
+    {
+        return translationalPIDF.getActualPosition();
+    }
+    public double getTranslationalPIDFTargetPosition()
+    {
+        return translationalPIDF.getTargetPosition();
+    }
+
+    public double getHeadingPIDFActualPosition()
+    {
+        return headingPIDF.getActualPosition();
+    }
+    public double getHeadingPIDFTargetPosition()
+    {
+        return headingPIDF.getTargetPosition();
+    }
+
+    public double getDrivePIDFActualPosition()
+    {
+        return drivePIDF.getActualPosition();
+    }
+    public double getDrivePIDFTargetPosition()
+    {
+        return drivePIDF.getTargetPosition();
+    }
+
+
+
     public String debugString() {
         return "Drive Vector: " + getDriveVector().toString() + "\n" +
                 "Heading Vector: " + getHeadingVector().toString() + "\n" +

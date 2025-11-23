@@ -1099,4 +1099,31 @@ public class Follower {
     public double getHeading() {
         return getPose().getHeading();
     }
+
+    public double getTranslationPIDFActualPosition()
+    {
+        return vectorCalculator.getTranslationPIDFActualPosition();
+    }
+    public double getTranslationalPIDFTargetPosition()
+    {
+        return vectorCalculator.getTranslationalPIDFTargetPosition();
+    }
+
+    public double getHeadingPIDFActualPosition()
+    {
+        return vectorCalculator.getHeadingPIDFActualPosition();
+    }
+    public double getHeadingPIDFTargetPosition()
+    {
+        return vectorCalculator.getHeadingPIDFTargetPosition();
+    }
+
+    public double getDrivePIDFActualPosition()
+    {
+        return vectorCalculator.getDrivePIDFActualPosition();
+    }
+    public double getDrivePIDFTargetPosition()
+    {
+        return vectorCalculator.getDrivePIDFTargetPosition();
+    }
 }
