@@ -1,4 +1,4 @@
-arguments=--init-script /home/kubar/.cache/jdtls/config/org.eclipse.osgi/58/0/.cp/gradle/init/init.gradle
+arguments=--init-script /home/kubar/.local/share/nvim/mason/packages/jdtls/configuration/org.eclipse.osgi/58/0/.cp/gradle/init/init.gradle
 auto.sync=false
 build.scans.enabled=false
 connection.gradle.distribution=GRADLE_DISTRIBUTION(WRAPPER)
