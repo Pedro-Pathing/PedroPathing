@@ -1,4 +1,4 @@
-package com.pedropathing;
+package com.pedropathing.drivetrain;
 
 import com.pedropathing.math.Vector;
 import com.pedropathing.math.MathFunctions;
@@ -102,7 +102,7 @@ public abstract class Drivetrain {
      *                     much power to allocate to each wheel.
      */
     public void runDrive(Vector correctivePower, Vector headingPower, Vector pathingPower, double robotHeading) {
-        runDrive(calculateDrive(correctivePower, headingPower, pathingPower, robotHeading));
+        runDrive(calculateDrive(correctivePower.copy(), headingPower.copy(), pathingPower.copy(), robotHeading));
     }
 
     /**

@@ -2,7 +2,7 @@ package com.pedropathing.ftc.drivetrains;
 
 import static com.pedropathing.math.MathFunctions.findNormalizingScaling;
 
-import com.pedropathing.Drivetrain;
+import com.pedropathing.drivetrain.Drivetrain;
 import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
