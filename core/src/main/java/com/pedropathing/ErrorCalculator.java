@@ -232,8 +232,8 @@ public class ErrorCalculator {
                "Closest Pose: " + closestPose.toString() + "\n" +
                "Current Path: " + (currentPath != null ? currentPath.toString() : "null") + "\n" + "Following Path Chain: " + followingPathChain + "\n" +
                "Chain Index: " + chainIndex + "\n" +
-               "Drive Error: " + getDriveError() + "\n" +
-               "Heading Error: " + getHeadingError() + "\n" +
-               "Raw Drive Error: " + getRawDriveError();
+               "Drive Error: " + driveError + "\n" +
+               "Heading Error: " + headingError + "\n" +
+               "Raw Drive Error: " + rawDriveError;
     }
 }
