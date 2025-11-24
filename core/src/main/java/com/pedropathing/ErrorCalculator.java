@@ -95,6 +95,21 @@ public class ErrorCalculator {
     }
 
     /**
+     * This returns the raw heading error, or how far off the closest point the robot is.
+     *
+     * @return This returns the raw heading error as a double.
+     */
+    public double getHeadingError(double headingGoal) {
+        if (currentPath == null) {
+            return 0;
+        }
+
+        this.headingGoal = headingGoal;
+        headingError = MathFunctions.getTurnDirection(currentPose.getHeading(), headingGoal) * MathFunctions.getSmallestAngleDifference(currentPose.getHeading(), headingGoal);
+        return headingError;
+    }
+
+    /**
      * This returns the velocity the robot needs to be at to make it to the end of the Path
      * at some specified deceleration (well technically just some negative acceleration).
      *

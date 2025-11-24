@@ -200,6 +200,8 @@ public class FollowerConstants {
      * This value is found via 'LateralZeroPowerAccelerationTuner'*/
     public double lateralZeroPowerAcceleration = -78.15554;
 
+    public boolean nonholonomicDrive = false;
+
     public FollowerConstants() {
         defaults();
     }
@@ -365,6 +367,11 @@ public class FollowerConstants {
         return this;
     }
 
+    public FollowerConstants nonHolonomicDrive(boolean nonHolonomicDrive) {
+        this.nonholonomicDrive = nonHolonomicDrive;
+        return this;
+    }
+
     public double getHeadingPIDFSwitch() {
         return headingPIDFSwitch;
     }
@@ -463,6 +470,14 @@ public class FollowerConstants {
         this.turnHeadingErrorThreshold = turnHeadingErrorThreshold;
     }
 
+    public void setNonholonomicDrive(boolean nonholonomicDrive) {
+        this.nonholonomicDrive = nonholonomicDrive;
+    }
+
+    public boolean isNonholonomicDrive() {
+        return nonholonomicDrive;
+    }
+
     public double getCentripetalScaling() {
         return centripetalScaling;
     }
@@ -537,5 +552,6 @@ public class FollowerConstants {
 
         forwardZeroPowerAcceleration = -41.278;
         lateralZeroPowerAcceleration = -59.7819;
+        nonholonomicDrive = false;
     }
 }

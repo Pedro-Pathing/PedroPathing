@@ -204,6 +204,33 @@ public class VectorCalculator {
      */
     public Vector getHeadingVector() {
         if (!useHeading) return new Vector();
+
+        if (Math.abs(headingError) < headingPIDFSwitch && useSecondaryHeadingPID) {
+            secondaryHeadingPIDF.updateFeedForwardInput(MathFunctions.getTurnDirection(currentPose.getHeading(), headingGoal));
+            secondaryHeadingPIDF.updateError(headingError);
+            headingVector = new Vector(MathFunctions.clamp(secondaryHeadingPIDF.run(), -maxPowerScaling, maxPowerScaling), currentPose.getHeading());
+            return headingVector.copy();
+        }
+        headingPIDF.updateFeedForwardInput(MathFunctions.getTurnDirection(currentPose.getHeading(), headingGoal));
+        headingPIDF.updateError(headingError);
+        headingVector = new Vector(MathFunctions.clamp(headingPIDF.run(), -maxPowerScaling, maxPowerScaling), currentPose.getHeading());
+        return headingVector.copy();
+    }
+
+    /**
+     * This returns a Vector in the direction of the robot that contains the heading correction
+     * as its magnitude. Positive heading correction turns the robot counter-clockwise, and negative
+     * heading correction values turn the robot clockwise. So basically, Pedro Pathing uses a right-
+     * handed coordinate system.
+     * <p>
+     * Note: This vector is clamped to be at most 1 in magnitude.
+     *
+     * @return returns the heading vector.
+     */
+    public Vector getHeadingVector(double headingError) {
+        if (!useHeading) return new Vector();
+        this.headingError = headingError;
+
         if (Math.abs(headingError) < headingPIDFSwitch && useSecondaryHeadingPID) {
             secondaryHeadingPIDF.updateFeedForwardInput(MathFunctions.getTurnDirection(currentPose.getHeading(), headingGoal));
             secondaryHeadingPIDF.updateError(headingError);

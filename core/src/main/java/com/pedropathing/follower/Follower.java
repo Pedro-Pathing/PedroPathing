@@ -424,7 +424,7 @@ public class Follower {
 
     /** Calls an update to the VectorCalculator, which updates the robot's current vectors to correct. */
     public void updateVectors() {
-        vectorCalculator.update(useDrive, useHeading, useTranslational, useCentripetal, manualDrive, chainIndex, drivetrain.getMaxPowerScaling(), followingPathChain, centripetalScaling, currentPose, closestPose.getPose(), poseTracker.getVelocity(), currentPath, currentPathChain, useDrive && !holdingPosition ? getDriveError() : -1, getTranslationalError(), getHeadingError(), getClosestPointHeadingGoal());
+        vectorCalculator.update(useDrive, useHeading, useTranslational, useCentripetal, manualDrive, chainIndex, drivetrain.getMaxPowerScaling(), followingPathChain, centripetalScaling, currentPose, closestPose.getPose(), poseTracker.getVelocity(), currentPath, currentPathChain, useDrive && !holdingPosition ? getDriveError() : -1, getTranslationalError(), !constants.isNonholonomicDrive()? getHeadingError() : 0, getClosestPointHeadingGoal());
     }
 
     public void updateErrorAndVectors() {updateErrors(); updateVectors();}
@@ -458,7 +458,14 @@ public class Follower {
             if (followingPathChain) currentPathChain.update();
             closestPose = currentPath.updateClosestPose(poseTracker.getPose(), 1);
             updateErrorAndVectors();
-            drivetrain.runDrive(useHoldScaling? getTranslationalCorrection().times(holdPointTranslationalScaling) : getTranslationalCorrection(), useHoldScaling? getHeadingVector().times(holdPointHeadingScaling) : getHeadingVector(), new Vector(), poseTracker.getPose().getHeading());
+
+            if (!constants.isNonholonomicDrive())
+                drivetrain.runDrive(useHoldScaling? getTranslationalCorrection().times(holdPointTranslationalScaling) : getTranslationalCorrection(), useHoldScaling? getHeadingVector().times(holdPointHeadingScaling) : getHeadingVector(), new Vector(), poseTracker.getPose().getHeading());
+            else {
+                Vector translationalVector = useHoldScaling? getTranslationalCorrection().times(holdPointTranslationalScaling) : getTranslationalCorrection();
+                Vector headingVector = useHoldScaling? getHeadingVectorNonholonomic(translationalVector).times(holdPointHeadingScaling) : getHeadingVectorNonholonomic(translationalVector);
+                drivetrain.runDrive(translationalVector, headingVector, new Vector(), poseTracker.getPose().getHeading());
+            }
 
             if(getHeadingError() < turnHeadingErrorThreshold && isTurning) {
                 isTurning = false;
@@ -473,7 +480,15 @@ public class Follower {
             closestPose = currentPath.updateClosestPose(poseTracker.getPose(), BEZIER_CURVE_SEARCH_LIMIT);
             updateErrorAndVectors();
             if (followingPathChain) updateCallbacks();
-            drivetrain.runDrive(getCorrectiveVector(), getHeadingVector(), getDriveVector(), poseTracker.getPose().getHeading());
+
+            if (!constants.isNonholonomicDrive())
+                drivetrain.runDrive(getCorrectiveVector(), getHeadingVector(), getDriveVector(), poseTracker.getPose().getHeading());
+            else {
+                Vector correctiveVector = getCorrectiveVector();
+                Vector driveVector = getDriveVector();
+                Vector headingVector = getHeadingVectorNonholonomic(correctiveVector.plus(driveVector));
+                drivetrain.runDrive(correctiveVector, driveVector, headingVector, poseTracker.getPose().getHeading());
+            }
         }
 
         if (poseTracker.getVelocity().getMagnitude() < 1.0 && currentPath.getClosestPointTValue() > 0.8
@@ -814,6 +829,10 @@ public class Follower {
      * @return returns the heading vector
      */
     public Vector getHeadingVector() { return vectorCalculator.getHeadingVector(); }
+
+    public Vector getHeadingVectorNonholonomic(Vector positionVector) {
+        return vectorCalculator.getHeadingVector(errorCalculator.getHeadingError(positionVector.getTheta()));
+    }
 
     /**
      * This returns the translational correction, which is the vector that the robot should be moving towards to correct its position.
