@@ -42,8 +42,8 @@ public class BezierCurve implements Curve {
 
     private Matrix cachedMatrix = new Matrix();
 
-    private int[][] diffPowers;
-    private int[][] diffCoefficients;
+    private PolynomialMatrixSupplier polyMatrixSupplier;
+
     protected PathConstraints pathConstraints;
 
     protected NumericBijectiveMap completionMap = new NumericBijectiveMap();
@@ -186,8 +186,9 @@ public class BezierCurve implements Curve {
             controlPointMatrix.set(i, new double[]{p.getX(), p.getY()});
         }
         this.cachedMatrix = CharacteristicMatrixSupplier.getBezierCharacteristicMatrix(this.controlPoints.size() - 1).multiply(controlPointMatrix);
-        initializeDegreeArray();
-        initializeCoefficientArray();
+        // initializeDegreeArray();
+        // initializeCoefficientArray();
+        this.polyMatrixSupplier.resizePoly(controlPointMatrix.getRows());
     }
 
     /**
@@ -222,14 +223,9 @@ public class BezierCurve implements Curve {
     /**
      * Initializes the degree/power array (for later processing) and cache them
      */
+    @Deprecated
     public void initializeDegreeArray(){
-        int deg = this.controlPoints.size() - 1;
-        // for now, cache position, velocity, and acceleration powers (thus 3) per bezier obj (change to global caching later)
-        this.diffPowers = new int[3][this.controlPoints.size()];
-
-        for (int i = 0; i < this.diffPowers.length; i++) {
-            this.diffPowers[i] = BezierCurve.genDiff(deg, i);
-        }
+        // basically stubbed
     }
 
     /**
@@ -238,31 +234,19 @@ public class BezierCurve implements Curve {
      * @param diffLevel number of differentiations
      * @return powers of each term in integers
      */
+    @Deprecated
     private static int[] genDiff(int deg, int diffLevel){
-        int[] output = new int[deg + 1];
-
-        for (int i = diffLevel; i < output.length; i++) {
-            output[i] = i - diffLevel;
-        }
-
-        return output;
+        // stubbed
+        return new int[0];
     }
 
     /**
      * Initializes the coefficient array (for later processing) and cache them.
      * Each row is a different level of differentiation.
      */
+    @Deprecated
     public void initializeCoefficientArray(){
-        // for now, cache coefficients for the 0th, 1st, and 2nd derivatives (change to global caching later)
-        this.diffCoefficients = new int[3][this.controlPoints.size()];
-
-        Arrays.fill(this.diffCoefficients[0], 1);
-
-        for (int row = 1; row < this.diffCoefficients.length; row++) {
-            for (int col = 0; col < this.diffCoefficients[0].length; col++) {
-                this.diffCoefficients[row][col] = this.diffCoefficients[row - 1][col] * this.diffPowers[row - 1][col];
-            }
-        }
+        this.polyMatrixSupplier.resizePoly(this.controlPoints.size());
     }
 
     /**
@@ -272,21 +256,7 @@ public class BezierCurve implements Curve {
      * @return t vector
      */
     public double[] getTVector(double t, int diffLevel){
-        int[] degrees = this.diffPowers[diffLevel];
-        double[] powers = new double[this.controlPoints.size()];
-
-        powers[0] = 1;
-        for (int i = 1; i < powers.length; i++) {
-            powers[i] = t * powers[i - 1];
-        }
-
-        double[] output = new double[powers.length];
-
-        for (int i = 0; i < degrees.length; i++) {
-            output[i] = powers[degrees[i]] * this.diffCoefficients[diffLevel][i];
-        }
-
-        return output;
+        return this.polyMatrixSupplier.getRowVector(t, diffLevel).getRow(0);
     }
 
     /**
@@ -619,7 +589,6 @@ public class BezierCurve implements Curve {
      * Generates a BezierCurve that passes through the given points
      * @param points vararg of points; requirements more than two points
      * @return the BezierCurve passing through the points
-     * @author William Phomphakdee - 7462 Not to Scale Alumni
      */
     public static BezierCurve through(Pose... points){
         double[] tValues = new double[points.length];
@@ -629,7 +598,7 @@ public class BezierCurve implements Curve {
             tValues[i] = tValues[i - 1] + increment;
         }
 
-        TVector tVectorGen = new TVector(points.length);
+        PolynomialMatrixSupplier tVectorGen = new PolynomialMatrixSupplier(points.length);
         Matrix tMatrix = new Matrix(points.length, points.length);
         for (int i = 0; i < tMatrix.getRows(); i++) {
             tMatrix.setRow(i, tVectorGen.getRowVector(tValues[i], 0).getRow(0));

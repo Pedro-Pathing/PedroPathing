@@ -12,6 +12,7 @@ import java.util.Arrays;
  * @author William Phomphakdee - 7462 Not to Scale Alumni
  * @version 0.0.1, 07/11/2025
  */
+@Deprecated
 public class TVector {
 
     private int[][] diffPowers;
