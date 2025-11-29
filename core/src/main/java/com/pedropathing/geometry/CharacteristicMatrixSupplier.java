@@ -34,21 +34,17 @@ public class CharacteristicMatrixSupplier {
      * @param layers how many layers of the triangle to generate; the minimum should be 1
      * @return Pascal's triangle (left-aligned)
      */
-    private static double[][] generatePascalTriangle(int layers) {
+    public static double[][] generatePascalTriangle(int layers) {
         double[][] output = new double[layers][layers];
 
-        // pad the start and end of all layers with 1's
-        int prevSign = 1;
-        for (int i = 0; i < layers; i++) {
-            output[i][0] = prevSign;
-            output[i][i] = 1;
-            prevSign *= -1;
-        }
+        output[0][0] = 1;
 
-        // apply the rule for the alternating sign pascal's triangle 'b - a = c' instead of the regular 'a + b = c'
-        for (int i = 2; i < output.length; i++) {
-            for (int j = 1; j < i; j++) {
-                output[i][j] = output[i - 1][j - 1] - output[i - 1][j];
+        for (int row = 1; row < output.length; row++) {
+            double a = 0.0;
+            for (int col = 0; col <= row; col++) {
+                double b = output[row - 1][col];
+                output[row][col] = b - a;
+                a = b;
             }
         }
 
@@ -67,9 +63,9 @@ public class CharacteristicMatrixSupplier {
 
         // sample the last row and multiply all other rows by the corresponding value
         double[] sampledRow = output.getRow(output.getRows() - 1);
-        for (int i = 1; i < output.getRows() - 1; i++) {
-            for (int j = 0; j <= i; j++) {
-                output.set(i, j, output.get(i, j) * Math.abs(sampledRow[i]));
+        for (int i = 1; i < output.getRows(); i++) {
+            for (int j = 0; j < i; j++) {
+                output.set(i, j, output.get(i, j) * sampledRow[i]);
             }
         }
 
