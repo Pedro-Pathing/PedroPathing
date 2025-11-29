@@ -37,13 +37,22 @@ public class CharacteristicMatrixSupplier {
     private static double[][] generatePascalTriangle(int layers) {
         double[][] output = new double[layers][layers];
 
+        // seed the first value of pascal's triangle
         output[0][0] = 1;
 
         for (int row = 1; row < output.length; row++) {
+            // since col is 0 and [row][col - 1] is out of bounds at this moment,
+            // the default should be a 0
             double a = 0.0;
+            // iterate through the row's elements
             for (int col = 0; col <= row; col++) {
                 double b = output[row - 1][col];
+                // the ruleset for the typical pascal's triangle is a + b.
+                // but, we want alternating signs for cheap without iterating again,
+                // so the rule goes to b - a
                 output[row][col] = b - a;
+                // assign 'a' as 'b' since it will be the correct previous [row - 1] value
+                // for the next iteration
                 a = b;
             }
         }
