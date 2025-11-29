@@ -96,17 +96,29 @@ public class SwervePod {
   // turnServo.getController().pwmEnable();
   // }
 
+    /**
+     * @param actualDeg current angle in degrees
+     * @param desiredDeg target angle in degrees
+     * @return the normalized error between the target and current
+     */
+    public static double getError(double actualDeg, double desiredDeg) {
+        double normalizedActualDeg = normalizeNeg180To180(actualDeg);
+        double normalizedDesiredDeg = normalizeNeg180To180(desiredDeg);
+
+        return shortestAngleToTarget(actualDeg, desiredDeg);
+    }
+
   /**
    * Commands pod to a wheel heading (degrees) with a drive power [0, 1]
    */
   public void move(double targetAngleRad, double drivePower, boolean ignoreServoAngleChanges,
       double motorCachingThreshold, double servoCachingThreshold) {
-    double actualDeg = normalizeNeg180To180(getRawAngleDeg() - angleOffsetDeg);
+    double actualDeg = normalizeNeg180To180(getAngleAfterOffsetDeg());
     // add 90 because servo 0s are facing forward, not to the right
     double desiredDeg = normalizeNeg180To180(Math.toDegrees(targetAngleRad) + 90);
 
     // Shortest-path error in [-180, 180]
-    double error = shortestAngleToTarget(actualDeg, desiredDeg);
+    double error = getError(actualDeg, desiredDeg);
 
     // Minimize rotation: flip + invert drive if > 90°
     if (Math.abs(error) > 90.0) {
@@ -148,6 +160,10 @@ public class SwervePod {
     return yOffset;
   }
 
+  public double getAngleAfterOffsetDeg() {
+      return getRawAngleDeg() - angleOffsetDeg;
+  }
+
   public double getRawAngleDeg() {
     // Map 0–3.3 V -> 0–360°
     return (turnEncoder.getVoltage() / ANALOG_REF_V) * 360.0;
@@ -157,14 +173,14 @@ public class SwervePod {
     return normalize0To360(getRawAngleDeg() - angleOffsetDeg);
   }
 
-  private static double normalize0To360(double deg) {
+  public static double normalize0To360(double deg) {
     deg = deg % 360.0;
     if (deg < 0)
       deg += 360.0;
     return deg;
   }
 
-  private static double normalizeNeg180To180(double deg) {
+  public static double normalizeNeg180To180(double deg) {
     deg = deg % 360.0;
     if (deg < -180)
       deg += 360.0;
@@ -195,110 +211,12 @@ public class SwervePod {
         + turnServo.getPower() + ", drive Power=" + driveMotor.getPower() + " }";
   }
 
+    private static double clamp(double v, double lo, double hi) {
+        return Math.max(lo, Math.min(v, hi));
+    }
 
 //    public void enableServo() {
 //        turnServo.getController().pwmEnable();
 //    }
 
-    /**
-     * Commands pod to a wheel heading (degrees) with a drive power [0, 1]
-     */
-    public void move(double targetAngleRad, double drivePower, boolean ignoreServoAngleChanges, double motorCachingThreshold, double servoCachingThreshold) {
-        double actualDeg = normalizeNeg180To180(getRawAngleDeg() - angleOffsetDeg);
-        //add 90 because servo 0s are facing forward, not to the right
-        double desiredDeg = normalizeNeg180To180(Math.toDegrees(targetAngleRad) + 90);
-
-        // Shortest-path error in [-180, 180]
-        double error = shortestAngleToTarget(actualDeg, desiredDeg);
-
-        // Minimize rotation: flip + invert drive if > 90°
-        if (Math.abs(error) > 90.0) {
-            desiredDeg = normalizeNeg180To180(desiredDeg + 180.0);
-            drivePower = -drivePower;
-            error = shortestAngleToTarget(actualDeg, desiredDeg);
-        }
-
-        // Setpoint close to current so PID follows shortest path
-        double setpointDeg = actualDeg + error;
-
-        //before pedro if something breaks
-        //double turnPower = -clamp(turnPID.calculate(setpointDeg, actualDeg), -1.0, 1.0);
-
-        turnPID.updateError(setpointDeg - actualDeg);
-        double turnPower = -clamp(turnPID.run(), -1.0, 1.0);
-
-        if (ignoreServoAngleChanges) {
-           turnServo.setPower(0);
-        } else if (Math.abs(turnPower - turnServo.getPower()) > servoCachingThreshold) {
-            turnServo.setPower(turnPower);
-        }
-
-
-
-
-        if (Math.abs(drivePower - driveMotor.getPower()) > motorCachingThreshold)
-            driveMotor.setPower(drivePower);
-    }
-
-    public double getXOffset() {
-        return xOffset;
-    }
-
-    public double getYOffset() {
-        return yOffset;
-    }
-
-    public double getRawAngleDeg() {
-        // Map 0–3.3 V -> 0–360°
-        return (turnEncoder.getVoltage() / ANALOG_REF_V) * 360.0;
-    }
-
-    public double getOffsetAngleDeg() {
-        return normalize0To360(getRawAngleDeg() - angleOffsetDeg);
-    }
-
-    private static double normalize0To360(double deg) {
-        deg = deg % 360.0;
-        if (deg < 0)
-            deg += 360.0;
-        return deg;
-    }
-
-    private static double normalizeNeg180To180(double deg) {
-        deg = deg % 360.0;
-        if (deg < -180)
-            deg += 360.0;
-        else if (deg > 180) {
-            deg -= 360.0;
-        }
-        return deg;
-    }
-
-    /** Smallest signed delta from current to target in [-180, 180]. */
-    private static double shortestAngleToTarget(double current, double target) {
-        current = normalize0To360(current);
-        target = normalize0To360(target);
-
-        double delta = target - current;
-        if (delta > 180)
-            delta -= 360;
-        else if (delta <= -180)
-            delta += 360;
-
-        if (Math.abs(delta) == 180)
-            return -180;
-        return delta;
-    }
-
-    private static double clamp(double v, double lo, double hi) {
-        return Math.max(lo, Math.min(v, hi));
-    }
-
-    public String debugString() {
-        return servoLabel + "{" +
-                "current Angle=" + getRawAngleDeg() +
-                ", servo Power=" + turnServo.getPower() +
-                ", drive Power=" + driveMotor.getPower() +
-                " }";
-    }
 }
