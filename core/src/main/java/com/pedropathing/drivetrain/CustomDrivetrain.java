@@ -74,6 +74,7 @@ public abstract class CustomDrivetrain extends Drivetrain {
         }
     }
 
+
     private boolean scaleDown(Vector staticVector, Vector variableVector, boolean useMinus) {
         return (staticVector.plus(variableVector).getMagnitude() >= maxPowerScaling) ||
                 (useMinus && staticVector.minus(variableVector).getMagnitude() >= maxPowerScaling);
