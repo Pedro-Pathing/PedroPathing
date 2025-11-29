@@ -65,7 +65,7 @@ public class Tank extends CustomDrivetrain {
             return new double[] {
                     0,
                     0,
-                    headingPower.getMagnitude()
+                    headingPower.dot(new Vector(1, robotHeading))
             };
         }
 
