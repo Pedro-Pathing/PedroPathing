@@ -619,7 +619,6 @@ public class BezierCurve implements Curve {
      * Generates a BezierCurve that passes through the given points
      * @param points vararg of points; requirements more than two points
      * @return the BezierCurve passing through the points
-     * @author William Phomphakdee - 7462 Not to Scale Alumni
      */
     public static BezierCurve through(Pose... points){
         double[] tValues = new double[points.length];

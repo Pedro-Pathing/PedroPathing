@@ -8,7 +8,7 @@ import java.util.HashMap;
  * The CharacteristicMatrixSupplier handles supply the characteristic matrices for splines in their matrix representations.
  *
  * @author William Phomphakdee - 7462 Not to Scale Alumni
- * @version 0.0.2, 08/29/2025
+ * @version 0.0.3, 11/29/2025
  */
 public class CharacteristicMatrixSupplier {
 
@@ -34,7 +34,7 @@ public class CharacteristicMatrixSupplier {
      * @param layers how many layers of the triangle to generate; the minimum should be 1
      * @return Pascal's triangle (left-aligned)
      */
-    public static double[][] generatePascalTriangle(int layers) {
+    private static double[][] generatePascalTriangle(int layers) {
         double[][] output = new double[layers][layers];
 
         output[0][0] = 1;
@@ -64,7 +64,7 @@ public class CharacteristicMatrixSupplier {
         // sample the last row and multiply all other rows by the corresponding value
         double[] sampledRow = output.getRow(output.getRows() - 1);
         for (int i = 1; i < output.getRows(); i++) {
-            for (int j = 0; j < i; j++) {
+            for (int j = 0; j <= i; j++) {
                 output.set(i, j, output.get(i, j) * sampledRow[i]);
             }
         }
