@@ -445,7 +445,16 @@ public class Follower {
             previousClosestPose = closestPose;
             closestPose = new PathPoint();
             updateErrorAndVectors();
-            drivetrain.runDrive(getCentripetalForceCorrection(), getTeleopHeadingVector(), getTeleopDriveVector(), poseTracker.getPose().getHeading());
+
+            if (!constants.isNonholonomicDrive())
+                drivetrain.runDrive(getCentripetalForceCorrection(), getTeleopHeadingVector(), getTeleopDriveVector(), poseTracker.getPose().getHeading());
+            else {
+                Vector centripetalVector = getCentripetalForceCorrection();
+                Vector driveVector = getTeleopDriveVector();
+                Vector headingVector = getHeadingVectorNonholonomic(centripetalVector.plus(driveVector));
+                drivetrain.runDrive(centripetalVector, headingVector, driveVector, poseTracker.getPose().getHeading());
+            }
+
             return;
         }
 
