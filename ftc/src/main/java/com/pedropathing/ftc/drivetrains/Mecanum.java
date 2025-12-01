@@ -75,6 +75,7 @@ public class Mecanum extends Drivetrain {
                 new Vector(copiedFrontLeftVector.getMagnitude(), copiedFrontLeftVector.getTheta())};
     }
 
+    @Override
     public void updateConstants() {
         leftFront.setDirection(constants.leftFrontMotorDirection);
         leftRear.setDirection(constants.leftRearMotorDirection);
@@ -105,6 +106,7 @@ public class Mecanum extends Drivetrain {
      *                        much power to allocate to each wheel.
      * @return this returns an Array of doubles with a length of 4, which contains the wheel powers.
      */
+    @Override
     public double[] calculateDrive(Vector correctivePower, Vector headingPower, Vector pathingPower, double robotHeading) {
         // clamps down the magnitudes of the input vectors
         if (correctivePower.getMagnitude() > maxPowerScaling)
@@ -207,6 +209,7 @@ public class Mecanum extends Drivetrain {
         }
     }
 
+    @Override
     public void breakFollowing() {
         for (DcMotorEx motor : motors) {
             motor.setPower(0);
@@ -214,6 +217,7 @@ public class Mecanum extends Drivetrain {
         setMotorsToFloat();
     }
 
+    @Override
     public void runDrive(double[] drivePowers) {
         for (int i = 0; i < motors.size(); i++) {
             if (Math.abs(motors.get(i).getPower() - drivePowers[i]) > motorCachingThreshold) {
@@ -242,15 +246,19 @@ public class Mecanum extends Drivetrain {
         runDrive(calculateDrive(correctivePower, headingPower, pathingPower, robotHeading));
     }
 
+    @Override
     public double xVelocity() {
         return constants.xVelocity;
     }
 
+    @Override
     public double yVelocity() {
         return constants.yVelocity;
     }
 
+    @Override
     public void setXVelocity(double xMovement) { constants.setXVelocity(xMovement); }
+    @Override
     public void setYVelocity(double yMovement) { constants.setYVelocity(yMovement); }
 
     public double getStaticFrictionCoefficient() {
@@ -267,6 +275,7 @@ public class Mecanum extends Drivetrain {
         return (nominalVoltage - (nominalVoltage * staticFrictionCoefficient)) / (voltage - ((nominalVoltage * nominalVoltage / voltage) * staticFrictionCoefficient));
     }
 
+    @Override
     public String debugString() {
         return "Mecanum{" +
                 " leftFront=" + leftFront +
