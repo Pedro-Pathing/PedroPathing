@@ -116,6 +116,10 @@ public class SwervePod {
         return shortestAngleToTarget(actualDeg, desiredDeg);
     }
 
+    public boolean isEncoderReversed() {
+      return encoderReversed;
+    }
+
   /**
    * Commands pod to a wheel heading (degrees) with a drive power [0, 1]
    */
