@@ -123,6 +123,7 @@ public class SwervePod {
       double motorCachingThreshold, double servoCachingThreshold) {
     double actualDeg = normalizeNeg180To180(getAngleAfterOffsetDeg());
     // add 90 because servo 0s are facing forward, not to the right
+    targetAngleRad = (encoderReversed) ? targetAngleRad : 2*Math.PI - targetAngleRad;
     double desiredDeg = normalizeNeg180To180(Math.toDegrees(targetAngleRad) + 90);
 
     // Shortest-path error in [-180, 180]
