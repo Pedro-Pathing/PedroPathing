@@ -178,13 +178,13 @@ public class SwervePod {
 
   public double getRawAngleDeg() {
     // Map 0–3.3 V -> 0–360°
-    double returnAngle = (encoderReversed) ? ((analogReferenceVoltage - turnEncoder.getVoltage()) / analogReferenceVoltage) :
-        (turnEncoder.getVoltage() / analogReferenceVoltage);
+    //double returnAngle = (encoderReversed) ? ((analogReferenceVoltage - turnEncoder.getVoltage()) / analogReferenceVoltage) :
+    //   (turnEncoder.getVoltage() / analogReferenceVoltage);
 
-    returnAngle *= 360;
+    //returnAngle *= 360;
 
-    return returnAngle;
-    //return (turnEncoder.getVoltage() / analogReferenceVoltage) * 360.0;
+    //return returnAngle;
+    return (turnEncoder.getVoltage() / analogReferenceVoltage) * 360.0;
   }
 
   public double getOffsetAngleDeg() {
