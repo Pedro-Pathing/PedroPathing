@@ -29,7 +29,9 @@ public class SwervePod {
   private final String servoLabel;
 
   // REV analog reference voltage (0–3.3 V)
-  private static final double ANALOG_REF_V = 3.3;
+  private double analogReferenceVoltage;
+
+  private boolean encoderReversed;
 
   /**
    * Constructs the Swerve Pod
@@ -49,7 +51,8 @@ public class SwervePod {
    */
   public SwervePod(HardwareMap hardwareMap, String servoName, String encoderName, String motorName,
       PIDFCoefficients pidfCoefficients, DcMotorSimple.Direction driveDirection,
-      CRServo.Direction servoDirection, double angleOffsetDeg, double[] offsets) {
+      CRServo.Direction servoDirection, double angleOffsetDeg, double[] offsets,
+      double referenceVoltage, boolean encoderReversed) {
     this.turnServo = hardwareMap.get(CRServo.class, servoName);
     this.turnEncoder = hardwareMap.get(AnalogInput.class, encoderName);
     this.driveMotor = hardwareMap.get(DcMotor.class, motorName);
@@ -68,6 +71,11 @@ public class SwervePod {
     driveMotor.setDirection(driveDirection);
 
     turnServo.setDirection(servoDirection);
+
+    this.analogReferenceVoltage = referenceVoltage;
+
+    this.encoderReversed = encoderReversed;
+
 
     // enableServo();
   }
@@ -166,7 +174,13 @@ public class SwervePod {
 
   public double getRawAngleDeg() {
     // Map 0–3.3 V -> 0–360°
-    return (turnEncoder.getVoltage() / ANALOG_REF_V) * 360.0;
+    double returnAngle = (encoderReversed) ? ((analogReferenceVoltage - turnEncoder.getVoltage()) / analogReferenceVoltage) :
+        (turnEncoder.getVoltage() / analogReferenceVoltage);
+
+    returnAngle *= 360;
+
+    return returnAngle;
+    //return (turnEncoder.getVoltage() / analogReferenceVoltage) * 360.0;
   }
 
   public double getOffsetAngleDeg() {

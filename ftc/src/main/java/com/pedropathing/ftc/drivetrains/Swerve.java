@@ -54,22 +54,22 @@ public class Swerve extends Drivetrain {
         leftFrontPod = new SwervePod(hardwareMap, constants.leftFrontServoName, constants.leftFrontEncoderName,
                 constants.leftFrontMotorName, constants.leftFrontTurnPID,
                 constants.leftFrontMotorDirection, constants.leftFrontServoDirection,
-                constants.leftFrontPodAngleOffsetDeg, constants.leftFrontPodXYOffsets);
+                constants.leftFrontPodAngleOffsetDeg, constants.leftFrontPodXYOffsets, constants.leftFrontReferenceVoltage, constants.leftFrontEncoderReversed);
 
         rightFrontPod = new SwervePod(hardwareMap, constants.rightFrontServoName, constants.rightFrontEncoderName,
                 constants.rightFrontMotorName, constants.rightFrontTurnPID,
                 constants.rightFrontMotorDirection, constants.rightFrontServoDirection,
-                constants.rightFrontPodAngleOffsetDeg, constants.rightFrontPodXYOffsets);
+                constants.rightFrontPodAngleOffsetDeg, constants.rightFrontPodXYOffsets, constants.rightFrontReferenceVoltage, constants.rightFrontEncoderReversed);
 
         leftRearPod = new SwervePod(hardwareMap, constants.leftRearServoName, constants.leftRearEncoderName,
                 constants.leftRearMotorName, constants.leftRearTurnPID,
                 constants.leftRearMotorDirection, constants.leftRearServoDirection,
-                constants.leftRearPodAngleOffsetDeg, constants.leftRearPodXYOffsets);
+                constants.leftRearPodAngleOffsetDeg, constants.leftRearPodXYOffsets, constants.leftRearReferenceVoltage, constants.leftRearEncoderReversed);
 
         rightRearPod = new SwervePod(hardwareMap, constants.rightRearServoName, constants.rightRearEncoderName,
                 constants.rightRearMotorName, constants.rightRearTurnPID,
                 constants.rightRearMotorDirection, constants.rightRearServoDirection,
-                constants.rightRearPodAngleOffsetDeg, constants.rightRearPodXYOffsets);
+                constants.rightRearPodAngleOffsetDeg, constants.rightRearPodXYOffsets, constants.rightRearReferenceVoltage, constants.rightRearEncoderReversed);
 
         pods[0] = leftFrontPod;
         pods[1] = rightFrontPod;
