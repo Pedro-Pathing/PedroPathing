@@ -42,10 +42,9 @@ public class SwervePod {
    * @param pidfCoefficients PIDF coefficients for the pod's rotation control
    * @param driveDirection   Direction of the drive motor
    * @param servoDirection   Direction of the servo
-   * @param angleOffsetDeg   In degrees, the negative of what the encoder reads
-   *                         when the pod is facing
-   *                         forward
-   * @param offsets          Array of the pod's x and y offsets from the robot
+   * @param angleOffsetDeg   In degrees, what the encoder reads
+   *                         when the pod is facing right
+   * @param offsets          Array of the pod's x and y offsets from the robo);
    *                         center (units don't
    *                         matter, just relative size of x and y)
    */
