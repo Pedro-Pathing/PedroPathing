@@ -56,7 +56,7 @@ public class SwerveConstants {
     public CRServo.Direction leftRearServoDirection = CRServo.Direction.FORWARD;
     public CRServo.Direction rightRearServoDirection = CRServo.Direction.FORWARD;
 
-    //TODO: These are the reported angle of each pod when facing right, in degrees
+    //TODO: These are the reported angle of each pod when facing forward, in degrees
     public double leftFrontPodAngleOffsetDeg = 0.0;
     public double rightFrontPodAngleOffsetDeg = 0.0;
     public double leftRearPodAngleOffsetDeg = 0.0;

@@ -236,10 +236,10 @@ public class Swerve extends Drivetrain {
     @Override
     public String debugString() {
         return "Swerve{" +
-                "\n leftFrontPodAngle = " + leftFrontPod.getRawAngleDeg() +
-                "\n rightFrontPodAngle = " + rightFrontPod.getRawAngleDeg() +
-                "\n leftRearPodAngle = " + leftRearPod.getRawAngleDeg() +
-                "\n rightRearPodAngle = " + rightRearPod.getRawAngleDeg() +
+                "\n leftFrontPodAngle = " + leftFrontPod.getAngleAfterOffsetDeg() +
+                "\n rightFrontPodAngle = " + rightFrontPod.getAngleAfterOffsetDeg() +
+                "\n leftRearPodAngle = " + leftRearPod.getAngleAfterOffsetDeg() +
+                "\n rightRearPodAngle = " + rightRearPod.getAngleAfterOffsetDeg() +
                 "\nforward input=" + lastForward +
                 "\n, strafe input=" + lastStrafe +
                 "\n, rotation input=" + lastRotation +
