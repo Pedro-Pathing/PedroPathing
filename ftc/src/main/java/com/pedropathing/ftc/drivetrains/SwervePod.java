@@ -43,7 +43,7 @@ public class SwervePod {
    * @param driveDirection   Direction of the drive motor
    * @param servoDirection   Direction of the servo
    * @param angleOffsetDeg   In degrees, what the encoder reads
-   *                         when the pod is facing right
+   *                         when the pod is facing forward
    * @param offsets          Array of the pod's x and y offsets from the robo);
    *                         center (units don't
    *                         matter, just relative size of x and y)
