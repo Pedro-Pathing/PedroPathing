@@ -150,7 +150,7 @@ public class Swerve extends Drivetrain {
             Vector finalVector = podVectors[podNum].times(maxPowerScaling / maxMagnitude); //Normalizing if necessary while preserving relative sizes
 
             //2*Pi-theta because servos have positive clockwise rotation, while our angles are counterclockwise
-            pods[podNum].move(2 * Math.PI - finalVector.getTheta(), finalVector.getMagnitude()  * avgScaling,
+            pods[podNum].move(finalVector.getTheta(), finalVector.getMagnitude()  * avgScaling,
                     ignoreTrans && ignoreRotation, motorCachingThreshold, servoCachingThreshold); //seing if motor / servo caching is an issue
         }
     }
