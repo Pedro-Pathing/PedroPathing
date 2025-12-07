@@ -50,6 +50,7 @@ public class FusionLocalizer implements Localizer {
 
     @Override
     public void update() {
+        deadReckoning.update();
         long now = System.nanoTime();
         double dt = lastUpdateTime < 0 ? 0 : (now - lastUpdateTime) / 1e9;
         lastUpdateTime = now;
