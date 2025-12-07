@@ -134,7 +134,9 @@ public class Swerve extends Drivetrain {
         for (int i = 0; i < pods.length; i++) {
             double currentAngle = pods[i].getAngleAfterOffsetDeg();
             //might need 2pi-theta here
-            double target = SwervePod.normalizeNeg180To180(Math.toDegrees(2*Math.PI-podVectors[i].getTheta()) + 90);
+            double target =  (pods[i].isEncoderReversed()) ? podVectors[i].getTheta() : 2*Math.PI - podVectors[i].getTheta();
+            target = SwervePod.normalizeNeg180To180(Math.toDegrees(target) + 90);
+            // double target = SwervePod.normalizeNeg180To180(Math.toDegrees(2*Math.PI-podVectors[i].getTheta()) + 90);
 
             double error = SwervePod.getError(currentAngle, target);
 
@@ -234,10 +236,10 @@ public class Swerve extends Drivetrain {
     @Override
     public String debugString() {
         return "Swerve{" +
-                "\n leftFrontPodAngle" + leftFrontPod.getRawAngleDeg() +
-                "\n rightFrontPodAngle" + rightFrontPod.getRawAngleDeg() +
-                "\n leftRearPodAngle" + leftRearPod.getRawAngleDeg() +
-                "\n rightRearPodAngle" + rightRearPod.getRawAngleDeg() +
+                "\n leftFrontPodAngle = " + leftFrontPod.getRawAngleDeg() +
+                "\n rightFrontPodAngle = " + rightFrontPod.getRawAngleDeg() +
+                "\n leftRearPodAngle = " + leftRearPod.getRawAngleDeg() +
+                "\n rightRearPodAngle = " + rightRearPod.getRawAngleDeg() +
                 "\nforward input=" + lastForward +
                 "\n, strafe input=" + lastStrafe +
                 "\n, rotation input=" + lastRotation +
