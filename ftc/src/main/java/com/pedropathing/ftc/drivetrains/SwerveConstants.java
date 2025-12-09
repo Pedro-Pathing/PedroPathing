@@ -56,7 +56,7 @@ public class SwerveConstants {
     public CRServo.Direction leftRearServoDirection = CRServo.Direction.FORWARD;
     public CRServo.Direction rightRearServoDirection = CRServo.Direction.FORWARD;
 
-    //TODO: These are the negatives of the reported angle of each pod when facing forward, in degrees
+    //TODO: These are the reported angle of each pod when facing forward, in degrees
     public double leftFrontPodAngleOffsetDeg = 0.0;
     public double rightFrontPodAngleOffsetDeg = 0.0;
     public double leftRearPodAngleOffsetDeg = 0.0;
@@ -71,6 +71,18 @@ public class SwerveConstants {
     public double[] rightFrontPodXYOffsets = new double[] {1, 1};
     public double[] leftRearPodXYOffsets = new double[] {-1, -1};
     public double[] rightRearPodXYOffsets = new double[] {1, -1};
+
+    public double leftFrontReferenceVoltage = 3.3;
+    public double rightFrontReferenceVoltage = 3.3;
+    public double leftRearReferenceVoltage = 3.3;
+    public double rightRearReferenceVoltage = 3.3;
+
+    //use to reverse your encoder if positive is counterclockwise
+    public boolean leftFrontEncoderReversed = false;
+    public boolean rightFrontEncoderReversed = false;
+    public boolean leftRearEncoderReversed = false;
+    public boolean rightRearEncoderReversed = false;
+
 
     public SwerveConstants() {
         defaults();
@@ -292,6 +304,42 @@ public class SwerveConstants {
         return this;
     }
 
+
+    public SwerveConstants leftFrontReferenceVoltage(double leftFrontReferenceVoltage) {
+        this.leftFrontReferenceVoltage = leftFrontReferenceVoltage;
+        return this;
+    }
+    public SwerveConstants rightFrontReferenceVoltage(double rightFrontReferenceVoltage) {
+        this.rightFrontReferenceVoltage = rightFrontReferenceVoltage;
+        return this;
+    }
+    public SwerveConstants leftRearReferenceVoltage(double leftRearReferenceVoltage) {
+        this.leftRearReferenceVoltage = leftRearReferenceVoltage;
+        return this;
+    }
+    public SwerveConstants rightRearReferenceVoltage(double rightRearReferenceVoltage) {
+        this.rightRearReferenceVoltage = rightRearReferenceVoltage;
+        return this;
+    }
+
+    public SwerveConstants leftFrontEncoderReversed(boolean leftFrontEncoderReversed) {
+        this.leftFrontEncoderReversed = leftFrontEncoderReversed;
+        return this;
+    }
+
+    public SwerveConstants rightFrontEncoderReversed(boolean rightFrontEncoderReversed) {
+        this.rightFrontEncoderReversed = rightFrontEncoderReversed;
+        return this;
+    }
+
+    public SwerveConstants leftRearEncoderReversed(boolean leftRearEncoderReversed) {
+        this.leftRearEncoderReversed = leftRearEncoderReversed;
+        return this;
+    }
+    public SwerveConstants rightRearEncoderReversed(boolean rightRearEncoderReversed) {
+        this.rightRearEncoderReversed = rightRearEncoderReversed;
+        return this;
+    }
     public double getVelocity() {
         return xVelocity; //almost certainly for swerve xVel = yVel
     }
@@ -460,6 +508,32 @@ public class SwerveConstants {
         return rightRearPodXYOffsets;
     }
 
+    public double getLeftFrontReferenceVoltage() {
+        return leftFrontReferenceVoltage;
+    }
+    public double getRightFrontReferenceVoltage() {
+        return rightFrontReferenceVoltage;
+    }
+    public double getLeftRearReferenceVoltage() {
+        return leftRearReferenceVoltage;
+    }
+    public double getRightRearReferenceVoltage() {
+        return rightRearReferenceVoltage;
+    }
+
+    public boolean getLeftFrontEncoderReversed() {
+        return leftFrontEncoderReversed;
+    }
+
+    public boolean getRightFrontEncoderReversed() {
+        return rightFrontEncoderReversed;
+    }
+    public boolean getLeftRearEncoderReversed() {
+        return leftRearEncoderReversed;
+    }
+    public boolean getRightRearEncoderReversed() {
+        return rightRearEncoderReversed;
+    }
     public void setVelocity(double velocity) {
         this.xVelocity = velocity;
         this.yVelocity = velocity;
@@ -629,6 +703,32 @@ public class SwerveConstants {
         this.rightRearPodXYOffsets = rightRearPodXYOffsets;
     }
 
+    public void setLeftFrontReferenceVoltage(double leftFrontReferenceVoltage) {
+        this.leftFrontReferenceVoltage = leftFrontReferenceVoltage;
+    }
+    public void setRightFrontReferenceVoltage(double rightFrontReferenceVoltage) {
+        this.rightFrontReferenceVoltage = rightFrontReferenceVoltage;
+    }
+    public void setLeftRearReferenceVoltage(double leftRearReferenceVoltage) {
+        this.leftRearReferenceVoltage = leftRearReferenceVoltage;
+    }
+    public void setRightRearReferenceVoltage(double rightRearReferenceVoltage) {
+        this.rightRearReferenceVoltage = rightRearReferenceVoltage;
+    }
+
+    public void setLeftFrontEncoderReversed(boolean leftFrontEncoderReversed) {
+        this.leftFrontEncoderReversed = leftFrontEncoderReversed;
+    }
+    public void setRightFrontEncoderReversed(boolean rightFrontEncoderReversed) {
+        this.rightFrontEncoderReversed = rightFrontEncoderReversed;
+    }
+    public void setLeftRearEncoderReversed(boolean leftRearEncoderReversed) {
+        this.leftRearEncoderReversed = leftRearEncoderReversed;
+    }
+    public void setRightRearEncoderReversed(boolean rightRearEncoderReversed) {
+        this.rightRearEncoderReversed = rightRearEncoderReversed;
+    }
+
 
 
 
@@ -674,5 +774,13 @@ public class SwerveConstants {
         rightFrontPodXYOffsets = new double[] {1, 1};
         leftRearPodXYOffsets = new double[] {-1, -1};
         rightRearPodXYOffsets = new double[] {1, -1};
+        leftFrontReferenceVoltage = 3.3;
+        rightFrontReferenceVoltage = 3.3;
+        leftRearReferenceVoltage = 3.3;
+        rightRearReferenceVoltage = 3.3;
+        leftFrontEncoderReversed = false;
+        rightFrontEncoderReversed = false;
+        leftRearEncoderReversed = false;
+        rightRearEncoderReversed = false;
     }
 }

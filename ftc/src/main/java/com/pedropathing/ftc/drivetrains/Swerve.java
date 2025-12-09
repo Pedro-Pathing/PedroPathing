@@ -54,22 +54,22 @@ public class Swerve extends Drivetrain {
         leftFrontPod = new SwervePod(hardwareMap, constants.leftFrontServoName, constants.leftFrontEncoderName,
                 constants.leftFrontMotorName, constants.leftFrontTurnPID,
                 constants.leftFrontMotorDirection, constants.leftFrontServoDirection,
-                constants.leftFrontPodAngleOffsetDeg, constants.leftFrontPodXYOffsets);
+                constants.leftFrontPodAngleOffsetDeg, constants.leftFrontPodXYOffsets, constants.leftFrontReferenceVoltage, constants.leftFrontEncoderReversed);
 
         rightFrontPod = new SwervePod(hardwareMap, constants.rightFrontServoName, constants.rightFrontEncoderName,
                 constants.rightFrontMotorName, constants.rightFrontTurnPID,
                 constants.rightFrontMotorDirection, constants.rightFrontServoDirection,
-                constants.rightFrontPodAngleOffsetDeg, constants.rightFrontPodXYOffsets);
+                constants.rightFrontPodAngleOffsetDeg, constants.rightFrontPodXYOffsets, constants.rightFrontReferenceVoltage, constants.rightFrontEncoderReversed);
 
         leftRearPod = new SwervePod(hardwareMap, constants.leftRearServoName, constants.leftRearEncoderName,
                 constants.leftRearMotorName, constants.leftRearTurnPID,
                 constants.leftRearMotorDirection, constants.leftRearServoDirection,
-                constants.leftRearPodAngleOffsetDeg, constants.leftRearPodXYOffsets);
+                constants.leftRearPodAngleOffsetDeg, constants.leftRearPodXYOffsets, constants.leftRearReferenceVoltage, constants.leftRearEncoderReversed);
 
         rightRearPod = new SwervePod(hardwareMap, constants.rightRearServoName, constants.rightRearEncoderName,
                 constants.rightRearMotorName, constants.rightRearTurnPID,
                 constants.rightRearMotorDirection, constants.rightRearServoDirection,
-                constants.rightRearPodAngleOffsetDeg, constants.rightRearPodXYOffsets);
+                constants.rightRearPodAngleOffsetDeg, constants.rightRearPodXYOffsets, constants.rightRearReferenceVoltage, constants.rightRearEncoderReversed);
 
         pods[0] = leftFrontPod;
         pods[1] = rightFrontPod;
@@ -134,7 +134,9 @@ public class Swerve extends Drivetrain {
         for (int i = 0; i < pods.length; i++) {
             double currentAngle = pods[i].getAngleAfterOffsetDeg();
             //might need 2pi-theta here
-            double target = SwervePod.normalizeNeg180To180(Math.toDegrees(2*Math.PI-podVectors[i].getTheta()) + 90);
+            double target =  (pods[i].isEncoderReversed()) ? podVectors[i].getTheta() : 2*Math.PI - podVectors[i].getTheta();
+            target = SwervePod.normalizeNeg180To180(Math.toDegrees(target) + 90);
+            // double target = SwervePod.normalizeNeg180To180(Math.toDegrees(2*Math.PI-podVectors[i].getTheta()) + 90);
 
             double error = SwervePod.getError(currentAngle, target);
 
@@ -150,7 +152,7 @@ public class Swerve extends Drivetrain {
             Vector finalVector = podVectors[podNum].times(maxPowerScaling / maxMagnitude); //Normalizing if necessary while preserving relative sizes
 
             //2*Pi-theta because servos have positive clockwise rotation, while our angles are counterclockwise
-            pods[podNum].move(2 * Math.PI - finalVector.getTheta(), finalVector.getMagnitude()  * avgScaling,
+            pods[podNum].move(finalVector.getTheta(), finalVector.getMagnitude()  * avgScaling,
                     ignoreTrans && ignoreRotation, motorCachingThreshold, servoCachingThreshold); //seing if motor / servo caching is an issue
         }
     }
@@ -234,6 +236,10 @@ public class Swerve extends Drivetrain {
     @Override
     public String debugString() {
         return "Swerve{" +
+                "\n leftFrontPodAngle = " + leftFrontPod.getAngleAfterOffsetDeg() +
+                "\n rightFrontPodAngle = " + rightFrontPod.getAngleAfterOffsetDeg() +
+                "\n leftRearPodAngle = " + leftRearPod.getAngleAfterOffsetDeg() +
+                "\n rightRearPodAngle = " + rightRearPod.getAngleAfterOffsetDeg() +
                 "\nforward input=" + lastForward +
                 "\n, strafe input=" + lastStrafe +
                 "\n, rotation input=" + lastRotation +
