@@ -7,12 +7,13 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 /**
  * Constants for swerve drive configuration
+ * 
  * @author Kabir Goyal - 365 MOE
  */
 public class SwerveConstants {
 
-    public double xVelocity = 80.0; //TODO: Change based on your robot
-    public double yVelocity = 80.0; //TODO: Change based on your robot
+    public double xVelocity = 80.0; // TODO: Change based on your robot
+    public double yVelocity = 80.0; // TODO: Change based on your robot
 
     public boolean useBrakeModeInTeleOp = false;
     public double maxPower = 1.0;
@@ -21,6 +22,8 @@ public class SwerveConstants {
     public boolean useVoltageCompensation = false;
     public double nominalVoltage = 12.0;
     public double staticFrictionCoefficient = 0.1;
+    public double drivePIDFFeedForward = 0.05;
+    public double epsilon = 0.001;
 
     public String leftFrontMotorName = "frontLeftDrive";
     public String leftFrontServoName = "frontLeftTurnServo";
@@ -38,56 +41,55 @@ public class SwerveConstants {
     public String rightRearServoName = "backRightTurnServo";
     public String rightRearEncoderName = "backRightTurnEncoder";
 
-    //TODO: Change PID coefficients based on your config
+    // TODO: Change PID coefficients based on your config
     public PIDFCoefficients leftFrontTurnPID = new PIDFCoefficients(0.005, 0.0, 0.001, 0.0);
     public PIDFCoefficients rightFrontTurnPID = new PIDFCoefficients(0.005, 0.0, 0.001, 0.0);
     public PIDFCoefficients leftRearTurnPID = new PIDFCoefficients(0.005, 0.0, 0.001, 0.0);
     public PIDFCoefficients rightRearTurnPID = new PIDFCoefficients(0.005, 0.0, 0.001, 0.0);
 
-    //TODO: Reverse motors if needed
+    // TODO: Reverse motors if needed
     public DcMotorEx.Direction leftFrontMotorDirection = DcMotorSimple.Direction.REVERSE;
     public DcMotorEx.Direction rightFrontMotorDirection = DcMotorSimple.Direction.FORWARD;
     public DcMotorEx.Direction leftRearMotorDirection = DcMotorSimple.Direction.REVERSE;
     public DcMotorEx.Direction rightRearMotorDirection = DcMotorSimple.Direction.FORWARD;
 
-    //TODO: Reverse servos if needed
+    // TODO: Reverse servos if needed
     public CRServo.Direction leftFrontServoDirection = CRServo.Direction.FORWARD;
     public CRServo.Direction rightFrontServoDirection = CRServo.Direction.FORWARD;
     public CRServo.Direction leftRearServoDirection = CRServo.Direction.FORWARD;
     public CRServo.Direction rightRearServoDirection = CRServo.Direction.FORWARD;
 
-    //TODO: These are the reported angle of each pod when facing forward, in degrees
+    // TODO: These are the reported angle of each pod when facing forward, in
+    // degrees
     public double leftFrontPodAngleOffsetDeg = 0.0;
     public double rightFrontPodAngleOffsetDeg = 0.0;
     public double leftRearPodAngleOffsetDeg = 0.0;
     public double rightRearPodAngleOffsetDeg = 0.0;
 
-    //TODO: distance from the center of the robot to each pod
-    //if you're swerve is square, you can leave these be
+    // TODO: distance from the center of the robot to each pod
+    // if you're swerve is square, you can leave these be
     // hopefully these should be +- the same x, y, but just in case
-    //units don't matter, they'll be normalized
-    //positive x is right, positive y is forward, as with joysticks
-    public double[] leftFrontPodXYOffsets = new double[] {-1, 1};
-    public double[] rightFrontPodXYOffsets = new double[] {1, 1};
-    public double[] leftRearPodXYOffsets = new double[] {-1, -1};
-    public double[] rightRearPodXYOffsets = new double[] {1, -1};
+    // units don't matter, they'll be normalized
+    // positive x is right, positive y is forward, as with joysticks
+    public double[] leftFrontPodXYOffsets = new double[] { -1, 1 };
+    public double[] rightFrontPodXYOffsets = new double[] { 1, 1 };
+    public double[] leftRearPodXYOffsets = new double[] { -1, -1 };
+    public double[] rightRearPodXYOffsets = new double[] { 1, -1 };
 
     public double leftFrontReferenceVoltage = 3.3;
     public double rightFrontReferenceVoltage = 3.3;
     public double leftRearReferenceVoltage = 3.3;
     public double rightRearReferenceVoltage = 3.3;
 
-    //use to reverse your encoder if positive is counterclockwise
+    // use to reverse your encoder if positive is counterclockwise
     public boolean leftFrontEncoderReversed = false;
     public boolean rightFrontEncoderReversed = false;
     public boolean leftRearEncoderReversed = false;
     public boolean rightRearEncoderReversed = false;
 
-
     public SwerveConstants() {
         defaults();
     }
-
 
     /**
      * @param velocity the max speed in ANY direction because swerve can do that :)
@@ -141,6 +143,16 @@ public class SwerveConstants {
 
     public SwerveConstants staticFrictionCoefficient(double staticFrictionCoefficient) {
         this.staticFrictionCoefficient = staticFrictionCoefficient;
+        return this;
+    }
+
+    public SwerveConstants drivePIDFFeedForward(double drivePIDFFeedForward) {
+        this.drivePIDFFeedForward = drivePIDFFeedForward;
+        return this;
+    }
+
+    public SwerveConstants epsilon(double epsilon) {
+        this.epsilon = epsilon;
         return this;
     }
 
@@ -304,19 +316,21 @@ public class SwerveConstants {
         return this;
     }
 
-
     public SwerveConstants leftFrontReferenceVoltage(double leftFrontReferenceVoltage) {
         this.leftFrontReferenceVoltage = leftFrontReferenceVoltage;
         return this;
     }
+
     public SwerveConstants rightFrontReferenceVoltage(double rightFrontReferenceVoltage) {
         this.rightFrontReferenceVoltage = rightFrontReferenceVoltage;
         return this;
     }
+
     public SwerveConstants leftRearReferenceVoltage(double leftRearReferenceVoltage) {
         this.leftRearReferenceVoltage = leftRearReferenceVoltage;
         return this;
     }
+
     public SwerveConstants rightRearReferenceVoltage(double rightRearReferenceVoltage) {
         this.rightRearReferenceVoltage = rightRearReferenceVoltage;
         return this;
@@ -336,12 +350,14 @@ public class SwerveConstants {
         this.leftRearEncoderReversed = leftRearEncoderReversed;
         return this;
     }
+
     public SwerveConstants rightRearEncoderReversed(boolean rightRearEncoderReversed) {
         this.rightRearEncoderReversed = rightRearEncoderReversed;
         return this;
     }
+
     public double getVelocity() {
-        return xVelocity; //almost certainly for swerve xVel = yVel
+        return xVelocity; // should be equal to yVelocity
     }
 
     public double getXVelocity() {
@@ -378,6 +394,14 @@ public class SwerveConstants {
 
     public double getStaticFrictionCoefficient() {
         return staticFrictionCoefficient;
+    }
+
+    public double getDrivePIDFFeedForward() {
+        return drivePIDFFeedForward;
+    }
+
+    public double getEpsilon() {
+        return epsilon;
     }
 
     public String getLeftFrontMotorName() {
@@ -511,12 +535,15 @@ public class SwerveConstants {
     public double getLeftFrontReferenceVoltage() {
         return leftFrontReferenceVoltage;
     }
+
     public double getRightFrontReferenceVoltage() {
         return rightFrontReferenceVoltage;
     }
+
     public double getLeftRearReferenceVoltage() {
         return leftRearReferenceVoltage;
     }
+
     public double getRightRearReferenceVoltage() {
         return rightRearReferenceVoltage;
     }
@@ -528,12 +555,15 @@ public class SwerveConstants {
     public boolean getRightFrontEncoderReversed() {
         return rightFrontEncoderReversed;
     }
+
     public boolean getLeftRearEncoderReversed() {
         return leftRearEncoderReversed;
     }
+
     public boolean getRightRearEncoderReversed() {
         return rightRearEncoderReversed;
     }
+
     public void setVelocity(double velocity) {
         this.xVelocity = velocity;
         this.yVelocity = velocity;
@@ -573,6 +603,14 @@ public class SwerveConstants {
 
     public void setStaticFrictionCoefficient(double staticFrictionCoefficient) {
         this.staticFrictionCoefficient = staticFrictionCoefficient;
+    }
+
+    public void setDrivePIDFFeedForward(double drivePIDFFeedForward) {
+        this.drivePIDFFeedForward = drivePIDFFeedForward;
+    }
+
+    public void setEpsilon(double epsilon) {
+        this.epsilon = epsilon;
     }
 
     public void setLeftFrontMotorName(String leftFrontMotorName) {
@@ -706,12 +744,15 @@ public class SwerveConstants {
     public void setLeftFrontReferenceVoltage(double leftFrontReferenceVoltage) {
         this.leftFrontReferenceVoltage = leftFrontReferenceVoltage;
     }
+
     public void setRightFrontReferenceVoltage(double rightFrontReferenceVoltage) {
         this.rightFrontReferenceVoltage = rightFrontReferenceVoltage;
     }
+
     public void setLeftRearReferenceVoltage(double leftRearReferenceVoltage) {
         this.leftRearReferenceVoltage = leftRearReferenceVoltage;
     }
+
     public void setRightRearReferenceVoltage(double rightRearReferenceVoltage) {
         this.rightRearReferenceVoltage = rightRearReferenceVoltage;
     }
@@ -719,18 +760,18 @@ public class SwerveConstants {
     public void setLeftFrontEncoderReversed(boolean leftFrontEncoderReversed) {
         this.leftFrontEncoderReversed = leftFrontEncoderReversed;
     }
+
     public void setRightFrontEncoderReversed(boolean rightFrontEncoderReversed) {
         this.rightFrontEncoderReversed = rightFrontEncoderReversed;
     }
+
     public void setLeftRearEncoderReversed(boolean leftRearEncoderReversed) {
         this.leftRearEncoderReversed = leftRearEncoderReversed;
     }
+
     public void setRightRearEncoderReversed(boolean rightRearEncoderReversed) {
         this.rightRearEncoderReversed = rightRearEncoderReversed;
     }
-
-
-
 
     public void defaults() {
         xVelocity = 80.0;
@@ -742,6 +783,8 @@ public class SwerveConstants {
         useVoltageCompensation = false;
         nominalVoltage = 12.0;
         staticFrictionCoefficient = 0.1;
+        drivePIDFFeedForward = 0.05;
+        epsilon = 0.001;
         leftFrontMotorName = "frontLeftDrive";
         leftFrontServoName = "frontLeftTurnServo";
         leftFrontEncoderName = "frontLeftTurnEncoder";
@@ -770,10 +813,10 @@ public class SwerveConstants {
         rightFrontPodAngleOffsetDeg = 0.0;
         leftRearPodAngleOffsetDeg = 0.0;
         rightRearPodAngleOffsetDeg = 0.0;
-        leftFrontPodXYOffsets = new double[] {-1, 1};
-        rightFrontPodXYOffsets = new double[] {1, 1};
-        leftRearPodXYOffsets = new double[] {-1, -1};
-        rightRearPodXYOffsets = new double[] {1, -1};
+        leftFrontPodXYOffsets = new double[] { -1, 1 };
+        rightFrontPodXYOffsets = new double[] { 1, 1 };
+        leftRearPodXYOffsets = new double[] { -1, -1 };
+        rightRearPodXYOffsets = new double[] { 1, -1 };
         leftFrontReferenceVoltage = 3.3;
         rightFrontReferenceVoltage = 3.3;
         leftRearReferenceVoltage = 3.3;
