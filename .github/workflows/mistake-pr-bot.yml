@@ -1,0 +1,153 @@
+name: Mistake PR Bot
+
+on:
+  pull_request:
+    types: [opened, reopened]
+
+permissions:
+  pull-requests: write
+  issues: write
+  contents: read
+
+jobs:
+  detect-mistake-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run bot script
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const author = pr.user.login;
+
+            const MISTAKE = "mistake-pr";
+            const USED_REOPEN = "reopen-used";
+
+            async function isMaintainer(username) {
+              const perm = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner,
+                repo,
+                username
+              });
+              return ["admin", "maintain", "write"].includes(perm.data.permission);
+            }
+
+            async function ensureLabel(name, color, description) {
+              try {
+                await github.rest.issues.getLabel({ owner, repo, name });
+              } catch (e) {
+                if (e.status === 404) {
+                  await github.rest.issues.createLabel({
+                    owner,
+                    repo,
+                    name,
+                    color,
+                    description
+                  });
+                } else {
+                  throw e;
+                }
+              }
+            }
+
+            // Ignore maintainers
+            if (await isMaintainer(author)) return;
+
+            const currentLabels = pr.labels.map(l => l.name);
+
+            // --------------------
+            // REOPENED PR LOGIC
+            // --------------------
+            if (context.payload.action === "reopened") {
+              if (currentLabels.includes(USED_REOPEN)) {
+                await github.rest.pulls.update({
+                  owner,
+                  repo,
+                  pull_number: pr.number,
+                  state: "closed"
+                });
+
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: pr.number,
+                  body: "This PR has already used its one allowed reopen, so it can’t be reopened again."
+                });
+                return;
+              }
+
+              await ensureLabel(
+                USED_REOPEN,
+                "0e8a16",
+                "Author used their one allowed reopen"
+              );
+
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: pr.number,
+                labels: [USED_REOPEN]
+              });
+
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pr.number,
+                body: "Reopened 👍 This is the one allowed reopen for this PR. If a maintainer closes it again, it won’t be able to be reopened."
+              });
+              return;
+            }
+
+            // --------------------
+            // OPENED PR LOGIC
+            // --------------------
+            if (context.payload.action === "opened") {
+              const files = await github.paginate(
+                github.rest.pulls.listFiles,
+                {
+                  owner,
+                  repo,
+                  pull_number: pr.number,
+                  per_page: 100
+                }
+              );
+
+              // Only close PRs that add new files
+              if (!files.some(f => f.status === "added")) return;
+
+              await ensureLabel(
+                MISTAKE,
+                "d73a4a",
+                "Likely accidental PR that adds new files"
+              );
+
+              await github.rest.issues.addLabels({
+                owner,
+                repo,
+                issue_number: pr.number,
+                labels: [MISTAKE]
+              });
+
+              await github.rest.pulls.update({
+                owner,
+                repo,
+                pull_number: pr.number,
+                state: "closed"
+              });
+
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pr.number,
+                body: `Hey! 👋
+
+This PR was automatically closed because it adds new files.
+
+Most PRs like this are opened by accident when teams try to merge PedroPathing into their own FTC project. This repo is just the library itself — not a place to upload robot code.
+
+If this was intentional (for example, an actual library contribution), you can reopen this PR **once**.
+If it gets closed again by a maintainer, it won’t be reopenable after that.`
+              });
+            }
