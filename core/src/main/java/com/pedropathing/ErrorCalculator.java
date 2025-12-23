@@ -144,7 +144,7 @@ public class ErrorCalculator {
             driveErrors[i] = driveErrors[i + 1];
         }
 
-        driveErrors[1] = driveKalmanFilter.getState();
+        driveErrors[driveErrors.length] = driveKalmanFilter.getState();
 
         return driveKalmanFilter.getState();
     }
