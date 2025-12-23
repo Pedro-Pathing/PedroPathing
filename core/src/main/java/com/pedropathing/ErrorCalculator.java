@@ -182,7 +182,7 @@ public class ErrorCalculator {
                     Vector forwardTheoreticalHeadingVector = new Vector(1.0, headingGoal);
 
                     double stoppingDistance = Kinematics.getStoppingDistance(
-                            yVelocity + (xVelocity - yVelocity) * forwardTheoreticalHeadingVector.dot(tangent), constants.forwardZeroPowerAcceleration
+                            yVelocity + (xVelocity - yVelocity) * Math.abs(forwardTheoreticalHeadingVector.dot(tangent)), constants.forwardZeroPowerAcceleration
                     );
                     if (distanceToGoal >= stoppingDistance * currentPath.getBrakingStartMultiplier()) {
                         return -1;
