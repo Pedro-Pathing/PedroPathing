@@ -63,11 +63,7 @@ public class BezierCurve implements Curve {
     public BezierCurve(List<Pose> controlPoints, PathConstraints constraints){
         this.pathConstraints = constraints;
         if (controlPoints.size()<3) {
-            try {
-                throw new Exception("Too few control points");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            throw new IllegalArgumentException("Too few control points");
         }
 
         this.controlPoints = new ArrayList<>(controlPoints);
@@ -82,11 +78,7 @@ public class BezierCurve implements Curve {
     protected BezierCurve(PathConstraints constraints, List<FuturePose> controlPoints) {
         this.pathConstraints = constraints;
         if (controlPoints.size()<3) {
-            try {
-                throw new Exception("Too few control points");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            throw new IllegalArgumentException("Too few control points");
         }
 
         boolean lazyInitialize = false;
