@@ -320,7 +320,7 @@ public class PathBuilder {
      * @return This returns itself with the updated data.
      */
     public PathBuilder setGlobalReversed() {
-        headingInterpolator.reverse();
+        headingInterpolator = headingInterpolator.reverse();
         return this;
     }
 
