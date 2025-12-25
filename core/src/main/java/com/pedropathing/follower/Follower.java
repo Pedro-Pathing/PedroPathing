@@ -424,7 +424,15 @@ public class Follower {
 
     /** Calls an update to the VectorCalculator, which updates the robot's current vectors to correct. */
     public void updateVectors() {
-        vectorCalculator.update(useDrive, useHeading, useTranslational, useCentripetal, manualDrive, chainIndex, drivetrain.getMaxPowerScaling(), followingPathChain, centripetalScaling, currentPose, closestPose.getPose(), poseTracker.getVelocity(), currentPath, currentPathChain, useDrive && !holdingPosition ? getDriveError() : -1, getTranslationalError(), getHeadingError(), getClosestPointHeadingGoal());
+        vectorCalculator.update(useDrive, useHeading, useTranslational, useCentripetal,
+                                manualDrive, chainIndex,
+                                drivetrain.getMaxPowerScaling(), followingPathChain,
+                                centripetalScaling, currentPose, closestPose.getPose(),
+                                poseTracker.getVelocity(), currentPath,
+                                currentPathChain, useDrive && !holdingPosition ?
+                                    getDriveError() : -1, getTranslationalError(),
+                                getHeadingError(), getClosestPointHeadingGoal(),
+                                getDistanceRemaining());
     }
 
     public void updateErrorAndVectors() {updateErrors(); updateVectors();}
