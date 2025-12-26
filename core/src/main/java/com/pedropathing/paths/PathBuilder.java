@@ -27,12 +27,12 @@ import java.util.List;
  * @version 1.0, 3/11/2024
  */
 public class PathBuilder {
-    private ArrayList<Path> paths = new ArrayList<>();
+    private final ArrayList<Path> paths = new ArrayList<>();
     private PathChain.DecelerationType decelerationType = PathChain.DecelerationType.LAST_PATH;
-    private ArrayList<PathCallback> callbacks = new ArrayList<>();
+    private final ArrayList<PathCallback> callbacks = new ArrayList<>();
     private PathConstraints constraints;
     private HeadingInterpolator headingInterpolator;
-    private Follower follower;
+    private final Follower follower;
 
     /**
      * This is an constructor for the PathBuilder class so it can get started with specific constraints.

@@ -449,12 +449,12 @@ public class VectorCalculator {
     }
 
     public String debugString() {
-        return "Drive Vector: " + getDriveVector().toString() + "\n" +
-                "Heading Vector: " + getHeadingVector().toString() + "\n" +
-                "Translational Vector: " + getTranslationalVector().toString() + "\n" +
-                "Centripetal Vector: " + getCentripetalVector().toString() + "\n" +
-                "Corrective Vector: " + getCorrectiveVector().toString() + "\n" +
-                "Teleop Drive Vector: " + getTeleopDriveVector().toString() + "\n" +
-                "Teleop Heading Vector: " + getTeleopHeadingVector().toString();
+        return "Drive Vector: " + driveVector.toString() + "\n" +
+                "Heading Vector: " + headingVector.toString() + "\n" +
+                "Translational Vector: " + translationalVector.toString() + "\n" +
+                "Centripetal Vector: " + centripetalVector.toString() + "\n" +
+                "Corrective Vector: " + correctiveVector.toString() + "\n" +
+                "Teleop Drive Vector: " + teleopDriveVector.toString() + "\n" +
+                "Teleop Heading Vector: " + teleopHeadingVector.toString();
     }
 }

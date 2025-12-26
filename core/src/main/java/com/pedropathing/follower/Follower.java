@@ -144,6 +144,30 @@ public class Follower {
     }
 
     /**
+     * This sets the current x-position estimate of the localizer. Units are inferred from localizer constants where necessary.
+     * @param x the x-position estimate to set
+     */
+    public void setX(double x) {
+        poseTracker.getLocalizer().setX(x);
+    }
+
+    /**
+     * This sets the current y-position estimate of the localizer. Units are inferred from localizer constants where necessary.
+     * @param y the y-position estimate to set
+     */
+    public void setY(double y) {
+        poseTracker.getLocalizer().setY(y);
+    }
+
+    /**
+     * This sets the current heading estimate of the localizer, in radians.
+     * @param heading the heading estimate to set
+     */
+    public void setHeading(double heading) {
+        poseTracker.getLocalizer().setHeading(heading);
+    }
+
+    /**
      * This returns the current pose from the PoseTracker.
      *
      * @return returns the pose

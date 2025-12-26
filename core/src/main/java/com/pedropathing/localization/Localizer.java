@@ -107,4 +107,28 @@ public interface Localizer {
      * @return returns if any component of the robot's position is NaN
      */
     boolean isNAN();
+
+    /**
+     * This sets the current x-position estimate of the localizer. Units are inferred from localizer constants where necessary.
+     * @param x the x-position estimate to set
+     */
+    default void setX(double x) {
+        setPose(getPose().withX(x));
+    }
+
+    /**
+     * This sets the current y-position estimate of the localizer. Units are inferred from localizer constants where necessary.
+     * @param y the y-position estimate to set
+     */
+    default void setY(double y) {
+        setPose(getPose().withY(y));
+    }
+
+    /**
+     * This sets the current heading estimate of the localizer, in radians.
+     * @param heading the heading estimate to set
+     */
+    default void setHeading(double heading) {
+        setPose(getPose().withHeading(heading));
+    }
 }

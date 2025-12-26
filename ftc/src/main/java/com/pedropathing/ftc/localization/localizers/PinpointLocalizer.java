@@ -31,6 +31,7 @@ import java.util.Objects;
  */
 public class PinpointLocalizer implements Localizer {
     private final GoBildaPinpointDriver odo;
+    private final PinpointConstants constants;
     private double previousHeading;
     private double totalHeading;
     private Pose startPose;
@@ -75,6 +76,7 @@ public class PinpointLocalizer implements Localizer {
         pinpointPose = startPose;
         currentVelocity = new Pose();
         previousHeading = setStartPose.getHeading();
+        this.constants = constants;
     }
 
     /**
@@ -108,8 +110,7 @@ public class PinpointLocalizer implements Localizer {
     }
 
     /**
-     * This sets the start pose. Since nobody should be using this after the robot has begun moving,
-     * and due to issues with the PinpointLocalizer, this is functionally the same as setPose(Pose).
+     * This sets the start pose. This alters the start position even if it is already set, compensating as needed.
      *
      * @param setStart the new start pose
      */
@@ -250,5 +251,20 @@ public class PinpointLocalizer implements Localizer {
      */
     public GoBildaPinpointDriver getPinpoint() {
         return odo;
+    }
+
+    @Override
+    public void setX(double x) {
+        odo.setPosX(x, constants.distanceUnit);
+    }
+
+    @Override
+    public void setY(double y) {
+        odo.setPosY(y, constants.distanceUnit);
+    }
+
+    @Override
+    public void setHeading(double heading) {
+        odo.setHeading(heading, AngleUnit.RADIANS);
     }
 }

@@ -30,6 +30,8 @@ public class BezierCurve implements Curve {
 
     protected boolean initialized = false;
 
+    protected boolean lazyInitialize = false;
+
     private Vector endTangent = new Vector();
 
     protected final int APPROXIMATION_STEPS = 1000;
@@ -81,7 +83,7 @@ public class BezierCurve implements Curve {
             throw new IllegalArgumentException("Too few control points");
         }
 
-        boolean lazyInitialize = false;
+        lazyInitialize = false;
         ArrayList<Pose> initializedControlPoints = new ArrayList<>();
         for (FuturePose pose : controlPoints) {
             if (!pose.initialized()) {
@@ -130,7 +132,7 @@ public class BezierCurve implements Curve {
      * This handles most of the initialization of the BezierCurve that is called from the constructor.
      */
     public void initialize() {
-        if (initialized) return; // If already initialized, do nothing
+        if (initialized && !lazyInitialize) return; // If already initialized, do nothing
         if (controlPoints.isEmpty() && !futureControlPoints.isEmpty()) {
             for (FuturePose pose : futureControlPoints) {
                 controlPoints.add(pose.getPose());
