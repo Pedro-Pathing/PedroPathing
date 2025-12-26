@@ -54,4 +54,8 @@ public class ParametricCallback implements PathCallback {
     public int getPathIndex() {
         return index;
     }
+
+    public double getStartCondition() {
+        return startCondition;
+    }
 }
