@@ -284,7 +284,7 @@ public class VectorCalculator {
                 );
             }
             
-            Vector normal = currentPath.getClosestPointNormalVector().normalize();
+            Vector normal = currentPath.getClosestLeftGradientVector();
             return normal.times(
                     predictiveBrakingController.computeOutput(translationalError.dot(normal),
                                                               velocity.dot(normal)));
