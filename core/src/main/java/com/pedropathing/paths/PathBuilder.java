@@ -12,10 +12,7 @@ import com.pedropathing.util.FiniteRunAction;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.PriorityQueue;
 
 /**
  * This is the PathBuilder class. This class makes it easier to create PathChains, so you don't have
