@@ -8,6 +8,7 @@ import com.pedropathing.paths.callbacks.TemporalCallback;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 
 /**
@@ -131,17 +132,13 @@ public class PathChain {
      */
     public void setCallbacks(ArrayList<PathCallback> callbacks) {
         Comparator<PathCallback> callbackComparator = (pathCallback, other) -> {
-            if (pathCallback instanceof ParametricCallback && other instanceof TemporalCallback)
-                return 1;
-            if (pathCallback instanceof TemporalCallback && other instanceof ParametricCallback)
-                return -1;
             if (pathCallback instanceof ParametricCallback && other instanceof ParametricCallback)
                 return Double.compare(((ParametricCallback) pathCallback).getStartCondition(), ((ParametricCallback) other).getStartCondition());
             if (pathCallback instanceof TemporalCallback && other instanceof TemporalCallback)
                 return Double.compare(((TemporalCallback) pathCallback).getStartCondition(), ((TemporalCallback) other).getStartCondition());
-            return pathCallback.getClass().getName().compareTo(other.getClass().getName());
+            return 0;
         };
-        callbacks.sort(callbackComparator);
+        Collections.sort(callbacks, callbackComparator);
         this.callbacks = callbacks;
     }
 
