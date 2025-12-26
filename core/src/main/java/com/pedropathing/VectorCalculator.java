@@ -188,9 +188,10 @@ public class VectorCalculator {
         if (!useDrive) return new Vector();
         
         if (usePredictiveBraking) {
-            return currentPath.getClosestPointTangentVector().times(
+            Vector tangent = currentPath.getClosestPointTangentVector().normalize();
+            return tangent.times(
                     predictiveBrakingController.computeOutput(distanceRemaining,
-                                                              velocity.dot(currentPath.getClosestPointTangentVector().normalize()))
+                                                              velocity.dot(tangent))
                 );
         }
 
@@ -274,7 +275,7 @@ public class VectorCalculator {
         Vector translationalVector = translationalError.copy();
         
         if (usePredictiveBraking) {
-            if (currentPath.getCurve() instanceof BezierPoint) {
+            if (currentPath.isAtParametricEnd()) {
                 return new Vector(
                     predictiveBrakingController.computeOutput(translationalError.getXComponent(),
                                                               velocity.getXComponent()),
@@ -284,7 +285,7 @@ public class VectorCalculator {
             }
             
             Vector normal = currentPath.getClosestPointNormalVector().normalize();
-            return translationalError.times(
+            return normal.times(
                     predictiveBrakingController.computeOutput(translationalError.dot(normal),
                                                               velocity.dot(normal)));
         }
