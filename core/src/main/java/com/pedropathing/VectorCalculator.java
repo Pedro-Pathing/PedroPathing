@@ -4,6 +4,7 @@ import com.pedropathing.control.FilteredPIDFCoefficients;
 import com.pedropathing.control.PIDFCoefficients;
 import com.pedropathing.control.PredictiveBrakingController;
 import com.pedropathing.follower.FollowerConstants;
+import com.pedropathing.geometry.BezierPoint;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.MathFunctions;
 import com.pedropathing.paths.Path;
@@ -189,7 +190,7 @@ public class VectorCalculator {
         if (usePredictiveBraking) {
             return currentPath.getClosestPointTangentVector().times(
                     predictiveBrakingController.computeOutput(distanceRemaining,
-                                                              velocity.dot(currentPath.getClosestPointTangentVector()))
+                                                              velocity.dot(currentPath.getClosestPointTangentVector().normalize()))
                 );
         }
 
@@ -273,12 +274,19 @@ public class VectorCalculator {
         Vector translationalVector = translationalError.copy();
         
         if (usePredictiveBraking) {
-            //if (isHoldingPosition() bc no normal vector) {
-   
-            return translationalError.times(
-                    predictiveBrakingController.computeOutput(translationalError.dot(currentPath.getClosestPointNormalVector()),
-                                                              velocity.dot(currentPath.getClosestPointNormalVector()))
+            if (currentPath.getCurve() instanceof BezierPoint) {
+                return new Vector(
+                    predictiveBrakingController.computeOutput(translationalError.getXComponent(),
+                                                              velocity.getXComponent()),
+                    predictiveBrakingController.computeOutput(translationalError.getYComponent(),
+                                                              velocity.getYComponent())
                 );
+            }
+            
+            Vector normal = currentPath.getClosestPointNormalVector().normalize();
+            return translationalError.times(
+                    predictiveBrakingController.computeOutput(translationalError.dot(normal),
+                                                              velocity.dot(normal)));
         }
 
         if (!(currentPath.isAtParametricEnd() || currentPath.isAtParametricStart())) {
