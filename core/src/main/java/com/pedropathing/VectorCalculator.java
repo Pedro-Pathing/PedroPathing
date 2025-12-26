@@ -275,13 +275,10 @@ public class VectorCalculator {
         if (usePredictiveBraking) {
             //if (isHoldingPosition() bc no normal vector) {
    
-            Vector predictedBrakingPerpendicular =
-                translationalError.times(
+            return translationalError.times(
                     predictiveBrakingController.computeOutput(translationalError.dot(currentPath.getClosestPointNormalVector()),
                                                               velocity.dot(currentPath.getClosestPointNormalVector()))
                 );
-
-            translationalVector = translationalVector.minus(predictedBrakingPerpendicular);
         }
 
         if (!(currentPath.isAtParametricEnd() || currentPath.isAtParametricStart())) {
