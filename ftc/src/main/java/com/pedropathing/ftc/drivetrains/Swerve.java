@@ -1,8 +1,5 @@
 package com.pedropathing.ftc.drivetrains;
-
-import static com.pedropathing.math.MathFunctions.findNormalizingScaling;
-
-import com.pedropathing.drivetrain.Drivetrain;
+import com.pedropathing.drivetrain.CustomDrivetrain;
 import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -16,8 +13,8 @@ import com.qualcomm.robotcore.util.Range;
  * 
  * @author Kabir Goyal - 365 MOE
  */
-public class Swerve extends Drivetrain {
-    private SwerveConstants constants;
+public class Swerve extends CustomDrivetrain {
+    private final SwerveConstants constants;
 
     protected Vector lastTranslationalVector = new Vector();
     protected Vector lastHeadingPower = new Vector();
@@ -285,86 +282,5 @@ public class Swerve extends Drivetrain {
                 "\n, leftRear=" + leftRearPod.debugString() +
                 "\n, rightRear=" + rightRearPod.debugString() +
                 "\n}";
-    }
-
-    @Override
-    public double[] calculateDrive(Vector correctivePower, Vector headingPower, Vector pathingPower,
-            double robotHeading) {
-        // clamps down the magnitudes of the input vectors
-        if (correctivePower.getMagnitude() >= maxPowerScaling) {
-            correctivePower.setMagnitude(maxPowerScaling);
-            return new double[] {
-                    correctivePower.getXComponent(),
-                    correctivePower.getYComponent(),
-                    0
-            };
-        }
-
-        if (headingPower.getMagnitude() > maxPowerScaling)
-            headingPower.setMagnitude(maxPowerScaling);
-        if (pathingPower.getMagnitude() > maxPowerScaling)
-            pathingPower.setMagnitude(maxPowerScaling);
-
-        if (scaleDown(correctivePower, headingPower, true)) {
-            headingPower = scaledVector(correctivePower, headingPower, true);
-            return new double[] {
-                    correctivePower.getXComponent(),
-                    correctivePower.getYComponent(),
-                    headingPower.dot(new Vector(1, robotHeading))
-            };
-        } else {
-            Vector combinedStatic = correctivePower.plus(headingPower);
-            if (scaleDown(combinedStatic, pathingPower, false)) {
-                pathingPower = scaledVector(combinedStatic, pathingPower, false);
-                Vector combinedMovement = correctivePower.plus(pathingPower);
-                return new double[] {
-                        combinedMovement.getXComponent(),
-                        combinedMovement.getYComponent(),
-                        headingPower.dot(new Vector(1, robotHeading))
-                };
-            } else {
-                Vector combinedMovement = correctivePower.plus(pathingPower);
-                return new double[] {
-                        combinedMovement.getXComponent(),
-                        combinedMovement.getYComponent(),
-                        headingPower.dot(new Vector(1, robotHeading))
-                };
-            }
-        }
-    }
-
-    private boolean scaleDown(Vector staticVector, Vector variableVector, boolean useMinus) {
-        return (staticVector.plus(variableVector).getMagnitude() >= maxPowerScaling) ||
-                (useMinus && staticVector.minus(variableVector).getMagnitude() >= maxPowerScaling);
-    }
-
-    private Vector scaledVector(Vector staticVector, Vector variableVector, boolean useMinus) {
-        double scalingFactor = useMinus
-                ? Math.min(findNormalizingScaling(staticVector, variableVector, maxPowerScaling),
-                        findNormalizingScaling(staticVector, variableVector.times(-1), maxPowerScaling))
-                : findNormalizingScaling(staticVector, variableVector, maxPowerScaling);
-        return variableVector.times(scalingFactor);
-    }
-
-    @Override
-    public void runDrive(Vector correctivePower, Vector headingPower, Vector pathingPower, double robotHeading) {
-        double[] calculatedDrive = calculateDrive(correctivePower, headingPower, pathingPower, robotHeading);
-        Vector translationalVector = new Vector();
-        translationalVector.setOrthogonalComponents(calculatedDrive[0], calculatedDrive[1]);
-        lastPathingPower = pathingPower;
-        lastCorrectivePower = correctivePower;
-
-        lastTranslationalVector = translationalVector; // before rotation
-        lastHeadingPower = headingPower;
-        lastHeading = robotHeading;
-
-        translationalVector.rotateVector(-robotHeading); // this should make it field centric when field centric is
-                                                         // desired and robot centric otherwise
-        arcadeDrive(translationalVector.getXComponent(), translationalVector.getYComponent(), calculatedDrive[2]);
-    }
-
-    @Deprecated
-    @Override
-    public void runDrive(double[] drivePowers) {
     }
 }
