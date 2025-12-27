@@ -121,6 +121,8 @@ public class FollowerConstants {
             0.09,
             0.001,
             0.2);
+    
+    public boolean usePredictiveBraking = false;
 
     /**
      * This scales the translational error correction power when the Follower is holding a Point.
@@ -256,7 +258,13 @@ public class FollowerConstants {
         useSecondaryDrivePIDF = true;
         return this;
     }
-
+    
+    public FollowerConstants predictiveBrakingCoefficients(PredictiveBrakingCoefficients predictiveBrakingCoefficients) {
+        this.predictiveBrakingCoefficients = predictiveBrakingCoefficients;
+        usePredictiveBraking = true;
+        return this;
+    }
+    
     public FollowerConstants holdPointTranslationalScaling(double holdPointTranslationalScaling) {
         this.holdPointTranslationalScaling = holdPointTranslationalScaling;
         return this;

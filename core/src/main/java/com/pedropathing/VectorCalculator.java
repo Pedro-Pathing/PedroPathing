@@ -96,11 +96,14 @@ public class VectorCalculator {
         useSecondaryDrivePID = constants.useSecondaryDrivePIDF;
         useSecondaryHeadingPID = constants.useSecondaryHeadingPIDF;
         useSecondaryTranslationalPID = constants.useSecondaryTranslationalPIDF;
+        usePredictiveBraking = constants.usePredictiveBraking;
         mass = constants.mass;
     }
 
     public void update(boolean useDrive, boolean useHeading, boolean useTranslational,
-                       boolean useCentripetal, boolean teleopDrive, int chainIndex,
+                       boolean useCentripetal,
+                       boolean teleopDrive,
+                       int chainIndex,
                        double maxPowerScaling, boolean followingPathChain,
                        double centripetalScaling, Pose currentPose, Pose closestPose,
                        Vector velocity, Path currentPath, PathChain currentPathChain,
