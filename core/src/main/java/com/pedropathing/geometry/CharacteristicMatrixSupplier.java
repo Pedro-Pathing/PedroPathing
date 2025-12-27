@@ -8,7 +8,7 @@ import java.util.HashMap;
  * The CharacteristicMatrixSupplier handles supply the characteristic matrices for splines in their matrix representations.
  *
  * @author William Phomphakdee - 7462 Not to Scale Alumni
- * @version 0.0.2, 08/29/2025
+ * @version 0.0.3, 11/29/2025
  */
 public class CharacteristicMatrixSupplier {
 
@@ -37,18 +37,23 @@ public class CharacteristicMatrixSupplier {
     private static double[][] generatePascalTriangle(int layers) {
         double[][] output = new double[layers][layers];
 
-        // pad the start and end of all layers with 1's
-        int prevSign = 1;
-        for (int i = 0; i < layers; i++) {
-            output[i][0] = prevSign;
-            output[i][i] = 1;
-            prevSign *= -1;
-        }
+        // seed the first value of pascal's triangle
+        output[0][0] = 1;
 
-        // apply the rule for the alternating sign pascal's triangle 'b - a = c' instead of the regular 'a + b = c'
-        for (int i = 2; i < output.length; i++) {
-            for (int j = 1; j < i; j++) {
-                output[i][j] = output[i - 1][j - 1] - output[i - 1][j];
+        for (int row = 1; row < output.length; row++) {
+            // since col is 0 and [row][col - 1] is out of bounds at this moment,
+            // the default should be a 0
+            double a = 0.0;
+            // iterate through the row's elements
+            for (int col = 0; col <= row; col++) {
+                double b = output[row - 1][col];
+                // the ruleset for the typical pascal's triangle is a + b.
+                // but, we want alternating signs for cheap without iterating again,
+                // so the rule goes to b - a
+                output[row][col] = b - a;
+                // assign 'a' as 'b' since it will be the correct previous [row - 1] value
+                // for the next iteration
+                a = b;
             }
         }
 
@@ -67,9 +72,9 @@ public class CharacteristicMatrixSupplier {
 
         // sample the last row and multiply all other rows by the corresponding value
         double[] sampledRow = output.getRow(output.getRows() - 1);
-        for (int i = 1; i < output.getRows() - 1; i++) {
+        for (int i = 1; i < output.getRows(); i++) {
             for (int j = 0; j <= i; j++) {
-                output.set(i, j, output.get(i, j) * Math.abs(sampledRow[i]));
+                output.set(i, j, output.get(i, j) * sampledRow[i]);
             }
         }
 
