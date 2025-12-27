@@ -1129,6 +1129,14 @@ public class Follower {
         return previousClosestPose;
     }
 
+    /**
+     * This gets the tangential velocity of the robot along the path
+     * @return the tangential velocity of the robot
+     */
+    public double getTangentialVelocity() {
+        return getVelocity().dot(getClosestPointTangentVector().normalize());
+    }
+
     public double getHeading() {
         return getPose().getHeading();
     }
