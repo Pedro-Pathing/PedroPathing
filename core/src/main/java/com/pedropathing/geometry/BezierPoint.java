@@ -57,6 +57,7 @@ public class BezierPoint extends BezierCurve {
         } else {
             futureControlPoints = new ArrayList<>();
             futureControlPoints.add(pose);
+            lazyInitialize = true;
         }
     }
 

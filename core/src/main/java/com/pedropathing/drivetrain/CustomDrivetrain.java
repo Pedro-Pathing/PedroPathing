@@ -1,9 +1,7 @@
 package com.pedropathing.drivetrain;
 
 import static com.pedropathing.math.MathFunctions.findNormalizingScaling;
-import static com.pedropathing.math.MathFunctions.normalizeAngle;
 
-import com.pedropathing.Drivetrain;
 import com.pedropathing.math.Vector;
 
 /**
@@ -75,12 +73,13 @@ public abstract class CustomDrivetrain extends Drivetrain {
         }
     }
 
-    private boolean scaleDown(Vector staticVector, Vector variableVector, boolean useMinus) {
+
+    protected boolean scaleDown(Vector staticVector, Vector variableVector, boolean useMinus) {
         return (staticVector.plus(variableVector).getMagnitude() >= maxPowerScaling) ||
                 (useMinus && staticVector.minus(variableVector).getMagnitude() >= maxPowerScaling);
     }
 
-    private Vector scaledVector(Vector staticVector, Vector variableVector, boolean useMinus) {
+    protected Vector scaledVector(Vector staticVector, Vector variableVector, boolean useMinus) {
         double scalingFactor = useMinus? Math.min(findNormalizingScaling(staticVector, variableVector, maxPowerScaling),
                 findNormalizingScaling(staticVector, variableVector.times(-1), maxPowerScaling)) :
                 findNormalizingScaling(staticVector, variableVector, maxPowerScaling);

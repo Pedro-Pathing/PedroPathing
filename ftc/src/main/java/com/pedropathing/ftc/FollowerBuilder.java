@@ -1,9 +1,11 @@
 package com.pedropathing.ftc;
-import com.pedropathing.Drivetrain;
+import com.pedropathing.drivetrain.Drivetrain;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.FollowerConstants;
 import com.pedropathing.ftc.drivetrains.Mecanum;
 import com.pedropathing.ftc.drivetrains.MecanumConstants;
+import com.pedropathing.ftc.drivetrains.Swerve;
+import com.pedropathing.ftc.drivetrains.SwerveConstants;
 import com.pedropathing.ftc.localization.constants.DriveEncoderConstants;
 import com.pedropathing.ftc.localization.constants.OTOSConstants;
 import com.pedropathing.ftc.localization.constants.PinpointConstants;
@@ -19,8 +21,6 @@ import com.pedropathing.ftc.localization.localizers.TwoWheelLocalizer;
 import com.pedropathing.localization.Localizer;
 import com.pedropathing.paths.PathConstraints;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-
-import java.util.ArrayList;
 
 /** This is the FollowerBuilder.
  * It is used to create Followers with a specific drivetrain + localizer without having to use a full constructor
@@ -76,6 +76,10 @@ public class FollowerBuilder {
 
     public FollowerBuilder mecanumDrivetrain(MecanumConstants mecanumConstants) {
         return setDrivetrain(new Mecanum(hardwareMap, mecanumConstants));
+    }
+
+    public FollowerBuilder swerveDrivetrain(SwerveConstants swerveConstants) {
+        return setDrivetrain(new Swerve(hardwareMap, swerveConstants));
     }
 
     public FollowerBuilder pathConstraints(PathConstraints pathConstraints) {

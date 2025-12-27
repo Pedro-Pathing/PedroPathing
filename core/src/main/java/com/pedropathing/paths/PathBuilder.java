@@ -27,12 +27,12 @@ import java.util.List;
  * @version 1.0, 3/11/2024
  */
 public class PathBuilder {
-    private ArrayList<Path> paths = new ArrayList<>();
+    private final ArrayList<Path> paths = new ArrayList<>();
     private PathChain.DecelerationType decelerationType = PathChain.DecelerationType.LAST_PATH;
-    private ArrayList<PathCallback> callbacks = new ArrayList<>();
+    private final ArrayList<PathCallback> callbacks = new ArrayList<>();
     private PathConstraints constraints;
     private HeadingInterpolator headingInterpolator;
-    private Follower follower;
+    private final Follower follower;
 
     /**
      * This is an constructor for the PathBuilder class so it can get started with specific constraints.
@@ -117,12 +117,7 @@ public class PathBuilder {
     public PathBuilder curveThrough(Pose prevPoint, Pose startPoint, double tension, Pose... points){
         //guard against points being zero length (which means the curve doesn't have an end point)
         if (points.length == 0) {
-            try {
-                throw new Exception("Points array must contain at least one point to curve through.");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return this;
+            throw new IllegalArgumentException("Points array must contain at least one point to curve through.");
         }
         ArrayList<Pose> poses = new ArrayList<>();
 
@@ -325,7 +320,7 @@ public class PathBuilder {
      * @return This returns itself with the updated data.
      */
     public PathBuilder setGlobalReversed() {
-        headingInterpolator.reverse();
+        headingInterpolator = headingInterpolator.reverse();
         return this;
     }
 
