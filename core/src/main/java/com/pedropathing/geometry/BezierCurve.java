@@ -1,7 +1,6 @@
 package com.pedropathing.geometry;
 import com.pedropathing.math.MathFunctions;
 import com.pedropathing.math.Matrix;
-import com.pedropathing.math.MatrixUtil;
 import com.pedropathing.math.Vector;
 import com.pedropathing.paths.PathConstraints;
 import static com.pedropathing.math.AbstractBijectiveMap.NumericBijectiveMap;
@@ -642,7 +641,7 @@ public class BezierCurve implements Curve {
             targetPointMatrix.setRow(i, points[i].getX(), points[i].getY());
         }
 
-        Matrix outputControlPoints = Matrix.rref(tMatrix.multiply(bezier), MatrixUtil.eye(points.length))[1].multiply(targetPointMatrix);
+        Matrix outputControlPoints = Matrix.rref(tMatrix.multiply(bezier), Matrix.identity(points.length))[1].multiply(targetPointMatrix);
         Pose[] output = new Pose[points.length];
 
         for (int i = 0; i < outputControlPoints.getRows(); i++) {
