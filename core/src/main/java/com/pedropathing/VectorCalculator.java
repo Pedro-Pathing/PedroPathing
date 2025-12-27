@@ -101,7 +101,7 @@ public class VectorCalculator {
     }
 
     public void update(boolean useDrive, boolean useHeading, boolean useTranslational,
-                       boolean useCentripetal, boolean usePredictiveBraking,
+                       boolean useCentripetal,
                        boolean teleopDrive,
                        int chainIndex,
                        double maxPowerScaling, boolean followingPathChain,
@@ -115,7 +115,6 @@ public class VectorCalculator {
         this.useHeading = useHeading;
         this.useTranslational = useTranslational;
         this.useCentripetal = useCentripetal;
-        this.usePredictiveBraking = usePredictiveBraking;
         this.teleopDrive = teleopDrive;
         this.maxPowerScaling = maxPowerScaling;
         this.chainIndex = chainIndex;
