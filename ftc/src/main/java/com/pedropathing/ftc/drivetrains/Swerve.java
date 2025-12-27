@@ -1,17 +1,19 @@
 package com.pedropathing.ftc.drivetrains;
 import com.pedropathing.drivetrain.CustomDrivetrain;
 import com.pedropathing.math.Vector;
-import com.qualcomm.robotcore.hardware.AnalogInput;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.pedropathing.math.MathFunctions;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.Range;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
- * Swerve drivetrain implementation
+ * Swerve Drivetrain implementation
  * 
  * @author Kabir Goyal - 365 MOE
+ * @author Baron Henderson
  */
 public class Swerve extends CustomDrivetrain {
     private final SwerveConstants constants;
@@ -22,17 +24,11 @@ public class Swerve extends CustomDrivetrain {
     protected Vector lastPathingPower = new Vector();
     protected double lastHeading = 0;
 
-    private boolean useBrakeModeInTeleOp; // implemented
-    private double motorCachingThreshold;
-    private double servoCachingThreshold;
+    private boolean useBrakeModeInTeleOp;
     private double staticFrictionCoefficient;
-    private double drivePIDFFeedForward;
     private double epsilon;
 
-    private final SwervePod leftFrontPod;
-    private final SwervePod rightFrontPod;
-    private final SwervePod leftRearPod;
-    private final SwervePod rightRearPod;
+    private List<SwervePod> pods;
 
     private double lastForward = 0;
     private double lastStrafe = 0;
@@ -41,65 +37,16 @@ public class Swerve extends CustomDrivetrain {
 
     private final VoltageSensor voltageSensor;
 
-    private final SwervePod[] pods;
-
-    private final HardwareMap hardwareMap;
-
-    public Swerve(HardwareMap hardwareMap, SwerveConstants constants) {
-        this.hardwareMap = hardwareMap;
+    public Swerve(HardwareMap hardwareMap, SwerveConstants constants, SwervePod... pods) {
         this.constants = constants;
         this.voltageSensor = hardwareMap.voltageSensor.iterator().next();
-        pods = new SwervePod[4];
         updateConstants();
-
-        leftFrontPod = new SwervePod(
-                hardwareMap.get(DcMotorEx.class, constants.getLeftFrontMotorName()),
-                hardwareMap.get(CRServo.class, constants.getLeftFrontServoName()),
-                hardwareMap.get(AnalogInput.class, constants.getLeftFrontEncoderName()),
-                constants.getLeftFrontTurnPID(),
-                constants.getLeftFrontMotorDirection(), constants.getLeftFrontServoDirection(),
-                constants.getLeftFrontPodAngleOffsetDeg(), constants.getLeftFrontPodXYOffsets(),
-                constants.getLeftFrontReferenceVoltage(), constants.getLeftFrontEncoderReversed());
-
-        rightFrontPod = new SwervePod(
-                hardwareMap.get(DcMotorEx.class, constants.getRightFrontMotorName()),
-                hardwareMap.get(CRServo.class, constants.getRightFrontServoName()),
-                hardwareMap.get(AnalogInput.class, constants.getRightFrontEncoderName()),
-                constants.getRightFrontTurnPID(),
-                constants.getRightFrontMotorDirection(), constants.getRightFrontServoDirection(),
-                constants.getRightFrontPodAngleOffsetDeg(), constants.getRightFrontPodXYOffsets(),
-                constants.getRightFrontReferenceVoltage(), constants.getRightFrontEncoderReversed());
-
-        leftRearPod = new SwervePod(
-                hardwareMap.get(DcMotorEx.class, constants.getLeftRearMotorName()),
-                hardwareMap.get(CRServo.class, constants.getLeftRearServoName()),
-                hardwareMap.get(AnalogInput.class, constants.getLeftRearEncoderName()),
-                constants.getLeftRearTurnPID(),
-                constants.getLeftRearMotorDirection(), constants.getLeftRearServoDirection(),
-                constants.getLeftRearPodAngleOffsetDeg(), constants.getLeftRearPodXYOffsets(),
-                constants.getLeftRearReferenceVoltage(), constants.getLeftRearEncoderReversed());
-
-        rightRearPod = new SwervePod(
-                hardwareMap.get(DcMotorEx.class, constants.getRightRearMotorName()),
-                hardwareMap.get(CRServo.class, constants.getRightRearServoName()),
-                hardwareMap.get(AnalogInput.class, constants.getRightRearEncoderName()),
-                constants.getRightRearTurnPID(),
-                constants.getRightRearMotorDirection(), constants.getRightRearServoDirection(),
-                constants.getRightRearPodAngleOffsetDeg(), constants.getRightRearPodXYOffsets(),
-                constants.getRightRearReferenceVoltage(), constants.getRightRearEncoderReversed());
-
-        pods[0] = leftFrontPod;
-        pods[1] = rightFrontPod;
-        pods[2] = leftRearPod;
-        pods[3] = rightRearPod;
+        this.pods = Arrays.asList(pods);
     }
 
     /**
      * This method takes in forward, strafe, and rotation values and applies them to
      * the drivetrain.
-     * Intended to work exactly like an arcade drive would in a typical TeleOp, this
-     * method can be a copy pasted from
-     * a robot-centric arcade drive implementation.
      *
      * @param forward  the forward power value, which would typically be
      *                 -gamepad1.left_stick_y in a normal arcade drive setup.
@@ -115,8 +62,7 @@ public class Swerve extends CustomDrivetrain {
         lastStrafe = strafe;
         lastRotation = rotation;
 
-        // stores forward and strafe values as the translation vector with max magnitude
-        // of 1
+        // stores forward and strafe values as the translation vector with max magnitude of 1
         Vector rawTrans = new Vector(Range.clip(Math.hypot(strafe, forward), 0, 1), Math.atan2(forward, strafe));
 
         boolean ignoreTrans = rawTrans.getMagnitude() < epsilon;
@@ -124,15 +70,15 @@ public class Swerve extends CustomDrivetrain {
 
         double rotationScalar = (ignoreRotation) ? 0 : rotation;
 
-        Vector[] podVectors = new Vector[pods.length];
+        Vector[] podVectors = new Vector[pods.size()];
 
-        for (int i = 0; i < pods.length; i++) {
-            SwervePod pod = pods[i];
+        for (int i = 0; i < pods.size(); i++) {
+            SwervePod pod = pods.get(i);
 
             Vector translationVector = ignoreTrans ? new Vector(0, 0) : rawTrans;
 
             // actually positive rotation scalar because positive turning is to the left
-            Vector rotationVector = new Vector(rotationScalar, Math.atan2(pod.getYOffset(), pod.getXOffset()));
+            Vector rotationVector = new Vector(rotationScalar, Math.atan2(pod.getOffset().getX(), -pod.getOffset().getY()));
 
             // this gets the perpendicular vector for the wheel
             rotationVector.rotateVector(Math.PI / 2);
@@ -143,7 +89,6 @@ public class Swerve extends CustomDrivetrain {
         // finding if any vector has magnitude > maxPowerScaling
         double maxMagnitude = maxPowerScaling;
         for (Vector podVector : podVectors) {
-            // voltage compensation impl copied straight from mecanum basically
             if (voltageCompensation) {
                 double voltageNormalized = getVoltageNormalized();
                 podVector.times(voltageNormalized);
@@ -154,28 +99,35 @@ public class Swerve extends CustomDrivetrain {
         // Find the avg scaling constant (avg of cos(angle error))
         double avgScaling = 0;
 
-        for (int i = 0; i < pods.length; i++) {
-            double currentAngle = pods[i].getAngleAfterOffsetDeg();
-            double target = (pods[i].isEncoderReversed()) ? podVectors[i].getTheta()
-                    : 2 * Math.PI - podVectors[i].getTheta();
-            target = SwervePod.normalizeNeg180To180(Math.toDegrees(target) + 90);
+        for (int i = 0; i < pods.size(); i++) {
+            double currentAngle = pods.get(i).getAngle();
 
-            double error = SwervePod.shortestAngleToTarget(currentAngle, target);
+            // ask the pod to translate the wheel-space theta into the encoder frame
+            double encodedRad = pods.get(i).adjustThetaForEncoder(podVectors[i].getTheta());
 
-            avgScaling += Math.abs(Math.cos(Math.toRadians(error)));
+            // current and target in radians
+            double currentRad = Math.toRadians(currentAngle);
+            double targetRad = encodedRad; // already normalized in radians by implementations
+
+            // compute shortest signed error in radians using MathFunctions
+            double mag = MathFunctions.getSmallestAngleDifference(currentRad, targetRad);
+            double dir = MathFunctions.getTurnDirection(currentRad, targetRad);
+            double signedRad = (mag == Math.PI) ? -Math.PI : mag * dir;
+            double errorDeg = Math.toDegrees(signedRad);
+
+            avgScaling += Math.abs(Math.cos(Math.toRadians(errorDeg)));
         }
 
-        avgScaling /= 4;
+        avgScaling /= pods.size();
         lastAvgScaling = avgScaling;
 
-        for (int podNum = 0; podNum < pods.length; podNum++) {
+        for (int podNum = 0; podNum < pods.size(); podNum++) {
             // Normalizing if necessary while preserving relative sizes
             Vector finalVector = podVectors[podNum].times(maxPowerScaling / maxMagnitude);
 
             // 2*Pi-theta because servos have positive clockwise rotation, while our angles
             // are counterclockwise, and we want to see if motor/servo caching is an issue
-            pods[podNum].move(finalVector.getTheta(), finalVector.getMagnitude() * avgScaling,
-                    ignoreTrans && ignoreRotation, motorCachingThreshold, servoCachingThreshold, drivePIDFFeedForward);
+            pods.get(podNum).move(finalVector.getTheta(), finalVector.getMagnitude() * avgScaling);
         }
     }
 
@@ -183,20 +135,17 @@ public class Swerve extends CustomDrivetrain {
     public void updateConstants() {
         this.useBrakeModeInTeleOp = constants.getUseBrakeModeInTeleOp();
         this.maxPowerScaling = constants.getMaxPower(); // inherited from Drivetrain, used by CustomDrivetrain
-        this.motorCachingThreshold = constants.getMotorCachingThreshold();
-        this.servoCachingThreshold = constants.getServoCachingThreshold();
         this.voltageCompensation = constants.getUseVoltageCompensation(); // inherited from Drivetrain
         this.nominalVoltage = constants.getNominalVoltage(); // inherited from Drivetrain
         this.staticFrictionCoefficient = constants.getStaticFrictionCoefficient();
-        this.drivePIDFFeedForward = constants.getDrivePIDFFeedForward();
         this.epsilon = constants.getEpsilon();
     }
 
     @Override
     public void breakFollowing() {
         for (SwervePod pod : pods) {
-            pod.setMotorPower(0);
-            pod.setMotorToFloat();
+            pod.move(pod.getAngle(), 0);
+            pod.setToFloat();
         }
     }
 
@@ -204,7 +153,7 @@ public class Swerve extends CustomDrivetrain {
     public void startTeleopDrive() {
         if (useBrakeModeInTeleOp) {
             for (SwervePod pod : pods) {
-                pod.setMotorToBreak();
+                pod.setToBreak();
             }
         }
     }
@@ -213,11 +162,11 @@ public class Swerve extends CustomDrivetrain {
     public void startTeleopDrive(boolean brakeMode) {
         if (brakeMode) {
             for (SwervePod pod : pods) {
-                pod.setMotorToBreak();
+                pod.setToBreak();
             }
         } else {
             for (SwervePod pod : pods) {
-                pod.setMotorToFloat();
+                pod.setToFloat();
             }
         }
     }
@@ -259,28 +208,25 @@ public class Swerve extends CustomDrivetrain {
 
     @Override
     public String debugString() {
-        return "Swerve{" +
-                "\n leftFrontPodAngle = " + leftFrontPod.getAngleAfterOffsetDeg() +
-                "\n rightFrontPodAngle = " + rightFrontPod.getAngleAfterOffsetDeg() +
-                "\n leftRearPodAngle = " + leftRearPod.getAngleAfterOffsetDeg() +
-                "\n rightRearPodAngle = " + rightRearPod.getAngleAfterOffsetDeg() +
-                "\nforward input=" + lastForward +
-                "\n, strafe input=" + lastStrafe +
-                "\n, rotation input=" + lastRotation +
-                "\n, unrotated translationVector x" + lastTranslationalVector.getXComponent() +
-                "\n, unrotated translationVector y" + lastTranslationalVector.getYComponent() +
-                "\n, correctivePower x" + lastCorrectivePower.getXComponent() +
-                "\n, correctivePower y" + lastCorrectivePower.getYComponent() +
-                "\n, pathingPower x" + lastPathingPower.getXComponent() +
-                "\n, pathingPower y" + lastPathingPower.getYComponent() +
-                "\n, headingPower magnitude" + lastHeadingPower.getMagnitude() +
-                "\n, headingPower direction" + lastHeadingPower.getTheta() +
-                "\nrobot heading" + lastHeading +
-                "\navg scaling" + lastAvgScaling +
-                "\n, leftFront=" + leftFrontPod.debugString() +
-                "\n, rightFront=" + rightFrontPod.debugString() +
-                "\n, leftRear=" + leftRearPod.debugString() +
-                "\n, rightRear=" + rightRearPod.debugString() +
-                "\n}";
+        StringBuilder sb = new StringBuilder("Swerve {");
+        for (int i = 0; i < pods.size(); i++) {
+            sb.append("\n pod").append(i).append(" angle = ").append(pods.get(i).getAngle())
+                    .append(" debug = ").append(pods.get(i).debugString());
+        }
+        sb.append("\n forward input=").append(lastForward)
+                .append("\n, strafe input=").append(lastStrafe)
+                .append("\n, rotation input=").append(lastRotation)
+                .append("\n, unrotated translationVector x").append(lastTranslationalVector.getXComponent())
+                .append("\n, unrotated translationVector y").append(lastTranslationalVector.getYComponent())
+                .append("\n, correctivePower x").append(lastCorrectivePower.getXComponent())
+                .append("\n, correctivePower y").append(lastCorrectivePower.getYComponent())
+                .append("\n, pathingPower x").append(lastPathingPower.getXComponent())
+                .append("\n, pathingPower y").append(lastPathingPower.getYComponent())
+                .append("\n, headingPower magnitude").append(lastHeadingPower.getMagnitude())
+                .append("\n, headingPower direction").append(lastHeadingPower.getTheta())
+                .append("\nrobot heading").append(lastHeading)
+                .append("\navg scaling").append(lastAvgScaling)
+                .append("\n}");
+        return sb.toString();
     }
 }
