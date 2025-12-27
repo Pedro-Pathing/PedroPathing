@@ -2,7 +2,9 @@ package com.pedropathing;
 
 import com.pedropathing.control.FilteredPIDFCoefficients;
 import com.pedropathing.control.PIDFCoefficients;
+import com.pedropathing.control.PredictiveBrakingController;
 import com.pedropathing.follower.FollowerConstants;
+import com.pedropathing.geometry.BezierPoint;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.MathFunctions;
 import com.pedropathing.paths.Path;
@@ -43,9 +45,12 @@ public class VectorCalculator {
     public static boolean useSecondaryDrivePID, useSecondaryHeadingPID, useSecondaryTranslationalPID;
     private double[] teleopDriveValues;
 
-    private boolean useDrive = true, useHeading = true, useTranslational = true, useCentripetal = true, teleopDrive = false, followingPathChain = false;
+    private boolean useDrive = true, useHeading = true, useTranslational = true,
+        useCentripetal = true, teleopDrive = false, followingPathChain = false,
+        usePredictiveBraking = true;
     private double maxPowerScaling = 1.0, mass = 10.65;
     private boolean scaleDriveFeedforward;
+    private double distanceRemaining;
 
     private int chainIndex;
     private double centripetalScaling;
@@ -58,6 +63,8 @@ public class VectorCalculator {
 
     private PIDFController headingPIDF;
     private FilteredPIDFController secondaryDrivePIDF, drivePIDF;
+    
+    private PredictiveBrakingController predictiveBrakingController;
 
     public VectorCalculator(FollowerConstants constants) {
         this.constants = constants;
@@ -69,6 +76,7 @@ public class VectorCalculator {
         secondaryTranslationalPIDF = new PIDFController(constants.coefficientsSecondaryTranslationalPIDF);
         translationalIntegral = new PIDFController(constants.integralTranslational);
         secondaryTranslationalIntegral = new PIDFController(constants.integralSecondaryTranslational);
+        predictiveBrakingController = new PredictiveBrakingController(constants.predictiveBrakingCoefficients);
         updateConstants();
     }
     
@@ -81,16 +89,26 @@ public class VectorCalculator {
         secondaryTranslationalPIDF.setCoefficients(constants.coefficientsSecondaryTranslationalPIDF);
         translationalIntegral.setCoefficients(constants.integralTranslational);
         secondaryTranslationalIntegral.setCoefficients(constants.integralSecondaryTranslational);
+        predictiveBrakingController.setCoefficients(constants.predictiveBrakingCoefficients);
         drivePIDFSwitch = constants.drivePIDFSwitch;
         headingPIDFSwitch = constants.headingPIDFSwitch;
         translationalPIDFSwitch = constants.translationalPIDFSwitch;
         useSecondaryDrivePID = constants.useSecondaryDrivePIDF;
         useSecondaryHeadingPID = constants.useSecondaryHeadingPIDF;
         useSecondaryTranslationalPID = constants.useSecondaryTranslationalPIDF;
+        usePredictiveBraking = constants.usePredictiveBraking;
         mass = constants.mass;
     }
 
-    public void update(boolean useDrive, boolean useHeading, boolean useTranslational, boolean useCentripetal, boolean teleopDrive, int chainIndex, double maxPowerScaling, boolean followingPathChain, double centripetalScaling, Pose currentPose, Pose closestPose, Vector velocity, Path currentPath, PathChain currentPathChain, double driveError, Vector translationalError, double headingError, double headingGoal) {
+    public void update(boolean useDrive, boolean useHeading, boolean useTranslational,
+                       boolean useCentripetal,
+                       boolean teleopDrive,
+                       int chainIndex,
+                       double maxPowerScaling, boolean followingPathChain,
+                       double centripetalScaling, Pose currentPose, Pose closestPose,
+                       Vector velocity, Path currentPath, PathChain currentPathChain,
+                       double driveError, Vector translationalError,
+                       double headingError, double headingGoal, double distanceRemaining) {
         updateConstants();
 
         this.useDrive = useDrive;
@@ -111,6 +129,7 @@ public class VectorCalculator {
         this.translationalError = translationalError;
         this.headingError = headingError;
         this.headingGoal = headingGoal;
+        this.distanceRemaining = distanceRemaining;
 
         if(teleopDrive)
             teleopUpdate();
@@ -170,6 +189,14 @@ public class VectorCalculator {
      */
     public Vector getDriveVector() {
         if (!useDrive) return new Vector();
+        
+        if (usePredictiveBraking) {
+            Vector tangent = currentPath.getClosestPointTangentVector().normalize();
+            return tangent.times(
+                    predictiveBrakingController.computeOutput(distanceRemaining,
+                                                              velocity.dot(tangent))
+                );
+        }
 
         if (followingPathChain && ((chainIndex < currentPathChain.size() - 1 && currentPathChain.getDecelerationType() == PathChain.DecelerationType.LAST_PATH) || currentPathChain.getDecelerationType() == PathChain.DecelerationType.NONE)) {
             return new Vector(maxPowerScaling, currentPath.getClosestPointTangentVector().getTheta());
@@ -249,6 +276,22 @@ public class VectorCalculator {
     public Vector getTranslationalCorrection() {
         if (!useTranslational) return new Vector();
         Vector translationalVector = translationalError.copy();
+        
+        if (usePredictiveBraking) {
+            if (currentPath.isAtParametricEnd()) {
+                return new Vector(
+                    predictiveBrakingController.computeOutput(translationalError.getXComponent(),
+                                                              velocity.getXComponent()),
+                    predictiveBrakingController.computeOutput(translationalError.getYComponent(),
+                                                              velocity.getYComponent())
+                );
+            }
+            
+            Vector normal = currentPath.getClosestLeftGradientVector();
+            return normal.times(
+                    predictiveBrakingController.computeOutput(translationalError.dot(normal),
+                                                              velocity.dot(normal)));
+        }
 
         if (!(currentPath.isAtParametricEnd() || currentPath.isAtParametricStart())) {
             translationalVector = translationalVector.minus(new Vector(translationalVector.dot(currentPath.getClosestPointTangentVector().normalize()), currentPath.getClosestPointTangentVector().getTheta()));
@@ -449,12 +492,12 @@ public class VectorCalculator {
     }
 
     public String debugString() {
-        return "Drive Vector: " + getDriveVector().toString() + "\n" +
-                "Heading Vector: " + getHeadingVector().toString() + "\n" +
-                "Translational Vector: " + getTranslationalVector().toString() + "\n" +
-                "Centripetal Vector: " + getCentripetalVector().toString() + "\n" +
-                "Corrective Vector: " + getCorrectiveVector().toString() + "\n" +
-                "Teleop Drive Vector: " + getTeleopDriveVector().toString() + "\n" +
-                "Teleop Heading Vector: " + getTeleopHeadingVector().toString();
+        return "Drive Vector: " + driveVector.toString() + "\n" +
+                "Heading Vector: " + headingVector.toString() + "\n" +
+                "Translational Vector: " + translationalVector.toString() + "\n" +
+                "Centripetal Vector: " + centripetalVector.toString() + "\n" +
+                "Corrective Vector: " + correctiveVector.toString() + "\n" +
+                "Teleop Drive Vector: " + teleopDriveVector.toString() + "\n" +
+                "Teleop Heading Vector: " + teleopHeadingVector.toString();
     }
 }

@@ -3,6 +3,8 @@ package com.pedropathing.paths;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.MathFunctions;
 
+import java.util.function.Supplier;
+
 /**
  * A heading interpolator is a function that takes a path and returns the heading goal the robot
  * should be at a specific point on the path.
@@ -86,46 +88,50 @@ public interface HeadingInterpolator {
          * The robot will transition from the start heading to the end heading from startT by endT.
          */
         public static PiecewiseNode linear(double startT, double endT, double startHeadingRad, double endHeadingRad) {
-            startHeadingRad = MathFunctions.normalizeAngle(startHeadingRad);
-            endHeadingRad = MathFunctions.normalizeAngle(endHeadingRad);
-            double finalStartHeadingRad = startHeadingRad;
-            double finalEndHeadingRad = endHeadingRad;
-
-            return new PiecewiseNode(startT, endT, closestPoint -> {
-                double clampedStartT = MathFunctions.clamp(startT, 0.0001, 1);
-                double clampedEndT = MathFunctions.clamp(endT, 0.0001, 1);
-                double u = (closestPoint.tValue - clampedStartT) / (clampedEndT - clampedStartT);
-                double t = MathFunctions.clamp(u, 0.0,1.0);
-                double deltaHeading = MathFunctions.getTurnDirection(finalStartHeadingRad, finalEndHeadingRad) * MathFunctions.getSmallestAngleDifference(finalEndHeadingRad, finalStartHeadingRad);
-                return MathFunctions.normalizeAngle(finalStartHeadingRad + deltaHeading * t);
-            });
+            return new PiecewiseNode(startT, endT, HeadingInterpolator.linear(startHeadingRad, endHeadingRad));
         }
 
         /**
          * The robot will transition from the start heading to the end heading from startT by endT.
          */
         public static PiecewiseNode reversedLinear(double startT, double endT, double startHeadingRad, double endHeadingRad) {
-            startHeadingRad = MathFunctions.normalizeAngle(startHeadingRad);
-            endHeadingRad = MathFunctions.normalizeAngle(endHeadingRad);
-            double finalStartHeadingRad = startHeadingRad;
-            double finalEndHeadingRad = endHeadingRad;
-
-            return new PiecewiseNode(startT, endT, closestPoint -> {
-                double clampedStartT = MathFunctions.clamp(startT, 0.0001, 1);
-                double clampedEndT = MathFunctions.clamp(endT, 0.0001, 1);
-                double u = (closestPoint.tValue - clampedStartT) / (clampedEndT - clampedStartT);
-                double t = MathFunctions.clamp(u, 0.0,1.0);
-                double deltaHeading = -MathFunctions.getTurnDirection(finalStartHeadingRad, finalEndHeadingRad) * Math.max(MathFunctions.normalizeAngle(finalEndHeadingRad - finalStartHeadingRad), MathFunctions.normalizeAngle(finalStartHeadingRad - finalEndHeadingRad));;
-                return MathFunctions.normalizeAngle(finalStartHeadingRad + deltaHeading * t);
-            });
+            return new PiecewiseNode(startT, endT, HeadingInterpolator.reversedLinear(startHeadingRad, endHeadingRad));
         }
     }
-    
+
+    static HeadingInterpolator lazy(Supplier<HeadingInterpolator> generator) {
+        return new HeadingInterpolator() {
+            private HeadingInterpolator inner;
+
+            @Override
+            public double interpolate(PathPoint closestPoint) {
+                return inner.interpolate(closestPoint);
+            }
+
+            @Override
+            public void init() {
+                inner = generator.get();
+                inner.init();
+            }
+        };
+    }
+
     /**
      * Offsets the heading interpolator by a given amount.
      */
     default HeadingInterpolator offset(double offsetRad) {
-        return closestPoint -> this.interpolate(closestPoint) + MathFunctions.normalizeAngle(offsetRad);
+        HeadingInterpolator outer = this;
+        return new HeadingInterpolator() {
+            @Override
+            public double interpolate(PathPoint closestPoint) {
+                return outer.interpolate(closestPoint) + MathFunctions.normalizeAngle(offsetRad);
+            }
+
+            @Override
+            public void init() {
+                outer.init();
+            }
+        };
     }
     
     /**
@@ -134,8 +140,18 @@ public interface HeadingInterpolator {
      * Note: For facing a point this will make the robot face the opposite direction of the point.
      */
     default HeadingInterpolator reverse() {
-        return closestPoint ->
-            MathFunctions.normalizeAngle(this.interpolate(closestPoint) + Math.PI);
+        HeadingInterpolator outer = this;
+        return new HeadingInterpolator() {
+            @Override
+            public double interpolate(PathPoint closestPoint) {
+                return MathFunctions.normalizeAngle(outer.interpolate(closestPoint) + Math.PI);
+            }
+
+            @Override
+            public void init() {
+                outer.init();
+            }
+        };
     }
     
     /**
@@ -220,16 +236,33 @@ public interface HeadingInterpolator {
      * @param nodes The nodes of the piecewise interpolation, make sure all t-values from [0,1] are covered
      */
     static HeadingInterpolator piecewise(PiecewiseNode... nodes) {
-        return closestPoint -> {
-            for (PiecewiseNode node : nodes) {
-                if (closestPoint.getTValue() >= node.getInitialTValue() && closestPoint.getTValue() <= node.getFinalTValue()) {
-                    HeadingInterpolator interpolator = node.getInterpolator();
-                    interpolator.init();
-                    return interpolator.interpolate(closestPoint);
+        return new HeadingInterpolator() {
+            @Override
+            public double interpolate(PathPoint closestPoint) {
+                for (PiecewiseNode node : nodes) {
+                    if (closestPoint.getTValue() >= node.getInitialTValue() && closestPoint.getTValue() <= node.getFinalTValue()) {
+                        PathPoint scaledClosestPoint = new PathPoint(
+                                MathFunctions.scale(
+                                        closestPoint.getTValue(),
+                                        node.getInitialTValue(),
+                                        node.getFinalTValue(),
+                                        0,
+                                        1
+                                ),
+                                closestPoint.getPose(),
+                                closestPoint.getTangentVector()
+                        );
+                        return node.getInterpolator().interpolate(scaledClosestPoint);
+                    }
                 }
+
+                return MathFunctions.normalizeAngle(tangent.interpolate(closestPoint));
             }
 
-            return MathFunctions.normalizeAngle(tangent.interpolate(closestPoint));
+            @Override
+            public void init() {
+                for (PiecewiseNode node : nodes) node.interpolator.init();
+            }
         };
     }
 
@@ -257,25 +290,7 @@ public interface HeadingInterpolator {
      * This allows for dynamic headings that can be determined at runtime.
      */
     static HeadingInterpolator linearFromPoint(FutureDouble startHeadingRad, FutureDouble endHeadingRad, double endT) {
-        return new HeadingInterpolator() {
-            double start = Double.NaN;
-            double end = Double.NaN;
-            boolean initialized = false;
-
-            @Override
-            public double interpolate(PathPoint closestPoint) {
-                return linear(start, end, endT).interpolate(closestPoint);
-            }
-
-            @Override
-            public void init() {
-                if (!initialized) {
-                    start = MathFunctions.normalizeAngle(startHeadingRad.get());
-                    end = MathFunctions.normalizeAngle(endHeadingRad.get());
-                    initialized = true;
-                }
-            }
-        };
+        return lazy(() -> linear(startHeadingRad.get(), endHeadingRad.get(), endT));
     }
 
     /**
@@ -284,24 +299,7 @@ public interface HeadingInterpolator {
      * This allows for dynamic headings that can be determined at runtime.
      */
     static HeadingInterpolator linearFromPoint(FutureDouble startHeadingRad, double endHeadingRad, double endT) {
-        return new HeadingInterpolator() {
-            double start = Double.NaN;
-            final double end = endHeadingRad;
-            boolean initialized = false;
-
-            @Override
-            public double interpolate(PathPoint closestPoint) {
-                return linear(start, end, endT).interpolate(closestPoint);
-            }
-
-            @Override
-            public void init() {
-                if (!initialized) {
-                    start = MathFunctions.normalizeAngle(startHeadingRad.get());
-                    initialized = true;
-                }
-            }
-        };
+        return linearFromPoint(startHeadingRad, () -> endHeadingRad, endT);
     }
 
     /**
@@ -310,24 +308,7 @@ public interface HeadingInterpolator {
      * This allows for dynamic headings that can be determined at runtime.
      */
     static HeadingInterpolator reversedLinearFromPoint(FutureDouble startHeadingRad, double endHeadingRad, double endT) {
-        return new HeadingInterpolator() {
-            double start = Double.NaN;
-            final double end = endHeadingRad;
-            boolean initialized = false;
-
-            @Override
-            public double interpolate(PathPoint closestPoint) {
-                return HeadingInterpolator.reversedLinear(start, end, endT).interpolate(closestPoint);
-            }
-
-            @Override
-            public void init() {
-                if (!initialized) {
-                    start = MathFunctions.normalizeAngle(startHeadingRad.get());
-                    initialized = true;
-                }
-            }
-        };
+        return linearFromPoint(startHeadingRad, () -> endHeadingRad, endT);
     }
 
     /**
@@ -336,24 +317,7 @@ public interface HeadingInterpolator {
      * This allows for dynamic headings that can be determined at runtime.
      */
     static HeadingInterpolator linearFromPoint(double startHeadingRad, FutureDouble endHeadingRad, double endT) {
-        return new HeadingInterpolator() {
-            final double start = startHeadingRad;
-            double end = Double.NaN;
-            boolean initialized = false;
-
-            @Override
-            public double interpolate(PathPoint closestPoint) {
-                return linear(start, end, endT).interpolate(closestPoint);
-            }
-
-            @Override
-            public void init() {
-                if (!initialized) {
-                    end = MathFunctions.normalizeAngle(endHeadingRad.get());
-                    initialized = true;
-                }
-            }
-        };
+        return linearFromPoint(() -> startHeadingRad, endHeadingRad, endT);
     }
 
     /**
@@ -362,24 +326,7 @@ public interface HeadingInterpolator {
      * This allows for dynamic headings that can be determined at runtime.
      */
     static HeadingInterpolator reversedLinearFromPoint(double startHeadingRad, FutureDouble endHeadingRad, double endT) {
-        return new HeadingInterpolator() {
-            final double start = startHeadingRad;
-            double end = Double.NaN;
-            boolean initialized = false;
-
-            @Override
-            public double interpolate(PathPoint closestPoint) {
-                return HeadingInterpolator.reversedLinear(start, end, endT).interpolate(closestPoint);
-            }
-
-            @Override
-            public void init() {
-                if (!initialized) {
-                    end = MathFunctions.normalizeAngle(endHeadingRad.get());
-                    initialized = true;
-                }
-            }
-        };
+        return reversedLinearFromPoint(() -> startHeadingRad, endHeadingRad, endT);
     }
 
     /**
@@ -388,24 +335,6 @@ public interface HeadingInterpolator {
      * This allows for dynamic headings that can be determined at runtime.
      */
     static HeadingInterpolator reversedLinearFromPoint(FutureDouble startHeadingRad, FutureDouble endHeadingRad, double endT) {
-        return new HeadingInterpolator() {
-            double start = Double.NaN;
-            double end = Double.NaN;
-            boolean initialized = false;
-
-            @Override
-            public double interpolate(PathPoint closestPoint) {
-                return reversedLinear(start, end, endT).interpolate(closestPoint);
-            }
-
-            @Override
-            public void init() {
-                if (!initialized) {
-                    start = MathFunctions.normalizeAngle(startHeadingRad.get());
-                    end = MathFunctions.normalizeAngle(endHeadingRad.get());
-                    initialized = true;
-                }
-            }
-        };
+        return lazy(() -> reversedLinear(startHeadingRad.get(), endHeadingRad.get(), endT));
     }
 }

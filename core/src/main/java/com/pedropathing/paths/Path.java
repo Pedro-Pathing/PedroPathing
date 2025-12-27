@@ -651,9 +651,10 @@ public class Path {
      * @param constraints the PathConstraints to set.
      */
     public void setConstraints(PathConstraints constraints) {
-        this.constraints = constraints;
+        this.constraints = constraints.copy();
 
-        if (curve != null) curve.setPathConstraints(constraints);
+        if (curve != null)
+            curve.setPathConstraints(this.constraints);
     }
 
     /**
@@ -680,5 +681,9 @@ public class Path {
     public void init() {
         curve.initialize();
         headingInterpolator.init();
+    }
+    
+    public Vector getClosestLeftGradientVector() {
+        return curve.leftGradient(closestPointTValue).normalize();
     }
 }

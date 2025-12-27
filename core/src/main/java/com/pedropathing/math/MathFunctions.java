@@ -1,5 +1,7 @@
 package com.pedropathing.math;
 
+import java.util.List;
+
 /**
  * This is the MathFunctions class. This contains many useful math related methods that I use in
  * other classes to simplify code elsewhere.
@@ -128,5 +130,37 @@ public class MathFunctions {
             throw new IllegalArgumentException("Input range cannot be zero.");
         }
         return (n - x1) * (y2 - y1) / (x2 - x1) + y1;
+    }
+    
+    /**
+     * Finds the best-fit quadratic curve of the form y = ax^2 + bx.
+     * Used to predict braking distances.
+     *
+     * @author Jacob Ophoven - 18535, Frozen Code
+     */
+    public static double[] quadraticFit(List<double[]> points) {
+        double sumX2 = 0, sumX3 = 0, sumX4 = 0;
+        double sumXY = 0, sumX2Y = 0;
+        
+        for (double[] point : points) {
+            double x = point[0];
+            double y = point[1];
+            
+            sumX2 += x * x;
+            sumX3 += x * x * x;
+            sumX4 += x * x * x * x;
+            sumXY += x * y;
+            sumX2Y += x * x * y;
+        }
+        
+        Matrix matrix = new Matrix(new double[][]{
+            {sumX2, sumX3},
+            {sumX3, sumX4}
+        });
+        
+        Matrix augment = new Matrix(new double[][]{new double[] {sumXY, sumX2Y}});
+        double[] solution = Matrix.rref(matrix, augment)[1].getRow(0);
+        
+        return new double[] {solution[1], solution[0]};
     }
 }

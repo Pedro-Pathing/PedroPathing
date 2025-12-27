@@ -151,4 +151,8 @@ public final class PathConstraints {
     public void setVelocityConstraint(double velocityConstraint) {
         this.velocityConstraint = velocityConstraint;
     }
+
+    public PathConstraints copy() {
+        return new PathConstraints(tValueConstraint, velocityConstraint, translationalConstraint, headingConstraint, timeoutConstraint, brakingStrength, BEZIER_CURVE_SEARCH_LIMIT, brakingStart);
+    }
 }

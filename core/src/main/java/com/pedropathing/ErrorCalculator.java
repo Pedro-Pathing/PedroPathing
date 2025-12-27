@@ -182,7 +182,7 @@ public class ErrorCalculator {
                     Vector forwardTheoreticalHeadingVector = new Vector(1.0, headingGoal);
 
                     double stoppingDistance = Kinematics.getStoppingDistance(
-                            yVelocity + (xVelocity - yVelocity) * forwardTheoreticalHeadingVector.dot(tangent), constants.forwardZeroPowerAcceleration
+                            yVelocity + (xVelocity - yVelocity) * Math.abs(forwardTheoreticalHeadingVector.dot(tangent)), constants.forwardZeroPowerAcceleration
                     );
                     if (distanceToGoal >= stoppingDistance * currentPath.getBrakingStartMultiplier()) {
                         return -1;
@@ -232,8 +232,8 @@ public class ErrorCalculator {
                "Closest Pose: " + closestPose.toString() + "\n" +
                "Current Path: " + (currentPath != null ? currentPath.toString() : "null") + "\n" + "Following Path Chain: " + followingPathChain + "\n" +
                "Chain Index: " + chainIndex + "\n" +
-               "Drive Error: " + getDriveError() + "\n" +
-               "Heading Error: " + getHeadingError() + "\n" +
-               "Raw Drive Error: " + getRawDriveError();
+               "Drive Error: " + driveError + "\n" +
+               "Heading Error: " + headingError + "\n" +
+               "Raw Drive Error: " + rawDriveError;
     }
 }

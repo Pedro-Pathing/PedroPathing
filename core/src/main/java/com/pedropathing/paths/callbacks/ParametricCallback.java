@@ -43,7 +43,7 @@ public class ParametricCallback implements PathCallback {
      */
     @Override
     public boolean isReady() {
-        return follower.getPathCompletion() >= startCondition;
+        return follower.atParametricEnd() || follower.getPathCompletion() >= startCondition;
     }
 
     /**
@@ -53,5 +53,9 @@ public class ParametricCallback implements PathCallback {
     @Override
     public int getPathIndex() {
         return index;
+    }
+
+    public double getStartCondition() {
+        return startCondition;
     }
 }
