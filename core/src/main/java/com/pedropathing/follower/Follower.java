@@ -58,6 +58,7 @@ public class Follower {
     public boolean useCentripetal = true;
     public boolean useHeading = true;
     public boolean useDrive = true;
+    public boolean usePredictiveBraking = true;
     private Timer zeroVelocityDetectedTimer = null;
     private Runnable resetFollowing = null;
 
@@ -425,6 +426,7 @@ public class Follower {
     /** Calls an update to the VectorCalculator, which updates the robot's current vectors to correct. */
     public void updateVectors() {
         vectorCalculator.update(useDrive, useHeading, useTranslational, useCentripetal,
+                                usePredictiveBraking,
                                 manualDrive, chainIndex,
                                 drivetrain.getMaxPowerScaling(), followingPathChain,
                                 centripetalScaling, currentPose, closestPose.getPose(),
