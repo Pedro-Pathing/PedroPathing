@@ -682,4 +682,8 @@ public class Path {
         curve.initialize();
         headingInterpolator.init();
     }
+    
+    public Vector getClosestLeftGradientVector() {
+        return curve.leftGradient(closestPointTValue).normalize();
+    }
 }
