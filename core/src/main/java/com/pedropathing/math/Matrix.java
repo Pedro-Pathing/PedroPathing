@@ -605,7 +605,7 @@ public class Matrix {
 
     /**
      * Gets the inverse matrix
-     * @param matrix An invertible 2x2 matrix to compute the inverse of
+     * @param matrix An invertible 3x3 matrix to compute the inverse of
      * @return the inverse of the given matrix
      */
     public static Matrix inverse3x3(Matrix matrix) {
