@@ -457,7 +457,7 @@ public class Follower {
                                 currentPathChain, useDrive && !holdingPosition ?
                                     getDriveError() : -1, getTranslationalError(),
                                 getHeadingError(), getClosestPointHeadingGoal(),
-                                getDistanceRemainingBeforeStop());
+                                getTotalDistanceRemaining());
     }
 
     public void updateErrorAndVectors() {updateErrors(); updateVectors();}
@@ -1140,8 +1140,12 @@ public class Follower {
     public double getHeading() {
         return getPose().getHeading();
     }
-    
-    public double getDistanceRemainingBeforeStop() {
+
+    /**
+     * Gets the total distance remaining for the robot to follow along the entire PathChain
+     * @return the distance left on the current PathChain to follow
+     */
+    public double getTotalDistanceRemaining() {
         if (currentPath == null) {
             return 0;
         }
@@ -1155,14 +1159,6 @@ public class Follower {
             return -1;
         }
         
-        double remainingLength = 0;
-        
-        if (chainIndex < currentPathChain.size()) {
-            for (int i = chainIndex + 1; i < currentPathChain.size(); i++) {
-                remainingLength += currentPathChain.getPath(i).length();
-            }
-        }
-        
-        return remainingLength + currentPath.getDistanceRemaining();
+        return currentPathChain.getDistanceRemaining(chainIndex);
     }
 }

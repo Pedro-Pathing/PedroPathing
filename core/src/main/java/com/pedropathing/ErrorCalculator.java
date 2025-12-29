@@ -174,15 +174,7 @@ public class ErrorCalculator {
             if (followingPathChain) {
                 PathChain.DecelerationType type = currentPathChain.getDecelerationType();
                 if (type == PathChain.DecelerationType.GLOBAL) {
-                    double remainingLength = 0;
-
-                    if (chainIndex < currentPathChain.size()) {
-                        for (int i = chainIndex + 1; i < currentPathChain.size(); i++) {
-                            remainingLength += currentPathChain.getPath(i).length();
-                        }
-                    }
-
-                    distanceToGoal = remainingLength + currentPath.getDistanceRemaining();
+                    distanceToGoal = currentPathChain.getDistanceRemaining(chainIndex);
 
                     Vector tangent = currentPath.getClosestPointTangentVector().normalize();
                     Vector forwardTheoreticalHeadingVector = new Vector(1.0, headingGoal);
