@@ -1134,6 +1134,10 @@ public class Follower {
     }
     
     public double getDistanceRemainingBeforeStop() {
+        if (currentPath == null) {
+            return 0;
+        }
+
         if (followingPathChain) {
             PathChain.DecelerationType type = currentPathChain.getDecelerationType();
             if (type != PathChain.DecelerationType.NONE) {
