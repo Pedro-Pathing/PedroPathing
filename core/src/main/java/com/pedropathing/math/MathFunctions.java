@@ -138,6 +138,32 @@ public class MathFunctions {
      *
      * @author Jacob Ophoven - 18535, Frozen Code
      */
+//    public static double[] quadraticFit(List<double[]> points) {
+//        double sumX2 = 0, sumX3 = 0, sumX4 = 0;
+//        double sumXY = 0, sumX2Y = 0;
+//
+//        for (double[] point : points) {
+//            double x = point[0];
+//            double y = point[1];
+//
+//            sumX2 += x * x;
+//            sumX3 += x * x * x;
+//            sumX4 += x * x * x * x;
+//            sumXY += x * y;
+//            sumX2Y += x * x * y;
+//        }
+//
+//        Matrix matrix = new Matrix(new double[][]{
+//            {sumX2, sumX3},
+//            {sumX3, sumX4}
+//        });
+//
+//        Matrix augment = new Matrix(new double[][]{new double[] {sumXY, sumX2Y}});
+//        double[] solution = Matrix.rref(matrix, augment)[1].getRow(0);
+//
+//        return new double[] {solution[1], solution[0]};
+//    }
+    
     public static double[] quadraticFit(List<double[]> points) {
         double sumX2 = 0, sumX3 = 0, sumX4 = 0;
         double sumXY = 0, sumX2Y = 0;
