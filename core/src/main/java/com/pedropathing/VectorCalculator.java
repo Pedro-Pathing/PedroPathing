@@ -4,7 +4,6 @@ import com.pedropathing.control.FilteredPIDFCoefficients;
 import com.pedropathing.control.PIDFCoefficients;
 import com.pedropathing.control.PredictiveBrakingController;
 import com.pedropathing.follower.FollowerConstants;
-import com.pedropathing.geometry.BezierPoint;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.MathFunctions;
 import com.pedropathing.paths.Path;
@@ -50,7 +49,7 @@ public class VectorCalculator {
         usePredictiveBraking = true;
     private double maxPowerScaling = 1.0, mass = 10.65;
     private boolean scaleDriveFeedforward;
-    private double distanceRemaining;
+    private double distanceRemainingBeforeStop;
 
     private int chainIndex;
     private double centripetalScaling;
@@ -129,7 +128,7 @@ public class VectorCalculator {
         this.translationalError = translationalError;
         this.headingError = headingError;
         this.headingGoal = headingGoal;
-        this.distanceRemaining = distanceRemaining;
+        this.distanceRemainingBeforeStop = distanceRemaining;
 
         if(teleopDrive)
             teleopUpdate();
@@ -189,17 +188,18 @@ public class VectorCalculator {
      */
     public Vector getDriveVector() {
         if (!useDrive) return new Vector();
-        
-        if (usePredictiveBraking) {
-            Vector tangent = currentPath.getClosestPointTangentVector().normalize();
-            return tangent.times(
-                    predictiveBrakingController.computeOutput(distanceRemaining,
-                                                              velocity.dot(tangent))
-                );
-        }
 
         if (followingPathChain && ((chainIndex < currentPathChain.size() - 1 && currentPathChain.getDecelerationType() == PathChain.DecelerationType.LAST_PATH) || currentPathChain.getDecelerationType() == PathChain.DecelerationType.NONE)) {
             return new Vector(maxPowerScaling, currentPath.getClosestPointTangentVector().getTheta());
+        }
+        
+        if (usePredictiveBraking) {
+            if (distanceRemainingBeforeStop == -1) {
+                return new Vector(maxPowerScaling, currentPath.getClosestPointTangentVector().getTheta());
+            }
+            return new Vector(
+                predictiveBrakingController.computeOutput(distanceRemainingBeforeStop,
+                                                          velocity.dot(currentPath.getClosestPointTangentVector().normalize())), currentPath.getClosestPointTangentVector().getTheta());
         }
 
         if (driveError == -1) return new Vector(maxPowerScaling, currentPath.getClosestPointTangentVector().getTheta());
