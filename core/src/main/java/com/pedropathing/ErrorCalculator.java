@@ -30,6 +30,7 @@ public class ErrorCalculator {
     private Double driveError;
     private Vector velocityVector = new Vector();
     private double headingGoal;
+    private boolean usePredictiveBraking;
     
     public ErrorCalculator(FollowerConstants constants) {
         this.constants = constants;
@@ -42,7 +43,10 @@ public class ErrorCalculator {
 
     }
 
-    public void update(Pose currentPose, Path currentPath, PathChain currentPathChain, boolean followingPathChain, Pose closestPose, Vector velocity, int chainIndex, double xMovement, double yMovement, double headingGoal) {
+    public void update(Pose currentPose, Path currentPath, PathChain currentPathChain,
+                       boolean followingPathChain, Pose closestPose, Vector velocity,
+                       int chainIndex, double xMovement, double yMovement,
+                       double headingGoal, boolean usePredictiveBraking) {
         this.currentPose = currentPose;
         this.velocityVector = velocity;
         this.currentPath = currentPath;
@@ -53,6 +57,7 @@ public class ErrorCalculator {
         this.xVelocity = xMovement;
         this.yVelocity = yMovement;
         this.headingGoal = headingGoal;
+        this.usePredictiveBraking = usePredictiveBraking;
         driveError = null;
     }
 
@@ -156,6 +161,7 @@ public class ErrorCalculator {
      * @return The drive error as a double.
      */
     public double getDriveError() {
+        if (usePredictiveBraking) return 0;
         if (driveError != null) return driveError;
 
         double distanceToGoal;
