@@ -213,6 +213,7 @@ public class Follower {
         closestPose = currentPath.updateClosestPose(poseTracker.getPose(), 1);
     }
 
+
     /**
      * This holds a Point.
      *
@@ -223,13 +224,17 @@ public class Follower {
         holdPoint(point, heading, true);
     }
 
+    public void holdPoint(Pose pose, boolean useHoldScaling) {
+        holdPoint(new BezierPoint(pose), pose.getHeading(), useHoldScaling);
+    }
+
     /**
      * This holds a Point.
      *
      * @param pose the Point (as a Pose) to stay at.
      */
     public void holdPoint(Pose pose) {
-        holdPoint(new BezierPoint(pose), pose.getHeading());
+        holdPoint(new BezierPoint(pose), pose.getHeading(), true);
     }
 
     /**
@@ -688,7 +693,7 @@ public class Follower {
      */
     public void turn(double radians, boolean isLeft) {
         Pose temp = new Pose(getPose().getX(), getPose().getY(), getPose().getHeading() + (isLeft ? radians : -radians));
-        holdPoint(temp);
+        holdPoint(temp, false);
         isTurning = true;
         isBusy = true;
     }
@@ -697,7 +702,7 @@ public class Follower {
      * @param radians the heading in radians to turn to
      */
     public void turnTo(double radians) {
-        holdPoint(new Pose(getPose().getX(), getPose().getY(), radians));
+        holdPoint(new Pose(getPose().getX(), getPose().getY(), radians), false);
         isTurning = true;
         isBusy = true;
     }
@@ -705,6 +710,7 @@ public class Follower {
     /** Turns to a specific heading in degrees
      * @param degrees the heading in degrees to turn to
      */
+    @Deprecated
     public void turnToDegrees(double degrees) {
         turnTo(Math.toRadians(degrees));
     }
@@ -713,6 +719,7 @@ public class Follower {
      * @param degrees the amount of degrees to turn
      * @param isLeft true if turning left, false if turning right
      */
+    @Deprecated
     public void turnDegrees(double degrees, boolean isLeft) {
         turn(Math.toRadians(degrees), isLeft);
     }
