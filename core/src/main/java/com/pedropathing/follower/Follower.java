@@ -1146,23 +1146,23 @@ public class Follower {
             return 0;
         }
 
-        if (followingPathChain) {
-            PathChain.DecelerationType type = currentPathChain.getDecelerationType();
-            if (type != PathChain.DecelerationType.NONE) {
-                double remainingLength = 0;
-                
-                if (chainIndex < currentPathChain.size()) {
-                    for (int i = chainIndex + 1; i < currentPathChain.size(); i++) {
-                        remainingLength += currentPathChain.getPath(i).length();
-                    }
-                }
-                
-                return remainingLength + currentPath.getDistanceRemaining();
-            } else {
-                return -1;
-            }
-        } else {
+        if (!followingPathChain) {
             return currentPath.getDistanceRemaining();
         }
+        
+        PathChain.DecelerationType type = currentPathChain.getDecelerationType();
+        if (type == PathChain.DecelerationType.NONE) {
+            return -1;
+        }
+        
+        double remainingLength = 0;
+        
+        if (chainIndex < currentPathChain.size()) {
+            for (int i = chainIndex + 1; i < currentPathChain.size(); i++) {
+                remainingLength += currentPathChain.getPath(i).length();
+            }
+        }
+        
+        return remainingLength + currentPath.getDistanceRemaining();
     }
 }
