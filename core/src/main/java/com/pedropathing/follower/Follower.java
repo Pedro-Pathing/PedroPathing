@@ -221,6 +221,7 @@ public class Follower {
         closestPose = currentPath.updateClosestPose(poseTracker.getPose(), 1);
     }
 
+
     /**
      * This holds a Point.
      *
@@ -231,13 +232,17 @@ public class Follower {
         holdPoint(point, heading, true);
     }
 
+    public void holdPoint(Pose pose, boolean useHoldScaling) {
+        holdPoint(new BezierPoint(pose), pose.getHeading(), useHoldScaling);
+    }
+
     /**
      * This holds a Point.
      *
      * @param pose the Point (as a Pose) to stay at.
      */
     public void holdPoint(Pose pose) {
-        holdPoint(new BezierPoint(pose), pose.getHeading());
+        holdPoint(new BezierPoint(pose), pose.getHeading(), true);
     }
 
     /**
@@ -741,7 +746,7 @@ public class Follower {
      * @param radians the heading in radians to turn to
      */
     public void turnTo(double radians) {
-        holdPoint(new Pose(getPose().getX(), getPose().getY(), radians));
+        holdPoint(new Pose(getPose().getX(), getPose().getY(), radians), false);
         isTurning = true;
         isBusy = true;
     }
