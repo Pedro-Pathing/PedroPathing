@@ -457,7 +457,7 @@ public class Follower {
                                 currentPathChain, useDrive && !holdingPosition ?
                                     getDriveError() : -1, getTranslationalError(),
                                 getHeadingError(), getClosestPointHeadingGoal(),
-                                getDistanceRemaining());
+                                getDistanceRemainingBeforeStop());
     }
 
     public void updateErrorAndVectors() {updateErrors(); updateVectors();}
@@ -1139,5 +1139,30 @@ public class Follower {
 
     public double getHeading() {
         return getPose().getHeading();
+    }
+    
+    public double getDistanceRemainingBeforeStop() {
+        if (currentPath == null) {
+            return 0;
+        }
+
+        if (followingPathChain) {
+            PathChain.DecelerationType type = currentPathChain.getDecelerationType();
+            if (type != PathChain.DecelerationType.NONE) {
+                double remainingLength = 0;
+                
+                if (chainIndex < currentPathChain.size()) {
+                    for (int i = chainIndex + 1; i < currentPathChain.size(); i++) {
+                        remainingLength += currentPathChain.getPath(i).length();
+                    }
+                }
+                
+                return remainingLength + currentPath.getDistanceRemaining();
+            } else {
+                return -1;
+            }
+        } else {
+            return currentPath.getDistanceRemaining();
+        }
     }
 }
