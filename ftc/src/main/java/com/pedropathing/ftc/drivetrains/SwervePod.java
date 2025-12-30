@@ -31,7 +31,7 @@ public interface SwervePod {
      * Implementations own any hardware-specific thresholds/flags and pull those from
      * internal state; the interface exposes only the logical command inputs.
      */
-    void move(double targetAngleRad, double drivePower);
+    void move(double targetAngleRad, double drivePower, boolean ignoreAngleChanges);
 
     /**
      * Set drivetrain hardware to float (zero power behaviour FLOAT) for the pod's drive motor.

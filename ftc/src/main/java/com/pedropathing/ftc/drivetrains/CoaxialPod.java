@@ -24,20 +24,20 @@ public class CoaxialPod implements SwervePod {
 
   private final String servoLabel;
 
-  // REV analog reference voltage (0–3.3 V)
-  private final double analogReferenceVoltage;
+  // analog encoder voltage range (min -> max), e.g. 0.0 -> 3.3 V
+  private final double analogMinVoltage;
+  private final double analogMaxVoltage;
 
   private final boolean encoderReversed;
 
   private double motorCachingThreshold = 0.01;
   private double servoCachingThreshold = 0.01;
   private double feedForward = 0.0;
-  private boolean ignoreServoAngleChanges = false;
 
   public CoaxialPod(HardwareMap hardwareMap, String motorName, String servoName, String turnEncoderName,
                     PIDFCoefficients turnPIDFCoefficients, DcMotorSimple.Direction driveDirection,
                     CRServo.Direction servoDirection, double angleOffsetDeg, Pose podOffset,
-                    double referenceVoltage, boolean encoderReversed, double drivePIDFFeedForward, boolean ignoreServoAngleChanges) {
+                    double analogMinVoltage, double analogMaxVoltage, boolean encoderReversed, double drivePIDFFeedForward) {
 
       this.driveMotor = hardwareMap.get(DcMotorEx.class, motorName); 
       this.turnServo = hardwareMap.get(CRServo.class, servoName);
@@ -53,7 +53,8 @@ public class CoaxialPod implements SwervePod {
     driveMotor.setDirection(driveDirection);
     turnServo.setDirection(servoDirection);
 
-    this.analogReferenceVoltage = referenceVoltage;
+    this.analogMinVoltage = analogMinVoltage;
+    this.analogMaxVoltage = analogMaxVoltage;
     this.encoderReversed = encoderReversed;
     this.feedForward = drivePIDFFeedForward;
     
@@ -108,7 +109,7 @@ public class CoaxialPod implements SwervePod {
    * This implementation pulls caching thresholds and feedforward from internal state.
    */
   @Override
-  public void move(double targetAngleRad, double drivePower) {
+  public void move(double targetAngleRad, double drivePower, boolean ignoreAngleChanges) {
     // Convert hardware angle (degrees) to radians and normalize
     double actualRad = Math.toRadians(getAngleAfterOffsetDeg());
     actualRad = MathFunctions.normalizeAngle(actualRad);
@@ -151,7 +152,7 @@ public class CoaxialPod implements SwervePod {
       turnPower += feedForward * Math.signum(turnPower);
     }
 
-    if (ignoreServoAngleChanges) {
+    if (ignoreAngleChanges) {
       turnPower = 0;
     }
 
@@ -167,7 +168,12 @@ public class CoaxialPod implements SwervePod {
   }
 
   public double getRawAngleDeg() {
-    return (turnEncoder.getVoltage() / analogReferenceVoltage) * 360.0;
+    double v = turnEncoder.getVoltage();
+    double range = analogMaxVoltage - analogMinVoltage;
+    if (range == 0) return 0;
+    double normalized = (v - analogMinVoltage) / range;
+    normalized = MathFunctions.clamp(normalized, 0, 1);
+    return normalized * 360.0;
   }
 
   public double getOffsetAngleDeg() {
@@ -185,10 +191,6 @@ public class CoaxialPod implements SwervePod {
 
   public void setFeedForward(double feedForward) {
     this.feedForward = feedForward;
-  }
-
-  public void setIgnoreServoAngleChanges(boolean ignoreServoAngleChanges) {
-    this.ignoreServoAngleChanges = ignoreServoAngleChanges;
   }
 
   @Override
