@@ -23,8 +23,8 @@ public abstract class CustomDrivetrain extends Drivetrain {
      * a robot-centric arcade drive implementation.
      *
      * @param forward the forward power value, which would typically be -gamepad1.left_stick_y in a normal arcade drive setup.
-     * @param strafe the strafe power value, which would typically be gamepad1.left_stick_x in a normal arcade drive setup.
-     * @param rotation the rotation power value, which would typically be gamepad1.right_stick_x in a normal arcade drive setup.
+     * @param strafe the strafe power value, which would typically be -gamepad1.left_stick_x in a normal arcade drive setup.
+     * @param rotation the rotation power value, which would typically be -gamepad1.right_stick_x in a normal arcade drive setup.
      */
     public abstract void arcadeDrive(double forward, double strafe, double rotation);
 
