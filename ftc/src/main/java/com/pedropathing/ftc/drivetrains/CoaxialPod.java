@@ -32,7 +32,6 @@ public class CoaxialPod implements SwervePod {
 
   private double motorCachingThreshold = 0.01;
   private double servoCachingThreshold = 0.01;
-  private double feedForward = 0.0;
 
   public CoaxialPod(HardwareMap hardwareMap, String motorName, String servoName, String turnEncoderName,
                     PIDFCoefficients turnPIDFCoefficients, DcMotorSimple.Direction driveDirection,
@@ -56,7 +55,6 @@ public class CoaxialPod implements SwervePod {
     this.analogMinVoltage = analogMinVoltage;
     this.analogMaxVoltage = analogMaxVoltage;
     this.encoderReversed = encoderReversed;
-    this.feedForward = drivePIDFFeedForward;
     
     this.offset = podOffset;
   }
@@ -149,7 +147,7 @@ public class CoaxialPod implements SwervePod {
 
     // Add feedforward if we have non-negligible error
     if (Math.abs(errorDeg) > 0.02) {
-      turnPower += feedForward * Math.signum(turnPower);
+      turnPower += turnPID.F() * Math.signum(turnPower);
     }
 
     if (ignoreAngleChanges) {
@@ -187,10 +185,6 @@ public class CoaxialPod implements SwervePod {
 
   public void setServoCachingThreshold(double servoCachingThreshold) {
     this.servoCachingThreshold = servoCachingThreshold;
-  }
-
-  public void setFeedForward(double feedForward) {
-    this.feedForward = feedForward;
   }
 
   @Override
