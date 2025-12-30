@@ -1,4 +1,5 @@
 package com.pedropathing.localization;
+
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.MathFunctions;
 import com.pedropathing.math.Matrix;
@@ -66,13 +67,13 @@ public class FusionLocalizer implements Localizer {
     }
 
     /**
-     * Consider the system x<sub>k+1</sub> = x<sub>k</sub> + (f(x<sub>k</sub>, u<sub>k</sub>) + w<sub>k</sub>) * Δt.
+     * Consider the system xₖ₊₁ = xₖ + (f(xₖ, uₖ) + wₖ) * Δt.
      * <p>
-     * w<sub>k</sub> is the noise in the system caused by sensor uncertainty, a zero-mean random vector with covariance Q.
+     * wₖ is the noise in the system caused by sensor uncertainty, a zero-mean random vector with covariance Q.
      * <p>
      * The Kalman Filter update step is given by:
      * <pre>
-     *     P<sub>k+1</sub> = F * P<sub>k</sub> * F<sup>T</sup> + G * Q * G<sup>T</sup>
+     *     Pₖ₊₁ = F * Pₖ * Fᵀ + G * Q * Gᵀ
      * </pre>
      * Here F and G represent the State Transition Matrix and Control-to-State Matrix respectively.
      * <p>
@@ -80,11 +81,11 @@ public class FusionLocalizer implements Localizer {
      * We computed our twist integration using a first-order forward-Euler approximation.
      * Therefore, f only depends on the twist, not on x, so ∂f/∂x = 0 and F = I.
      * <p>
-     * The Control-to-State Matrix G is given by ∂x<sub>k+1</sub>/∂w<sub>k</sub>.
+     * The Control-to-State Matrix G is given by ∂xₖ₊₁ / ∂wₖ.
      * Here this is simply I * Δt.
      * <p>
-     * The Kalman update is P<sub>k+1</sub> = F * P<sub>k</sub> * F<sup>T</sup> + G * Q * G<sup>T</sup>.
-     * With F = I and G = I * Δt, we get P<sub>k+1</sub> = Q * Δt<sup>2</sup>.
+     * The Kalman update is Pₖ₊₁ = F * Pₖ * Fᵀ + G * Q * Gᵀ.
+     * With F = I and G = I * Δt, we get Pₖ₊₁ = Q * Δt².
      *
      * @param dt the time step Δt in seconds
      */
@@ -104,7 +105,7 @@ public class FusionLocalizer implements Localizer {
         if (pastPose == null)
             pastPose = getPose();
 
-        //Computes the innovation matrix y_k = z_k - x_{k|k-1}, where z_k is the camera's measured pose at discrete timestamp k
+        //Computes the innovation matrix yₖ = zₖ - xₖ|ₖ₋₁, where zₖ is the camera's measured pose at discrete timestamp k
         //Checking for NaN allows for single dimension measurements, if the camera isn't able to measure a certain axis
         Matrix y = new Matrix(new double[][]{
                 {!Double.isNaN(measuredPose.getX()) ? measuredPose.getX() - pastPose.getX() : 0},
@@ -116,13 +117,13 @@ public class FusionLocalizer implements Localizer {
         //Gets the covariance at the timestamp
         Matrix pastCovariance = covarianceHistory.floorEntry(timestamp).getValue();
 
-        //Computes the innovation covariance matrix, S_k = P_{k|k-1} + R
+        //Computes the innovation covariance matrix, Sₖ = Pₖ|ₖ₋₁ + R
         Matrix S = pastCovariance.plus(R);
 
-        //The Kalman Gain is typically computed as follows: K_k = P_{k|k-1} * S^{-1}
+        //The Kalman Gain is typically computed as follows: Kₖ = Pₖ|ₖ₋₁ * S⁻¹
         Matrix K = pastCovariance.multiply(invert(S));
 
-        //Update the state using x_{k|k} = x_{k|k-1} + K_k * y_k
+        //Update the state using xₖ|ₖ = xₖ|ₖ₋₁ + Kₖ * yₖ
         Matrix K_y = K.multiply(y);
         Pose updatedPast = new Pose(
                 pastPose.getX() + K_y.get(0,0),
@@ -131,7 +132,7 @@ public class FusionLocalizer implements Localizer {
         );
         poseHistory.put(timestamp, updatedPast);
 
-        //Update the covariance using P_{k|k} = P_{k|k-1} - K_k * P_{k|k-1}
+        //Update the covariance using Pₖ|ₖ = Pₖ|ₖ₋₁ - Kₖ * Pₖ|ₖ₋₁
         Matrix covarianceUpdate = K.multiply(pastCovariance);
         covarianceHistory.put(timestamp, pastCovariance.minus(covarianceUpdate));
 
@@ -198,7 +199,6 @@ public class FusionLocalizer implements Localizer {
 
     private Pose integrate(Pose previousPose, Pose twist, double dt) {
         //Standard forward-Euler first-order approximation for twist integration
-        //I didn't think the full se(2) matrix exponential was necessary here given that dt is small
         double dx = twist.getX() * dt;
         double dy = twist.getY() * dt;
         double dTheta = twist.getHeading() * dt;
