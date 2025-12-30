@@ -36,7 +36,7 @@ public class CoaxialPod implements SwervePod {
   public CoaxialPod(HardwareMap hardwareMap, String motorName, String servoName, String turnEncoderName,
                     PIDFCoefficients turnPIDFCoefficients, DcMotorSimple.Direction driveDirection,
                     CRServo.Direction servoDirection, double angleOffsetDeg, Pose podOffset,
-                    double analogMinVoltage, double analogMaxVoltage, boolean encoderReversed, double drivePIDFFeedForward) {
+                    double analogMinVoltage, double analogMaxVoltage, boolean encoderReversed) {
 
       this.driveMotor = hardwareMap.get(DcMotorEx.class, motorName); 
       this.turnServo = hardwareMap.get(CRServo.class, servoName);
