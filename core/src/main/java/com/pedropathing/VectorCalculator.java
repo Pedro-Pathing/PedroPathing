@@ -230,6 +230,14 @@ public class VectorCalculator {
      * @return returns the heading vector.
      */
     public Vector getHeadingVector() {
+        return getHeadingVector(this.headingError, this.currentPose, this.headingGoal);
+    }
+
+    /**
+     * Overloaded getHeadingVector which allows providing the heading error, current pose and heading goal.
+     * This preserves the original behavior but uses the supplied values instead of the internal fields.
+     */
+    public Vector getHeadingVector(double headingError, Pose currentPose, double headingGoal) {
         if (!useHeading) return new Vector();
         if (Math.abs(headingError) < headingPIDFSwitch && useSecondaryHeadingPID) {
             secondaryHeadingPIDF.updateFeedForwardInput(MathFunctions.getTurnDirection(currentPose.getHeading(), headingGoal));
@@ -274,9 +282,17 @@ public class VectorCalculator {
      * @return returns the translational correction vector.
      */
     public Vector getTranslationalCorrection() {
+        return getTranslationalCorrection(this.translationalError, this.currentPose);
+    }
+
+    /**
+     * Overloaded getTranslationalCorrection which accepts a translational error vector and the current pose.
+     * This preserves original behavior but uses the supplied translational error and current pose.
+     */
+    public Vector getTranslationalCorrection(Vector translationalError, Pose currentPose) {
         if (!useTranslational) return new Vector();
         Vector translationalVector = translationalError.copy();
-        
+
         if (usePredictiveBraking) {
             if (currentPath.isAtParametricEnd()) {
                 return new Vector(
@@ -286,7 +302,7 @@ public class VectorCalculator {
                                                               velocity.getYComponent())
                 );
             }
-            
+
             Vector normal = currentPath.getClosestLeftGradientVector();
             return normal.times(
                     predictiveBrakingController.computeOutput(translationalError.dot(normal),

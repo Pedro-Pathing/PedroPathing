@@ -234,6 +234,15 @@ public class Follower {
     }
 
     /**
+     * This holds a Point.
+     *
+     * @param pose the Point (as a Pose) to stay at.
+     */
+    public void holdPoint(Pose pose, boolean useHoldScaling) {
+        holdPoint(new BezierPoint(pose), pose.getHeading(), useHoldScaling);
+    }
+
+    /**
      * This follows a Path.
      * This also makes the Follower hold the last Point on the Path.
      *
@@ -599,6 +608,7 @@ public class Follower {
         manualDrive = false;
         holdingPosition = false;
         isBusy = false;
+        isTurning = false;
         reachedParametricPathEnd = false;
         zeroVelocityDetectedTimer = null;
     }
@@ -699,16 +709,25 @@ public class Follower {
         return poseTracker.getLocalizer().isNAN();
     }
 
-    /** Turns a certain amount of degrees left
+    /** Turns a certain amount of radians left
      * @param radians the amount of radians to turn
      * @param isLeft true if turning left, false if turning right
      */
+    @Deprecated
     public void turn(double radians, boolean isLeft) {
-        Pose temp = new Pose(getPose().getX(), getPose().getY(), getPose().getHeading() + (isLeft ? radians : -radians));
+        turn(isLeft ? radians : -radians);
+    }
+
+    /** Turns a certain amount of degrees counterclockwise
+     * @param radians the amount of radians to turn
+     */
+    public void turn(double radians) {
+        Pose temp = new Pose(getPose().getX(), getPose().getY(), getPose().getHeading() + radians);
         holdPoint(temp);
         isTurning = true;
         isBusy = true;
     }
+
 
     /** Turns to a specific heading
      * @param radians the heading in radians to turn to
@@ -722,6 +741,7 @@ public class Follower {
     /** Turns to a specific heading in degrees
      * @param degrees the heading in degrees to turn to
      */
+    @Deprecated
     public void turnToDegrees(double degrees) {
         turnTo(Math.toRadians(degrees));
     }
@@ -730,6 +750,7 @@ public class Follower {
      * @param degrees the amount of degrees to turn
      * @param isLeft true if turning left, false if turning right
      */
+    @Deprecated
     public void turnDegrees(double degrees, boolean isLeft) {
         turn(Math.toRadians(degrees), isLeft);
     }

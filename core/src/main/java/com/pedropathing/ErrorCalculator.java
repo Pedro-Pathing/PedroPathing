@@ -66,12 +66,35 @@ public class ErrorCalculator {
      *
      * @return This returns the raw translational error as a Vector.
      */
-    public Vector getTranslationalError() {
+    public Vector getTranslationalError(Pose current, Pose target) {
         Vector error = new Vector();
-        double x = closestPose.getX() - currentPose.getX();
-        double y = closestPose.getY() - currentPose.getY();
+        double x = target.getX() - current.getX();
+        double y = target.getY() - current.getY();
         error.setOrthogonalComponents(x, y);
         return error;
+    }
+
+    /**
+     * This returns the raw translational error, or how far off the closest point the robot is.
+     *
+     * @return This returns the raw translational error as a Vector.
+     */
+    public Vector getTranslationalError() {
+        return getTranslationalError(currentPose, closestPose);
+    }
+
+    /**
+     * This returns the raw heading error from a targetHeading
+     *
+     * @return This returns the raw heading error as a double.
+     */
+    public double getHeadingError(double current, double target) {
+        if (currentPath == null) {
+            return 0;
+        }
+
+        headingError = MathFunctions.getTurnDirection(current, target) * MathFunctions.getSmallestAngleDifference(current, target);
+        return headingError;
     }
 
     /**
@@ -80,13 +103,9 @@ public class ErrorCalculator {
      * @return This returns the raw heading error as a double.
      */
     public double getHeadingError() {
-        if (currentPath == null) {
-            return 0;
-        }
-
-        headingError = MathFunctions.getTurnDirection(currentPose.getHeading(), headingGoal) * MathFunctions.getSmallestAngleDifference(currentPose.getHeading(), headingGoal);
-        return headingError;
+        return getHeadingError(currentPose.getHeading(), headingGoal);
     }
+
 
     /**
      * This returns the error in the velocity the robot needs to be at to make it to the end of the Path
