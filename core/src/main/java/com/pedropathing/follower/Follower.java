@@ -524,7 +524,7 @@ public class Follower {
         }
         
         boolean skipToNextPath =
-            followingPathChain && chainIndex < currentPathChain.size() - 1 && usePredictiveBraking
+            followingPathChain && chainIndex < currentPathChain.size() - 2 && usePredictiveBraking
                 && vectorCalculator.predictiveBrakingController
                 .computeOutput(getDistanceRemaining(), getTangentialVelocity()) < 1;
         
