@@ -41,13 +41,15 @@ public class PredictiveBrakingController {
     public double computeOutput(double error, double velocity) {
         double directionOfMotion = Math.signum(velocity);
         
-        double predictedBrakingDisplacement =
-            directionOfMotion * velocity * velocity * coefficients.kQuadraticFriction
-                + velocity * coefficients.kLinearBraking;
-        
-        double outputPower = coefficients.P * (error - predictedBrakingDisplacement);
+        double outputPower =
+            coefficients.P * (error - computeBrakingDisplacement(velocity, directionOfMotion));
         
         return clampReversePower(outputPower, directionOfMotion);
+    }
+    
+    public double computeBrakingDisplacement(double velocity, double directionOfMotion) {
+        return directionOfMotion * velocity * velocity * coefficients.kQuadraticFriction
+                + velocity * coefficients.kLinearBraking;
     }
     
     /**
