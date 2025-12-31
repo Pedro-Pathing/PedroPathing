@@ -21,7 +21,6 @@ public class SwerveConstants {
     public boolean useVoltageCompensation = false;
     public double nominalVoltage = 12.0;
     public double staticFrictionCoefficient = 0.1;
-    public double drivePIDFFeedForward = 0.05;
     public double epsilon = 0.001;
 
     public SwerveConstants() {
@@ -73,11 +72,6 @@ public class SwerveConstants {
         return this;
     }
 
-    public SwerveConstants drivePIDFFeedForward(double drivePIDFFeedForward) {
-        this.drivePIDFFeedForward = drivePIDFFeedForward;
-        return this;
-    }
-
     public SwerveConstants epsilon(double epsilon) {
         this.epsilon = epsilon;
         return this;
@@ -113,10 +107,6 @@ public class SwerveConstants {
 
     public double getStaticFrictionCoefficient() {
         return staticFrictionCoefficient;
-    }
-
-    public double getDrivePIDFFeedForward() {
-        return drivePIDFFeedForward;
     }
 
     public double getEpsilon() {
@@ -156,10 +146,6 @@ public class SwerveConstants {
         this.staticFrictionCoefficient = staticFrictionCoefficient;
     }
 
-    public void setDrivePIDFFeedForward(double drivePIDFFeedForward) {
-        this.drivePIDFFeedForward = drivePIDFFeedForward;
-    }
-
     public void setEpsilon(double epsilon) {
         this.epsilon = epsilon;
     }
@@ -172,7 +158,6 @@ public class SwerveConstants {
         useVoltageCompensation = false;
         nominalVoltage = 12.0;
         staticFrictionCoefficient = 0.1;
-        drivePIDFFeedForward = 0.05;
         epsilon = 0.001;
     }
 }

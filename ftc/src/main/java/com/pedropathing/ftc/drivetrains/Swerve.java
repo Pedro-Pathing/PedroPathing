@@ -67,6 +67,7 @@ public class Swerve extends CustomDrivetrain {
 
         boolean ignoreTrans = rawTrans.getMagnitude() < epsilon;
         boolean ignoreRotation = Math.abs(rotation) < epsilon;
+        boolean ignoreAngleChanges = ignoreTrans && ignoreRotation;
 
         double rotationScalar = (ignoreRotation) ? 0 : rotation;
 
@@ -127,7 +128,7 @@ public class Swerve extends CustomDrivetrain {
 
             // 2*Pi-theta because servos have positive clockwise rotation, while our angles
             // are counterclockwise, and we want to see if motor/servo caching is an issue
-            pods.get(podNum).move(finalVector.getTheta(), finalVector.getMagnitude() * avgScaling);
+            pods.get(podNum).move(finalVector.getTheta(), finalVector.getMagnitude() * avgScaling, ignoreAngleChanges);
         }
     }
 
@@ -144,7 +145,7 @@ public class Swerve extends CustomDrivetrain {
     @Override
     public void breakFollowing() {
         for (SwervePod pod : pods) {
-            pod.move(pod.getAngle(), 0);
+            pod.move(pod.getAngle(), 0, false);
             pod.setToFloat();
         }
     }
