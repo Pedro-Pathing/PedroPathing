@@ -513,8 +513,16 @@ public class Follower {
                 && zeroVelocityDetectedTimer == null && isBusy) {
             zeroVelocityDetectedTimer = new Timer();
         }
-
-        if (!(currentPath.isAtParametricEnd() || ( zeroVelocityDetectedTimer != null && zeroVelocityDetectedTimer.getElapsedTime() > 500.0))) {
+        
+        boolean skipToNextPath =
+            usePredictiveBraking
+                && vectorCalculator.predictiveBrakingController
+                .computeOutput(getDistanceRemaining(), getTangentialVelocity()) < 1;
+        
+        if (!skipToNextPath &&
+            !(currentPath.isAtParametricEnd()
+                || (zeroVelocityDetectedTimer != null
+                && zeroVelocityDetectedTimer.getElapsedTime() > 500.0))) {
             return;
         }
 

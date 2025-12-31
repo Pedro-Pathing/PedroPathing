@@ -63,7 +63,7 @@ public class VectorCalculator {
     private PIDFController headingPIDF;
     private FilteredPIDFController secondaryDrivePIDF, drivePIDF;
     
-    private PredictiveBrakingController predictiveBrakingController;
+    public PredictiveBrakingController predictiveBrakingController;
 
     public VectorCalculator(FollowerConstants constants) {
         this.constants = constants;
