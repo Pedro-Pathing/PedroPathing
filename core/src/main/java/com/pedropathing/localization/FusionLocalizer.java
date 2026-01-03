@@ -105,59 +105,79 @@ public class FusionLocalizer implements Localizer {
         if (pastPose == null)
             pastPose = getPose();
 
-        //Computes the innovation matrix yₖ = zₖ - xₖ|ₖ₋₁, where zₖ is the camera's measured pose at discrete timestamp k
-        //Checking for NaN allows for single dimension measurements, if the camera isn't able to measure a certain axis
+        // Measurement residual y = z - x
+        boolean measX = !Double.isNaN(measuredPose.getX());
+        boolean measY = !Double.isNaN(measuredPose.getY());
+        boolean measH = !Double.isNaN(measuredPose.getHeading());
+
         Matrix y = new Matrix(new double[][]{
-                {!Double.isNaN(measuredPose.getX()) ? measuredPose.getX() - pastPose.getX() : 0},
-                {!Double.isNaN(measuredPose.getY()) ? measuredPose.getY() - pastPose.getY() : 0},
-                {!Double.isNaN(measuredPose.getHeading()) ?
-                        MathFunctions.normalizeAngle(measuredPose.getHeading() - pastPose.getHeading()) : 0}
+                {measX ? measuredPose.getX() - pastPose.getX() : 0},
+                {measY ? measuredPose.getY() - pastPose.getY() : 0},
+                {measH ? MathFunctions.normalizeAngle(
+                        measuredPose.getHeading() - pastPose.getHeading()) : 0}
         });
 
-        //Gets the covariance at the timestamp
-        Matrix pastCovariance = covarianceHistory.floorEntry(timestamp).getValue();
+        // Measurement mask M
+        Matrix M = MatrixUtil.diag(
+                measX ? 1 : 0,
+                measY ? 1 : 0,
+                measH ? 1 : 0
+        );
 
-        //Computes the innovation covariance matrix, Sₖ = Pₖ|ₖ₋₁ + R
-        Matrix S = pastCovariance.plus(R);
+        // Covariance at measurement time
+        Matrix Pm = covarianceHistory.floorEntry(timestamp).getValue();
 
-        //The Kalman Gain is typically computed as follows: Kₖ = Pₖ|ₖ₋₁ * S⁻¹
-        Matrix K = pastCovariance.multiply(invert(S));
+        // Innovation covariance S = P + R
+        Matrix S = Pm.plus(R);
 
-        //Update the state using xₖ|ₖ = xₖ|ₖ₋₁ + Kₖ * yₖ
-        Matrix K_y = K.multiply(y);
+        Matrix K = Pm.multiply(invert(S));
+
+        // Apply mask
+        K = M.multiply(K);
+        y = M.multiply(y);
+
+        // State update
+        Matrix Ky = K.multiply(y);
         Pose updatedPast = new Pose(
-                pastPose.getX() + K_y.get(0,0),
-                pastPose.getY() + K_y.get(1,0),
-                MathFunctions.normalizeAngle(pastPose.getHeading() + K_y.get(2,0))
+                pastPose.getX() + Ky.get(0, 0),
+                pastPose.getY() + Ky.get(1, 0),
+                MathFunctions.normalizeAngle(pastPose.getHeading() + Ky.get(2, 0))
         );
         poseHistory.put(timestamp, updatedPast);
 
-        //Update the covariance using Pₖ|ₖ = Pₖ|ₖ₋₁ - Kₖ * Pₖ|ₖ₋₁
-        Matrix covarianceUpdate = K.multiply(pastCovariance);
-        covarianceHistory.put(timestamp, pastCovariance.minus(covarianceUpdate));
+        // Joseph-form covariance update
+        Matrix I = MatrixUtil.identity(3);
+        Matrix IK = I.minus(K);
+        Matrix updatedCovariance =
+                IK.multiply(Pm).multiply(IK.transposed())
+                        .plus(K.multiply(R).multiply(K.transposed()));
 
-        //Forward propagation on all further states beyond that timestamp
-        //Allows us to use the new state estimate in the past to generate a new state estimate in the present
-        long previousTime = timestamp;
-        Pose previousPose = updatedPast;
-        double dt = 0;
+        covarianceHistory.put(timestamp, updatedCovariance);
 
-        for (NavigableMap.Entry<Long, Pose> entry : poseHistory.tailMap(timestamp, false).entrySet()) {
+        // Forward propagate pose + covariance
+        long prevTime = timestamp;
+        Pose prevPose = updatedPast;
+        Matrix prevCov = updatedCovariance;
+
+        for (NavigableMap.Entry<Long, Pose> entry :
+                poseHistory.tailMap(timestamp, false).entrySet()) {
+
             long t = entry.getKey();
             Pose twist = interpolate(t, twistHistory);
             if (twist == null)
                 twist = getVelocity();
-            dt = (t - previousTime) / 1e9;
 
-            //Computes the new position based on the old position
-            Pose nextPose = integrate(previousPose, twist, dt);
+            double dt = (t - prevTime) / 1e9;
+
+            Pose nextPose = integrate(prevPose, twist, dt);
             poseHistory.put(t, nextPose);
 
-            //We also update the covariance
-            covarianceHistory.compute(t, (k, prevCovariance) -> prevCovariance.minus(covarianceUpdate));
+            // Covariance propagation: P ← P + Q dt²
+            prevCov = prevCov.plus(Q.multiply(dt * dt));
+            covarianceHistory.put(t, prevCov);
 
-            previousPose = nextPose;
-            previousTime = t;
+            prevPose = nextPose;
+            prevTime = t;
         }
 
         currentPosition = poseHistory.lastEntry().getValue().copy();
