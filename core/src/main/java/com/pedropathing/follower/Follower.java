@@ -528,7 +528,7 @@ public class Follower {
                 && vectorCalculator.predictiveBrakingController
                 .computeOutput(getDistanceRemaining(), getTangentialVelocity()) < 1;
         
-        if (!skipToNextPath &&
+        if (//!skipToNextPath &&
             !(currentPath.isAtParametricEnd()
                 || (zeroVelocityDetectedTimer != null
                 && zeroVelocityDetectedTimer.getElapsedTime() > 500.0))) {
