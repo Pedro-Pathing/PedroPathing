@@ -87,6 +87,14 @@ public class SwerveConstants {
     public boolean leftRearEncoderReversed = false;
     public boolean rightRearEncoderReversed = false;
 
+
+    enum ZeroPowerBehavior {
+        RESIST_MOVEMENT,
+        IGNORE_ANGLE_CHANGES
+    }
+
+    public ZeroPowerBehavior zeroPowerBehavior = ZeroPowerBehavior.RESIST_MOVEMENT;
+
     public SwerveConstants() {
         defaults();
     }
@@ -356,6 +364,11 @@ public class SwerveConstants {
         return this;
     }
 
+    public SwerveConstants zeroPowerBehavior(ZeroPowerBehavior behavior) {
+        this.zeroPowerBehavior = behavior;
+        return this;
+    }
+
     public double getVelocity() {
         return xVelocity; // should be equal to yVelocity
     }
@@ -562,6 +575,10 @@ public class SwerveConstants {
 
     public boolean getRightRearEncoderReversed() {
         return rightRearEncoderReversed;
+    }
+
+    public ZeroPowerBehavior getZeroPowerBehavior () {
+        return zeroPowerBehavior;
     }
 
     public void setVelocity(double velocity) {
@@ -773,6 +790,10 @@ public class SwerveConstants {
         this.rightRearEncoderReversed = rightRearEncoderReversed;
     }
 
+    public void setZeroPowerBehavior(ZeroPowerBehavior behavior) {
+        this.zeroPowerBehavior = behavior;
+    }
+
     public void defaults() {
         xVelocity = 80.0;
         yVelocity = 80.0;
@@ -825,5 +846,6 @@ public class SwerveConstants {
         rightFrontEncoderReversed = false;
         leftRearEncoderReversed = false;
         rightRearEncoderReversed = false;
+        zeroPowerBehavior = ZeroPowerBehavior.RESIST_MOVEMENT;
     }
 }
