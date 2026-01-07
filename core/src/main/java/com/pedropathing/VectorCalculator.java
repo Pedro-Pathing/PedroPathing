@@ -4,7 +4,6 @@ import com.pedropathing.control.FilteredPIDFCoefficients;
 import com.pedropathing.control.PIDFCoefficients;
 import com.pedropathing.control.PredictiveBrakingController;
 import com.pedropathing.follower.FollowerConstants;
-import com.pedropathing.geometry.BezierPoint;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.MathFunctions;
 import com.pedropathing.paths.Path;
@@ -50,7 +49,7 @@ public class VectorCalculator {
         usePredictiveBraking = true;
     private double maxPowerScaling = 1.0, mass = 10.65;
     private boolean scaleDriveFeedforward;
-    private double distanceRemaining;
+    private double distanceRemainingBeforeStop;
 
     private int chainIndex;
     private double centripetalScaling;
@@ -64,7 +63,7 @@ public class VectorCalculator {
     private PIDFController headingPIDF;
     private FilteredPIDFController secondaryDrivePIDF, drivePIDF;
     
-    private PredictiveBrakingController predictiveBrakingController;
+    public PredictiveBrakingController predictiveBrakingController;
 
     public VectorCalculator(FollowerConstants constants) {
         this.constants = constants;
@@ -96,11 +95,14 @@ public class VectorCalculator {
         useSecondaryDrivePID = constants.useSecondaryDrivePIDF;
         useSecondaryHeadingPID = constants.useSecondaryHeadingPIDF;
         useSecondaryTranslationalPID = constants.useSecondaryTranslationalPIDF;
+        usePredictiveBraking = constants.usePredictiveBraking;
         mass = constants.mass;
     }
 
     public void update(boolean useDrive, boolean useHeading, boolean useTranslational,
-                       boolean useCentripetal, boolean teleopDrive, int chainIndex,
+                       boolean useCentripetal,
+                       boolean teleopDrive,
+                       int chainIndex,
                        double maxPowerScaling, boolean followingPathChain,
                        double centripetalScaling, Pose currentPose, Pose closestPose,
                        Vector velocity, Path currentPath, PathChain currentPathChain,
@@ -126,7 +128,7 @@ public class VectorCalculator {
         this.translationalError = translationalError;
         this.headingError = headingError;
         this.headingGoal = headingGoal;
-        this.distanceRemaining = distanceRemaining;
+        this.distanceRemainingBeforeStop = distanceRemaining;
 
         if(teleopDrive)
             teleopUpdate();
@@ -186,17 +188,18 @@ public class VectorCalculator {
      */
     public Vector getDriveVector() {
         if (!useDrive) return new Vector();
-        
-        if (usePredictiveBraking) {
-            Vector tangent = currentPath.getClosestPointTangentVector().normalize();
-            return tangent.times(
-                    predictiveBrakingController.computeOutput(distanceRemaining,
-                                                              velocity.dot(tangent))
-                );
-        }
 
         if (followingPathChain && ((chainIndex < currentPathChain.size() - 1 && currentPathChain.getDecelerationType() == PathChain.DecelerationType.LAST_PATH) || currentPathChain.getDecelerationType() == PathChain.DecelerationType.NONE)) {
             return new Vector(maxPowerScaling, currentPath.getClosestPointTangentVector().getTheta());
+        }
+        
+        if (usePredictiveBraking) {
+            if (distanceRemainingBeforeStop == -1) {
+                return new Vector(maxPowerScaling, currentPath.getClosestPointTangentVector().getTheta());
+            }
+            return new Vector(
+                predictiveBrakingController.computeOutput(distanceRemainingBeforeStop,
+                                                          velocity.dot(currentPath.getClosestPointTangentVector().normalize())), currentPath.getClosestPointTangentVector().getTheta());
         }
 
         if (driveError == -1) return new Vector(maxPowerScaling, currentPath.getClosestPointTangentVector().getTheta());
@@ -227,6 +230,14 @@ public class VectorCalculator {
      * @return returns the heading vector.
      */
     public Vector getHeadingVector() {
+        return getHeadingVector(this.headingError, this.currentPose, this.headingGoal);
+    }
+
+    /**
+     * Overloaded getHeadingVector which allows providing the heading error, current pose and heading goal.
+     * This preserves the original behavior but uses the supplied values instead of the internal fields.
+     */
+    public Vector getHeadingVector(double headingError, Pose currentPose, double headingGoal) {
         if (!useHeading) return new Vector();
         if (Math.abs(headingError) < headingPIDFSwitch && useSecondaryHeadingPID) {
             secondaryHeadingPIDF.updateFeedForwardInput(MathFunctions.getTurnDirection(currentPose.getHeading(), headingGoal));
@@ -271,9 +282,17 @@ public class VectorCalculator {
      * @return returns the translational correction vector.
      */
     public Vector getTranslationalCorrection() {
+        return getTranslationalCorrection(this.translationalError, this.currentPose);
+    }
+
+    /**
+     * Overloaded getTranslationalCorrection which accepts a translational error vector and the current pose.
+     * This preserves original behavior but uses the supplied translational error and current pose.
+     */
+    public Vector getTranslationalCorrection(Vector translationalError, Pose currentPose) {
         if (!useTranslational) return new Vector();
         Vector translationalVector = translationalError.copy();
-        
+
         if (usePredictiveBraking) {
             if (currentPath.isAtParametricEnd()) {
                 return new Vector(
@@ -283,7 +302,7 @@ public class VectorCalculator {
                                                               velocity.getYComponent())
                 );
             }
-            
+
             Vector normal = currentPath.getClosestLeftGradientVector();
             return normal.times(
                     predictiveBrakingController.computeOutput(translationalError.dot(normal),

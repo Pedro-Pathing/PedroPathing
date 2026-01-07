@@ -402,6 +402,30 @@ public class PathChain {
         return finalHeadingGoal;
     }
 
+    public double getDistanceRemaining(PathT completion) {
+        double remainingLength = 0;
+
+        if (completion.pathIndex < size()) {
+            for (int i = completion.pathIndex + 1; i < size(); i++) {
+                remainingLength += getPath(i).length();
+            }
+        }
+
+        return remainingLength + getPath(completion.pathIndex).getDistanceRemaining(completion.t);
+    }
+
+    public double getDistanceRemaining(int chainIndex) {
+        double remainingLength = 0;
+
+        if (chainIndex < size()) {
+            for (int i = chainIndex + 1; i < size(); i++) {
+                remainingLength += getPath(i).length();
+            }
+        }
+
+        return remainingLength + getPath(chainIndex).getDistanceRemaining();
+    }
+
     public void update() {
         closestPointHeadingGoal = null;
     }

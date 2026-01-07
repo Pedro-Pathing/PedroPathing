@@ -1,7 +1,5 @@
 package com.pedropathing.control;
 
-import java.util.function.Function;
-
 /**
  * This is the PIDFCoefficients class. This class handles holding coefficients for PIDF
  * controllers.
