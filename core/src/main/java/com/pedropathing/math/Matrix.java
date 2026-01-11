@@ -4,9 +4,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.Locale;
-import java.util.Objects;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 /**
  * The Matrix class is used to represent matrix objects. Has basic operations such as adding, subtracting, and multiplying (w/ scalars and another matrix),
