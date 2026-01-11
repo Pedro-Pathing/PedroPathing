@@ -23,69 +23,6 @@ public class SwerveConstants {
     public double staticFrictionCoefficient = 0.1;
     public double epsilon = 0.001;
 
-    public String leftFrontMotorName = "frontLeftDrive";
-    public String leftFrontServoName = "frontLeftTurnServo";
-    public String leftFrontEncoderName = "frontLeftTurnEncoder";
-
-    public String rightFrontMotorName = "frontRightDrive";
-    public String rightFrontServoName = "frontRightTurnServo";
-    public String rightFrontEncoderName = "frontRightTurnEncoder";
-
-    public String leftRearMotorName = "backLeftDrive";
-    public String leftRearServoName = "backLeftTurnServo";
-    public String leftRearEncoderName = "backLeftTurnEncoder";
-
-    public String rightRearMotorName = "backRightDrive";
-    public String rightRearServoName = "backRightTurnServo";
-    public String rightRearEncoderName = "backRightTurnEncoder";
-
-    // TODO: Change PID coefficients based on your config
-    public PIDFCoefficients leftFrontTurnPID = new PIDFCoefficients(0.005, 0.0, 0.001, 0.0);
-    public PIDFCoefficients rightFrontTurnPID = new PIDFCoefficients(0.005, 0.0, 0.001, 0.0);
-    public PIDFCoefficients leftRearTurnPID = new PIDFCoefficients(0.005, 0.0, 0.001, 0.0);
-    public PIDFCoefficients rightRearTurnPID = new PIDFCoefficients(0.005, 0.0, 0.001, 0.0);
-
-    // TODO: Reverse motors if needed
-    public DcMotorEx.Direction leftFrontMotorDirection = DcMotorSimple.Direction.REVERSE;
-    public DcMotorEx.Direction rightFrontMotorDirection = DcMotorSimple.Direction.FORWARD;
-    public DcMotorEx.Direction leftRearMotorDirection = DcMotorSimple.Direction.REVERSE;
-    public DcMotorEx.Direction rightRearMotorDirection = DcMotorSimple.Direction.FORWARD;
-
-    // TODO: Reverse servos if needed
-    public CRServo.Direction leftFrontServoDirection = CRServo.Direction.FORWARD;
-    public CRServo.Direction rightFrontServoDirection = CRServo.Direction.FORWARD;
-    public CRServo.Direction leftRearServoDirection = CRServo.Direction.FORWARD;
-    public CRServo.Direction rightRearServoDirection = CRServo.Direction.FORWARD;
-
-    // TODO: These are the reported angle of each pod when facing forward, in
-    // degrees
-    public double leftFrontPodAngleOffsetDeg = 0.0;
-    public double rightFrontPodAngleOffsetDeg = 0.0;
-    public double leftRearPodAngleOffsetDeg = 0.0;
-    public double rightRearPodAngleOffsetDeg = 0.0;
-
-    // TODO: distance from the center of the robot to each pod
-    // if you're swerve is square, you can leave these be
-    // hopefully these should be +- the same x, y, but just in case
-    // units don't matter, they'll be normalized
-    // positive x is right, positive y is forward, as with joysticks
-    public double[] leftFrontPodXYOffsets = new double[] { -1, 1 };
-    public double[] rightFrontPodXYOffsets = new double[] { 1, 1 };
-    public double[] leftRearPodXYOffsets = new double[] { -1, -1 };
-    public double[] rightRearPodXYOffsets = new double[] { 1, -1 };
-
-    public double leftFrontReferenceVoltage = 3.3;
-    public double rightFrontReferenceVoltage = 3.3;
-    public double leftRearReferenceVoltage = 3.3;
-    public double rightRearReferenceVoltage = 3.3;
-
-    // use to reverse your encoder if positive is counterclockwise
-    public boolean leftFrontEncoderReversed = false;
-    public boolean rightFrontEncoderReversed = false;
-    public boolean leftRearEncoderReversed = false;
-    public boolean rightRearEncoderReversed = false;
-
-
     enum ZeroPowerBehavior {
         RESIST_MOVEMENT,
         IGNORE_ANGLE_CHANGES
