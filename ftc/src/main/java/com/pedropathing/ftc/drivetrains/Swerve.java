@@ -1,4 +1,5 @@
 package com.pedropathing.ftc.drivetrains;
+
 import com.pedropathing.drivetrain.CustomDrivetrain;
 import com.pedropathing.math.Vector;
 import com.pedropathing.math.MathFunctions;
@@ -65,18 +66,17 @@ public class Swerve extends CustomDrivetrain {
         // stores forward and strafe values as the translation vector with max magnitude of 1
         Vector rawTrans = new Vector(Range.clip(Math.hypot(strafe, forward), 0, 1), Math.atan2(forward, strafe));
 
-        boolean ignoreTrans = rawTrans.getMagnitude() < epsilon;
-        boolean ignoreRotation = Math.abs(rotation) < epsilon;
-        boolean ignoreAngleChanges = ignoreTrans && ignoreRotation;
+        boolean zeroTrans = rawTrans.getMagnitude() < epsilon;
+        boolean zeroRotation = Math.abs(rotation) < epsilon;
 
-        double rotationScalar = (ignoreRotation) ? 0 : rotation;
+        double rotationScalar = (zeroRotation) ? 0 : rotation;
 
         Vector[] podVectors = new Vector[pods.size()];
 
         for (int i = 0; i < pods.size(); i++) {
             SwervePod pod = pods.get(i);
 
-            Vector translationVector = ignoreTrans ? new Vector(0, 0) : rawTrans;
+            Vector translationVector = zeroTrans ? new Vector(0, 0) : rawTrans;
 
             // actually positive rotation scalar because positive turning is to the left
             Vector rotationVector = new Vector(rotationScalar, Math.atan2(pod.getOffset().getX(), -pod.getOffset().getY()));
@@ -85,6 +85,10 @@ public class Swerve extends CustomDrivetrain {
             rotationVector.rotateVector(Math.PI / 2);
 
             podVectors[i] = translationVector.plus(rotationVector);
+            if (constants.getZeroPowerBehavior() == SwerveConstants.ZeroPowerBehavior.RESIST_MOVEMENT
+                    && zeroTrans && zeroRotation) {
+                podVectors[i] = rotationVector;
+            }
         }
 
         // finding if any vector has magnitude > maxPowerScaling
@@ -128,7 +132,8 @@ public class Swerve extends CustomDrivetrain {
 
             // 2*Pi-theta because servos have positive clockwise rotation, while our angles
             // are counterclockwise, and we want to see if motor/servo caching is an issue
-            pods.get(podNum).move(finalVector.getTheta(), finalVector.getMagnitude() * avgScaling, ignoreAngleChanges);
+            pods.get(podNum).move(finalVector.getTheta(), finalVector.getMagnitude() * avgScaling,
+    zeroTrans && zeroRotation && constants.getZeroPowerBehavior() == SwerveConstants.ZeroPowerBehavior.IGNORE_ANGLE_CHANGES);
         }
     }
 
@@ -203,8 +208,8 @@ public class Swerve extends CustomDrivetrain {
 
     private double getVoltageNormalized() {
         double voltage = getVoltage();
-        return (nominalVoltage - (nominalVoltage * staticFrictionCoefficient))
-                / (voltage - ((nominalVoltage * nominalVoltage / voltage) * staticFrictionCoefficient));
+        return (nominalVoltage - (nominalVoltage * staticFrictionCoefficient)) / (voltage
+                - ((nominalVoltage * nominalVoltage / voltage) * staticFrictionCoefficient));
     }
 
     @Override
