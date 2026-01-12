@@ -1,6 +1,7 @@
 package com.pedropathing.ftc;
 
 import com.pedropathing.geometry.CoordinateSystem;
+import com.pedropathing.geometry.PedroCoordinates;
 import com.pedropathing.geometry.Pose;
 
 /**
@@ -20,8 +21,11 @@ public enum FTCCoordinates implements CoordinateSystem {
      */
     @Override
     public Pose convertFromPedro(Pose pose) {
-        Pose normalizedPose = pose.minus(new Pose(72, 72));
-        return normalizedPose.rotate(-Math.PI / 2, true);
+        // Center the pose (subtract offset without using minus to avoid coordinate conversion issues)
+        Pose centered = new Pose(pose.getX() - 72, pose.getY() - 72, pose.getHeading());
+        Pose rotated = centered.rotate(-Math.PI / 2, true);
+        // Return with FTC coordinate system
+        return new Pose(rotated.getX(), rotated.getY(), rotated.getHeading(), FTCCoordinates.INSTANCE);
     }
 
     /**
@@ -32,7 +36,9 @@ public enum FTCCoordinates implements CoordinateSystem {
      */
     @Override
     public Pose convertToPedro(Pose pose) {
-        Pose rotatedPose = pose.rotate(-Math.PI / 2, true);
-        return rotatedPose.plus(new Pose(72, 72));
+        // Rotate first (inverse rotation of convertFromPedro)
+        Pose rotated = pose.rotate(Math.PI / 2, true);
+        // Add offset and return with Pedro coordinate system
+        return new Pose(rotated.getX() + 72, rotated.getY() + 72, rotated.getHeading(), PedroCoordinates.INSTANCE);
     }
 }
