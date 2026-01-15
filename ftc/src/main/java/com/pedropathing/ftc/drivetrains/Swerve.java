@@ -150,7 +150,7 @@ public class Swerve extends CustomDrivetrain {
     @Override
     public void breakFollowing() {
         for (SwervePod pod : pods) {
-            pod.move(pod.getAngle(), 0, false);
+            pod.move(Math.toRadians(pod.getAngle()), 0, false);
             pod.setToFloat();
         }
     }
