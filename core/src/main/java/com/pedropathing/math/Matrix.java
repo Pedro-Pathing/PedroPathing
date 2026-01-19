@@ -4,7 +4,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.Locale;
-import java.util.Objects;
 
 /**
  * The Matrix class is used to represent matrix objects. Has basic operations such as adding, subtracting, and multiplying (w/ scalars and another matrix),
@@ -644,7 +643,7 @@ public class Matrix {
         Matrix I = Matrix.identity(rowCount);
         Matrix[] r = Matrix.rref(this, I);
 
-        if (!r[1].equals(I)) throw new IllegalArgumentException("matrix not invertible");
+        if (!r[0].equals(I)) throw new IllegalArgumentException("Matrix not invertible");
         return r[1];
     }
 

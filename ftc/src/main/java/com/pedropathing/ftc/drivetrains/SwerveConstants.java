@@ -21,7 +21,14 @@ public class SwerveConstants {
     public boolean useVoltageCompensation = false;
     public double nominalVoltage = 12.0;
     public double staticFrictionCoefficient = 0.1;
-    public double epsilon = 0.001;
+    public double epsilon = 0.05;
+
+    enum ZeroPowerBehavior {
+        RESIST_MOVEMENT,
+        IGNORE_ANGLE_CHANGES
+    }
+
+    public ZeroPowerBehavior zeroPowerBehavior = ZeroPowerBehavior.IGNORE_ANGLE_CHANGES;
 
     public SwerveConstants() {
         defaults();
@@ -77,6 +84,11 @@ public class SwerveConstants {
         return this;
     }
 
+    public SwerveConstants zeroPowerBehavior(ZeroPowerBehavior zeroPowerBehavior) {
+        this.zeroPowerBehavior = zeroPowerBehavior;
+        return this;
+    }
+
     public double getVelocity() {
         return Math.max(getXVelocity(), getYVelocity());
     }
@@ -111,6 +123,10 @@ public class SwerveConstants {
 
     public double getEpsilon() {
         return epsilon;
+    }
+
+    public ZeroPowerBehavior getZeroPowerBehavior() {
+        return zeroPowerBehavior;
     }
 
     public void setVelocity(double velocity) {
@@ -150,6 +166,10 @@ public class SwerveConstants {
         this.epsilon = epsilon;
     }
 
+    public void setZeroPowerBehavior(ZeroPowerBehavior zeroPowerBehavior) {
+        this.zeroPowerBehavior = zeroPowerBehavior;
+    }
+
     public void defaults() {
         xVelocity = 80.0;
         yVelocity = 80.0;
@@ -158,6 +178,7 @@ public class SwerveConstants {
         useVoltageCompensation = false;
         nominalVoltage = 12.0;
         staticFrictionCoefficient = 0.1;
-        epsilon = 0.001;
+        epsilon = 0.05;
+        zeroPowerBehavior = ZeroPowerBehavior.IGNORE_ANGLE_CHANGES;
     }
 }

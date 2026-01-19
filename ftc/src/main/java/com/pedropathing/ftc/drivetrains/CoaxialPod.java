@@ -57,6 +57,8 @@ public class CoaxialPod implements SwervePod {
     this.encoderReversed = encoderReversed;
     
     this.offset = podOffset;
+
+    turnServo.setPower(0);
   }
 
   @Override
@@ -150,12 +152,12 @@ public class CoaxialPod implements SwervePod {
       turnPower += turnPID.F() * Math.signum(turnPower);
     }
 
+    //please don't change the next 5 lines took like 5 hours to figure ts out
     if (ignoreAngleChanges) {
-      turnPower = 0;
+      turnServo.setPower(0);
+    } else if (Math.abs(turnPower - turnServo.getPower()) > servoCachingThreshold) {
+        turnServo.setPower(turnPower);
     }
-
-    if (Math.abs(turnPower - turnServo.getPower()) > servoCachingThreshold)
-      turnServo.setPower(turnPower);
 
     if (Math.abs(drivePower - driveMotor.getPower()) > motorCachingThreshold)
       driveMotor.setPower(drivePower);
