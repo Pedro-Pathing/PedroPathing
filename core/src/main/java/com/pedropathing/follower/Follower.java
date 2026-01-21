@@ -96,6 +96,7 @@ public class Follower {
         this.centripetalScaling = constants.centripetalScaling;
         this.turnHeadingErrorThreshold = constants.turnHeadingErrorThreshold;
         this.automaticHoldEnd = constants.automaticHoldEnd;
+        this.usePredictiveBraking = constants.usePredictiveBraking;
     }
 
     /**
@@ -466,7 +467,7 @@ public class Follower {
                                 currentPathChain, useDrive && !holdingPosition ?
                                     getDriveError() : -1, getTranslationalError(),
                                 getHeadingError(), getClosestPointHeadingGoal(),
-                                getTotalDistanceRemaining());
+                                getTotalDistanceRemaining(), usePredictiveBraking);
     }
 
     public void updateErrorAndVectors() {updateErrors(); updateVectors();}
@@ -509,6 +510,16 @@ public class Follower {
             return;
         }
 
+//        if (followingPathChain && chainIndex < currentPathChain.size() - 1 && usePredictiveBraking) {
+//            double tangentialVelocity = getTangentialVelocity();
+//            double brakingDisplacement = vectorCalculator.predictiveBrakingController
+//                .computeBrakingDisplacement(tangentialVelocity,
+//                                            Math.signum(tangentialVelocity));
+//            if (brakingDisplacement >= getDistanceRemaining()) {
+//                advancePathChain();
+//            }
+//        }
+
         if (isBusy) {
             previousClosestPose = closestPose;
             if (followingPathChain) currentPathChain.update();
@@ -523,35 +534,14 @@ public class Follower {
             zeroVelocityDetectedTimer = new Timer();
         }
         
-        boolean skipToNextPath =
-            followingPathChain && chainIndex < currentPathChain.size() - 1 && usePredictiveBraking
-                && vectorCalculator.predictiveBrakingController
-                .computeOutput(getDistanceRemaining(), getTangentialVelocity()) < 1;
-        
-        if (!skipToNextPath &&
-            !(currentPath.isAtParametricEnd()
+        if (!(currentPath.isAtParametricEnd()
                 || (zeroVelocityDetectedTimer != null
                 && zeroVelocityDetectedTimer.getElapsedTime() > 500.0))) {
             return;
         }
 
         if (followingPathChain && chainIndex < currentPathChain.size() - 1) {
-            breakFollowing();
-            isBusy = true;
-            followingPathChain = true;
-            chainIndex++;
-            setPath(currentPathChain.getPath(chainIndex));
-            previousClosestPose = closestPose;
-            if (followingPathChain) currentPathChain.update();
-            closestPose = currentPath.updateClosestPose(poseTracker.getPose(), BEZIER_CURVE_SEARCH_LIMIT);
-            updateErrorAndVectors();
-
-            for (PathCallback callback : currentPathChain.getCallbacks()) {
-                if (callback.getPathIndex() == chainIndex) {
-                    callback.initialize();
-                }
-            }
-
+            advancePathChain();
             return;
         }
 
@@ -588,6 +578,24 @@ public class Follower {
             else holdPoint(new BezierPoint(currentPath.getLastControlPoint()), currentPath.getHeadingGoal(1));
         } else {
             breakFollowing();
+        }
+    }
+    
+    public void advancePathChain() {
+        breakFollowing();
+        isBusy = true;
+        followingPathChain = true;
+        chainIndex++;
+        setPath(currentPathChain.getPath(chainIndex));
+        previousClosestPose = closestPose;
+        if (followingPathChain) currentPathChain.update();
+        closestPose = currentPath.updateClosestPose(poseTracker.getPose(), BEZIER_CURVE_SEARCH_LIMIT);
+        updateErrorAndVectors();
+        
+        for (PathCallback callback : currentPathChain.getCallbacks()) {
+            if (callback.getPathIndex() == chainIndex) {
+                callback.initialize();
+            }
         }
     }
 
