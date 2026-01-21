@@ -468,7 +468,7 @@ public class Follower {
                                 currentPathChain, useDrive && !holdingPosition ?
                                     getDriveError() : -1, getTranslationalError(),
                                 getHeadingError(), getClosestPointHeadingGoal(),
-                                getTotalDistanceRemaining());
+                                getTotalDistanceRemaining(), usePredictiveBraking);
     }
 
     public void updateErrorAndVectors() {updateErrors(); updateVectors();}

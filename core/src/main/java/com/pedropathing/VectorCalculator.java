@@ -95,7 +95,6 @@ public class VectorCalculator {
         useSecondaryDrivePID = constants.useSecondaryDrivePIDF;
         useSecondaryHeadingPID = constants.useSecondaryHeadingPIDF;
         useSecondaryTranslationalPID = constants.useSecondaryTranslationalPIDF;
-        usePredictiveBraking = constants.usePredictiveBraking;
         mass = constants.mass;
     }
 
@@ -107,7 +106,7 @@ public class VectorCalculator {
                        double centripetalScaling, Pose currentPose, Pose closestPose,
                        Vector velocity, Path currentPath, PathChain currentPathChain,
                        double driveError, Vector translationalError,
-                       double headingError, double headingGoal, double distanceRemaining) {
+                       double headingError, double headingGoal, double distanceRemaining, boolean usePredictiveBraking) {
         updateConstants();
 
         this.useDrive = useDrive;
@@ -129,6 +128,7 @@ public class VectorCalculator {
         this.headingError = headingError;
         this.headingGoal = headingGoal;
         this.distanceRemainingBeforeStop = distanceRemaining;
+        this.usePredictiveBraking = usePredictiveBraking;
 
         if(teleopDrive)
             teleopUpdate();
