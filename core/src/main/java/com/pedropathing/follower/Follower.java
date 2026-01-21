@@ -89,6 +89,7 @@ public class Follower {
         centripetalScaling = constants.centripetalScaling;
         turnHeadingErrorThreshold = constants.turnHeadingErrorThreshold;
         automaticHoldEnd = constants.automaticHoldEnd;
+        usePredictiveBraking = constants.usePredictiveBraking;
 
         breakFollowing();
     }
@@ -100,6 +101,7 @@ public class Follower {
         this.centripetalScaling = constants.centripetalScaling;
         this.turnHeadingErrorThreshold = constants.turnHeadingErrorThreshold;
         this.automaticHoldEnd = constants.automaticHoldEnd;
+        this.usePredictiveBraking = constants.usePredictiveBraking;
     }
 
     /**
@@ -469,7 +471,7 @@ public class Follower {
                                 currentPathChain, useDrive && !holdingPosition ?
                                     getDriveError() : -1, getTranslationalError(),
                                 getHeadingError(), getClosestPointHeadingGoal(),
-                                getTotalDistanceRemaining());
+                                getTotalDistanceRemaining(), usePredictiveBraking);
     }
 
     public void updateErrorAndVectors() {updateErrors(); updateVectors();}
