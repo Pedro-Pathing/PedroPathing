@@ -246,7 +246,8 @@ public class FusionLocalizer implements Localizer {
     @Override
     public void setStartPose(Pose setStart) {
         deadReckoning.setStartPose(setStart);
-        poseHistory.put(0L, setStart);
+        poseHistory.put(0L, setStart.copy());
+        currentPosition = setStart.copy();
     }
 
     @Override
