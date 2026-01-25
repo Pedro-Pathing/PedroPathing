@@ -3,12 +3,17 @@ package com.pedropathing.ftc;
 import com.pedropathing.geometry.CoordinateSystem;
 import com.pedropathing.geometry.PedroCoordinates;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.math.MathFunctions;
 
 /**
  * An enum that contains the FTC standard coordinate system.
  * This enum implements the {@link CoordinateSystem} interface, which specifies a way to convert to and from FTC standard coordinates.
  *
+ * <p>This implementation performs numeric transforms directly on the Pose components
+ * to avoid calling {@code Pose} methods that may themselves trigger coordinate conversions.</p>
+ *
  * @author BeepBot99
+ * @author Baron Henderson
  */
 public enum FTCCoordinates implements CoordinateSystem {
     INSTANCE;

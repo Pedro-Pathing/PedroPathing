@@ -3,12 +3,14 @@ package com.pedropathing.ftc;
 import com.pedropathing.geometry.CoordinateSystem;
 import com.pedropathing.geometry.PedroCoordinates;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.math.MathFunctions;
 
 /**
  * An enum that contains the Inverted FTC standard coordinate system (for DECODE game).
  * This enum implements the {@link CoordinateSystem} interface, which specifies a way to convert to and from Inverted FTC standard coordinates.
  *
  * @author BeepBot99
+ * @author Baron Henderson
  */
 public enum InvertedFTCCoordinates implements CoordinateSystem {
     INSTANCE;
