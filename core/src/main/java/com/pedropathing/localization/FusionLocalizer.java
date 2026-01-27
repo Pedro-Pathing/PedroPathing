@@ -114,8 +114,7 @@ public class FusionLocalizer implements Localizer {
         Matrix y = new Matrix(new double[][]{
                 {measX ? measuredPose.getX() - pastPose.getX() : 0},
                 {measY ? measuredPose.getY() - pastPose.getY() : 0},
-                {measH ? MathFunctions.normalizeAngle(
-                        measuredPose.getHeading() - pastPose.getHeading()) : 0}
+                {measH ? MathFunctions.normalizeAngleSigned(measuredPose.getHeading() - pastPose.getHeading()) : 0}
         });
 
         // Measurement mask M
@@ -131,7 +130,8 @@ public class FusionLocalizer implements Localizer {
         // Innovation covariance S = P + R
         Matrix S = Pm.plus(R);
 
-        Matrix K = Pm.multiply(invert(S));
+        // Apply gain K = P * (P + R)^(-1)
+        Matrix K = Pm.multiply(S.inverted());
 
         // Apply mask
         K = M.multiply(K);
@@ -184,18 +184,6 @@ public class FusionLocalizer implements Localizer {
 
         currentPosition = poseHistory.lastEntry().getValue().copy();
         P = covarianceHistory.lastEntry().getValue().copy();
-    }
-
-    //Inverts a matrix
-    private Matrix invert(Matrix m) {
-        if (m.getRows() != m.getColumns())
-            throw new IllegalStateException("Matrix must be square");
-
-        Matrix I = MatrixUtil.identity(m.getRows());
-        Matrix[] r = Matrix.rref(m, I);
-
-        if (!r[1].equals(I)) throw new IllegalArgumentException("matrix not invertible");
-        return r[1];
     }
 
     //Performs linear interpolation inside the history map for the value at a given timestamp

@@ -33,12 +33,31 @@ public class MathFunctions {
      * IMPORTANT NOTE: This method operates in radians.
      *
      * @param angleRadians the angle to be normalized.
-     * @return returns the normalized angle.
+     * @return returns the normalized angle in the range [0, 2*pi].
      */
     public static double normalizeAngle(double angleRadians) {
         double angle = angleRadians % (2*Math.PI);
         if (angle < 0) {
             return angle + 2*Math.PI;
+        }
+        return angle;
+    }
+
+    /**
+     * Normalizes an angle to be between -pi and pi radians, inclusive.
+     * This is useful for Kalman filter residuals where the signed difference matters.
+     * <p>
+     * IMPORTANT NOTE: This method operates in radians.
+     *
+     * @param angleRadians the angle to be normalized.
+     * @return returns the normalized angle in the range [-pi, pi].
+     */
+    public static double normalizeAngleSigned(double angleRadians) {
+        double angle = angleRadians % (2 * Math.PI);
+        if (angle > Math.PI) {
+            angle -= 2 * Math.PI;
+        } else if (angle < -Math.PI) {
+            angle += 2 * Math.PI;
         }
         return angle;
     }
