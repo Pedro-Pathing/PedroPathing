@@ -100,7 +100,9 @@ public class FusionLocalizer implements Localizer {
      * @param timestamp the timestamp of the measurement
      */
     public void addMeasurement(Pose measuredPose, long timestamp) {
-        if (!poseHistory.containsKey(timestamp)) return;
+        // Reject if timestamp is outside our poseHistory time window
+        if (poseHistory.isEmpty() || timestamp < poseHistory.firstKey() || timestamp > poseHistory.lastKey())
+            return;
 
         Pose pastPose = interpolate(timestamp, poseHistory);
         if (pastPose == null)
@@ -235,6 +237,7 @@ public class FusionLocalizer implements Localizer {
     public void setStartPose(Pose setStart) {
         deadReckoning.setStartPose(setStart);
         poseHistory.put(0L, setStart.copy());
+        covarianceHistory.put(0L, P.copy());
         currentPosition = setStart.copy();
     }
 
