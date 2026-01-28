@@ -644,6 +644,10 @@ public class Follower {
      * @return returns whether the Follower is at the parametric end of its Path.
      */
     public boolean atParametricEnd() {
+        if(currentPath == null){
+            return true;
+        }
+        
         if (followingPathChain) {
             if (chainIndex == currentPathChain.size() - 1) return currentPath.isAtParametricEnd();
             return false;
