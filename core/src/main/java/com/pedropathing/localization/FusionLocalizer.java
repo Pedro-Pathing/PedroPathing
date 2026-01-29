@@ -95,11 +95,24 @@ public class FusionLocalizer implements Localizer {
     }
 
     /**
-     * Adds a vision measurement
+     * Adds a vision measurement using the default measurement variance
      * @param measuredPose the measured position by the camera, enter NaN to a specific axis if the camera couldn't measure that axis
      * @param timestamp the timestamp of the measurement
      */
     public void addMeasurement(Pose measuredPose, long timestamp) {
+        addMeasurement(measuredPose, timestamp, null);
+    }
+
+    /**
+     * Adds a vision measurement with a custom variance for this specific measurement
+     * @param measuredPose the measured position by the camera, enter NaN to a specific axis if the camera couldn't measure that axis
+     * @param timestamp the timestamp of the measurement
+     * @param measurementVariance the variance for this specific measurement (x, y, heading), or null to use the default
+     */
+    public void addMeasurement(Pose measuredPose, long timestamp, Pose measurementVariance) {
+        Matrix measurementR = measurementVariance == null
+                ? R
+                : Matrix.diag(measurementVariance.getX(), measurementVariance.getY(), measurementVariance.getHeading());
         // Reject if timestamp is outside our poseHistory time window
         if (poseHistory.isEmpty() || timestamp < poseHistory.firstKey() || timestamp > poseHistory.lastKey())
             return;
@@ -130,7 +143,7 @@ public class FusionLocalizer implements Localizer {
         Matrix Pm = covarianceHistory.floorEntry(timestamp).getValue();
 
         // Innovation covariance S = P + R
-        Matrix S = Pm.plus(R);
+        Matrix S = Pm.plus(measurementR);
 
         // Apply gain K = P * (P + R)^(-1)
         Matrix K = Pm.multiply(S.inverted());
@@ -153,7 +166,7 @@ public class FusionLocalizer implements Localizer {
         Matrix IK = I.minus(K);
         Matrix updatedCovariance =
                 IK.multiply(Pm).multiply(IK.transposed())
-                        .plus(K.multiply(R).multiply(K.transposed()));
+                        .plus(K.multiply(measurementR).multiply(K.transposed()));
 
         covarianceHistory.put(timestamp, updatedCovariance);
 
