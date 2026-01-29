@@ -24,18 +24,18 @@ public class FusionLocalizer implements Localizer {
 
     public FusionLocalizer(
             Localizer deadReckoning,
-            double[] P,
-            double[] processVariance,
-            double[] measurementVariance,
+            Pose initialCovariance,
+            Pose processVariance,
+            Pose measurementVariance,
             int bufferSize
     ) {
         this.deadReckoning = deadReckoning;
         this.currentPosition = new Pose();
 
         //Standard Deviations for Kalman Filter
-        this.P = MatrixUtil.diag(P[0], P[1], P[2]);
-        this.Q = MatrixUtil.diag(processVariance[0], processVariance[1], processVariance[2]);
-        this.R = MatrixUtil.diag(measurementVariance[0], measurementVariance[1], measurementVariance[2]);
+        this.P = Matrix.diag(initialCovariance.getX(), initialCovariance.getY(), initialCovariance.getHeading());
+        this.Q = Matrix.diag(processVariance.getX(), processVariance.getY(), processVariance.getHeading());
+        this.R = Matrix.diag(measurementVariance.getX(), measurementVariance.getY(), measurementVariance.getHeading());
         this.bufferSize = bufferSize;
         twistHistory.put(0L, new Pose());
     }
