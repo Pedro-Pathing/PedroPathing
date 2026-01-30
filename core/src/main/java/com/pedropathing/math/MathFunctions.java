@@ -50,14 +50,12 @@ public class MathFunctions {
      * IMPORTANT NOTE: This method operates in radians.
      *
      * @param angleRadians the angle to be normalized.
-     * @return returns the normalized angle in the range [-pi, pi].
+     * @return returns the normalized angle between -PI (inclusive) and PI (exclusive).
      */
     public static double normalizeAngleSigned(double angleRadians) {
-        double angle = angleRadians % (2 * Math.PI);
-        if (angle > Math.PI) {
-            angle -= 2 * Math.PI;
-        } else if (angle < -Math.PI) {
-            angle += 2 * Math.PI;
+        double angle = normalizeAngle(angleRadians);
+        if (angle >= Math.PI) {
+            return angle - 2*Math.PI;
         }
         return angle;
     }
