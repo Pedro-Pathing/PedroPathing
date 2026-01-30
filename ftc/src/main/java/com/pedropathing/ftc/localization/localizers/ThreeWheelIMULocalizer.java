@@ -30,7 +30,9 @@ public class ThreeWheelIMULocalizer implements Localizer {
     private Pose startPose;
     private Pose displacementPose;
     private Pose currentVelocity;
-    private Matrix prevRotationMatrix;
+    private final Matrix prevRotationMatrix = new Matrix(3,3);
+    private final Matrix returnMatrix = new Matrix(3,1);
+    private final Matrix transformation = new Matrix(3,3);
     private final NanoTimer timer;
     private long deltaTimeNano;
     private final Encoder leftEncoder;
@@ -144,7 +146,6 @@ public class ThreeWheelIMULocalizer implements Localizer {
      * @param heading the rotation of the Matrix
      */
     public void setPrevRotationMatrix(double heading) {
-        prevRotationMatrix = new Matrix(3,3);
         prevRotationMatrix.set(0, 0, Math.cos(heading));
         prevRotationMatrix.set(0, 1, -Math.sin(heading));
         prevRotationMatrix.set(1, 0, Math.sin(heading));
@@ -179,7 +180,6 @@ public class ThreeWheelIMULocalizer implements Localizer {
         Matrix globalDeltas;
         setPrevRotationMatrix(getPose().getHeading());
 
-        Matrix transformation = new Matrix(3,3);
         if (Math.abs(robotDeltas.get(2, 0)) < 0.001) {
             transformation.set(0, 0, 1.0 - (Math.pow(robotDeltas.get(2, 0), 2) / 6.0));
             transformation.set(0, 1, -robotDeltas.get(2, 0) / 2.0);
@@ -231,7 +231,6 @@ public class ThreeWheelIMULocalizer implements Localizer {
      * @return returns a Matrix containing the robot relative movement.
      */
     public Matrix getRobotDeltas() {
-        Matrix returnMatrix = new Matrix(3,1);
         // x/forward movement
         returnMatrix.set(0,0, FORWARD_TICKS_TO_INCHES * (rightEncoder.getDeltaPosition() * leftEncoderPose.getY() - leftEncoder.getDeltaPosition() * rightEncoderPose.getY()) / (leftEncoderPose.getY() - rightEncoderPose.getY()));
         //y/strafe movement
