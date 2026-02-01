@@ -161,7 +161,7 @@ public class CoaxialPod implements SwervePod {
         }
 
         turnPID.updateError(setpointDeg - actualDeg);
-        double turnPower = -MathFunctions.clamp(turnPID.run(), -1.0, 1.0);
+        double turnPower = MathFunctions.clamp(turnPID.run(), -1.0, 1.0);
 
         // please don't change the next 5 lines took like 5 hours to figure ts out
         if (ignoreAngleChanges) {
