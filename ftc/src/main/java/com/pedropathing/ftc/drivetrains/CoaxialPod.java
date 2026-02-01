@@ -7,191 +7,294 @@ import com.pedropathing.math.MathFunctions;
 import com.qualcomm.robotcore.hardware.*;
 
 /**
- * CoaxialPod is a hardware-backed implementation of the core `SwervePod` interface.
- * It owns the drive motor, continuous rotation servo (turn), analog encoder and the
- * PIDF controller used to control pod rotation.
+ * CoaxialPod is a hardware-backed implementation of the core `SwervePod` interface. It owns the
+ * drive motor, continuous rotation servo (turn), analog encoder and the PIDF controller used to
+ * control pod rotation.
+ *
+ * @author Kabir Goyal
  * @author Baron Henderson
  */
 public class CoaxialPod implements SwervePod {
-  private final AnalogInput turnEncoder; // for rotation of servo
-  private final CRServo turnServo;
-  private final DcMotorEx driveMotor;
+    private final AnalogInput turnEncoder; // for rotation of servo
+    private final CRServo turnServo;
+    private final DcMotorEx driveMotor;
 
-  private final PIDFController turnPID;
-  private final Pose offset;
+    private final PIDFController turnPID;
+    private final Pose offset;
 
-  private final double angleOffsetDeg;
+    // Angle offset in radians applied to raw encoder angle
+    private final double angleOffsetRad;
 
-  private final String servoLabel;
+    private final String servoLabel;
 
-  // analog encoder voltage range (min -> max), e.g. 0.0 -> 3.3 V
-  private final double analogMinVoltage;
-  private final double analogMaxVoltage;
+    // analog encoder voltage range (min -> max), e.g. 0.0 -> 3.3 V
+    private final double analogMinVoltage;
+    private final double analogMaxVoltage;
 
-  private final boolean encoderReversed;
+    private final boolean encoderReversed;
 
-  private double motorCachingThreshold = 0.01;
-  private double servoCachingThreshold = 0.01;
+    private double motorCachingThreshold = 0.01;
+    private double servoCachingThreshold = 0.01;
 
-  public CoaxialPod(HardwareMap hardwareMap, String motorName, String servoName, String turnEncoderName,
-                    PIDFCoefficients turnPIDFCoefficients, DcMotorSimple.Direction driveDirection,
-                    CRServo.Direction servoDirection, double angleOffsetDeg, Pose podOffset,
-                    double analogMinVoltage, double analogMaxVoltage, boolean encoderReversed) {
+    /**
+     * @param motorName drive motor name
+     * @param servoName turn servo name
+     * @param turnEncoderName analog encoder name
+     * @param turnPIDFCoefficients PIDF coefficients for servo control
+     * @param driveDirection drive motor direction
+     * @param servoDirection turn servo direction
+     * @param angleOffsetRad offset applied to raw encoder angle, in radians. This is the raw angle
+     *                       in radians when the wheel is facing forward.
+     * @param podOffset pod position offset from robot center, using the same axes as odometry pods
+     * @param analogMinVoltage minimum encoder voltage (e.g. 0.0)
+     * @param analogMaxVoltage maximum encoder voltage (e.g. 3.3)
+     * @param encoderReversed true if encoder increases CCW (top-down)
+     */
+    public CoaxialPod(HardwareMap hardwareMap, String motorName, String servoName,
+            String turnEncoderName, PIDFCoefficients turnPIDFCoefficients,
+            DcMotorSimple.Direction driveDirection, CRServo.Direction servoDirection,
+            double angleOffsetRad, Pose podOffset, double analogMinVoltage, double analogMaxVoltage,
+            boolean encoderReversed) {
 
-      this.driveMotor = hardwareMap.get(DcMotorEx.class, motorName); 
-      this.turnServo = hardwareMap.get(CRServo.class, servoName);
-      this.turnEncoder = hardwareMap.get(AnalogInput.class, turnEncoderName);
+        this.driveMotor = hardwareMap.get(DcMotorEx.class, motorName);
+        this.turnServo = hardwareMap.get(CRServo.class, servoName);
+        this.turnEncoder = hardwareMap.get(AnalogInput.class, turnEncoderName);
 
-    this.servoLabel = turnServo.getConnectionInfo(); // Best guess for label without explicit name
+        this.servoLabel = servoName;
 
-    this.turnPID = new PIDFController(turnPIDFCoefficients);
-    this.angleOffsetDeg = angleOffsetDeg;
+        this.turnPID = new PIDFController(turnPIDFCoefficients);
+        this.angleOffsetRad = angleOffsetRad;
 
-    setMotorToFloat();
+        setMotorToFloat();
 
-    driveMotor.setDirection(driveDirection);
-    turnServo.setDirection(servoDirection);
+        driveMotor.setDirection(driveDirection);
+        turnServo.setDirection(servoDirection);
 
-    this.analogMinVoltage = analogMinVoltage;
-    this.analogMaxVoltage = analogMaxVoltage;
-    this.encoderReversed = encoderReversed;
-    
-    this.offset = podOffset;
+        this.analogMinVoltage = analogMinVoltage;
+        this.analogMaxVoltage = analogMaxVoltage;
+        this.encoderReversed = encoderReversed;
 
-    turnServo.setPower(0);
-  }
+        this.offset = podOffset;
 
-  @Override
-  public Pose getOffset() { return offset; }
-
-  @Override
-  public double getAngle() {
-    return getAngleAfterOffsetDeg();
-  }
-
-  public void setServoPower(double power) {
-    turnServo.setPower(power);
-  }
-
-  public void setMotorPower(double power) {
-    driveMotor.setPower(power);
-  }
-
-  @Override
-  public void setToFloat() { setMotorToFloat(); }
-
-  @Override
-  public void setToBreak() { setMotorToBreak(); }
-
-  public void setMotorToFloat() {
-    driveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-  }
-
-  public void setMotorToBreak() {
-    driveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-  }
-
-  public boolean isEncoderReversed() {
-    return encoderReversed;
-  }
-
-  @Override
-  public double adjustThetaForEncoder(double wheelTheta) {
-    // wheelTheta is in radians. If encoder is reversed, use wheelTheta directly; otherwise invert.
-    double t = encoderReversed ? wheelTheta : (2 * Math.PI - wheelTheta);
-    // servo zero offset: +90 degrees -> +pi/2 radians
-    t += Math.PI / 2.0;
-    return MathFunctions.normalizeAngle(t);
-  }
-
-  /**
-   * Commands pod to a wheel heading (radians) with a drive power [0, 1]
-   * This implementation pulls caching thresholds and feedforward from internal state.
-   */
-  @Override
-  public void move(double targetAngleRad, double drivePower, boolean ignoreAngleChanges) {
-    // Convert hardware angle (degrees) to radians and normalize
-    double actualRad = Math.toRadians(getAngleAfterOffsetDeg());
-    actualRad = MathFunctions.normalizeAngle(actualRad);
-
-    // Account for encoder orientation and servo zero offset (+90deg)
-    double desiredRad = encoderReversed ? targetAngleRad : (2 * Math.PI - targetAngleRad);
-    desiredRad += Math.PI / 2.0;
-    desiredRad = MathFunctions.normalizeAngle(desiredRad);
-
-    // Shortest-path error in radians (signed)
-    double mag = MathFunctions.getSmallestAngleDifference(actualRad, desiredRad);
-    double dir = MathFunctions.getTurnDirection(actualRad, desiredRad);
-    double signedRad = (mag == Math.PI) ? -Math.PI : mag * dir;
-
-    // Convert to degrees for PID, preserving signedness
-    double errorDeg = Math.toDegrees(signedRad);
-
-    // Minimize rotation: flip + invert drive if > 90°
-    if (Math.abs(errorDeg) > 90.0) {
-      // add 180 degrees (pi radians)
-      desiredRad = MathFunctions.normalizeAngle(desiredRad + Math.PI);
-      drivePower = -drivePower;
-
-      // recompute signed error
-      mag = MathFunctions.getSmallestAngleDifference(actualRad, desiredRad);
-      dir = MathFunctions.getTurnDirection(actualRad, desiredRad);
-      signedRad = (mag == Math.PI) ? -Math.PI : mag * dir;
-      errorDeg = Math.toDegrees(signedRad);
+        turnServo.setPower(0);
     }
 
-    // Setpoint close to current so PID follows shortest path
-    double actualDeg = Math.toDegrees(actualRad);
-    double setpointDeg = actualDeg + errorDeg;
-
-    turnPID.updateError(setpointDeg - actualDeg);
-    double turnPower = -MathFunctions.clamp(turnPID.run(), -1.0, 1.0);
-
-    // Add feedforward if we have non-negligible error
-    if (Math.abs(errorDeg) > 0.02) {
-      turnPower += turnPID.F() * Math.signum(turnPower);
+    /**
+     * Returns the pod's offset from robot center.
+     *
+     * @return offset as a Pose
+     */
+    @Override
+    public Pose getOffset() {
+        return offset;
     }
 
-    //please don't change the next 5 lines took like 5 hours to figure ts out
-    if (ignoreAngleChanges) {
-      turnServo.setPower(0);
-    } else if (Math.abs(turnPower - turnServo.getPower()) > servoCachingThreshold) {
-        turnServo.setPower(turnPower);
+    /**
+     * Returns the current pod heading after applying the configured offset, in radians.
+     *
+     * @return heading in radians
+     */
+    @Override
+    public double getAngle() {
+        return getAngleAfterOffsetRad();
     }
 
-    if (Math.abs(drivePower - driveMotor.getPower()) > motorCachingThreshold)
-      driveMotor.setPower(drivePower);
-  }
+    /**
+     * Sets turn servo power in [-1, 1].
+     *
+     * @param power turn servo power
+     */
+    public void setServoPower(double power) {
+        turnServo.setPower(power);
+    }
 
-  public double getAngleAfterOffsetDeg() {
-    return getRawAngleDeg() - angleOffsetDeg;
-  }
+    /**
+     * Sets drive motor power in [-1, 1].
+     *
+     * @param power drive motor power
+     */
+    public void setMotorPower(double power) {
+        driveMotor.setPower(power);
+    }
 
-  public double getRawAngleDeg() {
-    double v = turnEncoder.getVoltage();
-    double range = analogMaxVoltage - analogMinVoltage;
-    if (range == 0) return 0;
-    double normalized = (v - analogMinVoltage) / range;
-    normalized = MathFunctions.clamp(normalized, 0, 1);
-    return normalized * 360.0;
-  }
+    /**
+     * Sets drive motor zero power behavior to FLOAT.
+     */
+    @Override
+    public void setToFloat() {
+        setMotorToFloat();
+    }
 
-  public double getOffsetAngleDeg() {
-    double deg = getRawAngleDeg() - angleOffsetDeg;
-    return Math.toDegrees(MathFunctions.normalizeAngle(Math.toRadians(deg)));
-  }
+    /**
+     * Sets drive motor zero power behavior to BRAKE.
+     */
+    @Override
+    public void setToBreak() {
+        setMotorToBreak();
+    }
 
-  public void setMotorCachingThreshold(double motorCachingThreshold) {
-    this.motorCachingThreshold = motorCachingThreshold;
-  }
+    /**
+     * Sets drive motor zero power behavior to FLOAT.
+     */
+    public void setMotorToFloat() {
+        driveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+    }
 
-  public void setServoCachingThreshold(double servoCachingThreshold) {
-    this.servoCachingThreshold = servoCachingThreshold;
-  }
+    /**
+     * Sets drive motor zero power behavior to BRAKE.
+     */
+    public void setMotorToBreak() {
+        driveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+    }
 
-  @Override
-  public String debugString() {
-    return servoLabel + "{" + "current Angle=" + getRawAngleDeg() + ", servo Power="
-        + turnServo.getPower() + ", drive Power=" + driveMotor.getPower() + " }";
-  }
+    /**
+     * @return encoder reversed status
+     */
+    public boolean isEncoderReversed() {
+        return encoderReversed;
+    }
+
+    /**
+     * Converts wheel-space theta (radians) to encoder-space theta.
+     *
+     * @param wheelTheta wheel-space heading in radians
+     * @return encoder-space heading in radians
+     */
+    @Override
+    public double adjustThetaForEncoder(double wheelTheta) {
+        // wheelTheta is in radians. If encoder is reversed, use wheelTheta directly; otherwise invert.
+        //if encoder is reversed, ccw (top down) is positive, if unreversed than cw is positive
+        double t = encoderReversed ? wheelTheta : (2 * Math.PI - wheelTheta);
+        // servo zero offset: +90 degrees -> +pi/2 radians
+        t += Math.PI / 2.0;
+        return MathFunctions.normalizeAngle(t);
+    }
+
+    /**
+     * Commands pod to a wheel heading (radians) with a drive power in [-1, 1].
+     *
+     * @param targetAngleRad desired wheel heading in radians
+     * @param drivePower drive power in [0, 1]
+     * @param ignoreAngleChanges if true, turn servo power is set to 0 regardless of target angle
+     */
+    @Override
+    public void move(double targetAngleRad, double drivePower, boolean ignoreAngleChanges) {
+        // Convert hardware angle to radians and normalize
+        double actualRad = getAngleAfterOffsetRad();
+        actualRad = MathFunctions.normalizeAngle(actualRad);
+
+        //if encoder is reversed, ccw (top down) is positive, if unreversed than cw is positive
+        double desiredRad = encoderReversed ? targetAngleRad : (2 * Math.PI - targetAngleRad);
+        desiredRad += Math.PI / 2.0;
+        desiredRad = MathFunctions.normalizeAngle(desiredRad);
+
+        // Shortest-path error in radians (signed)
+        double mag = MathFunctions.getSmallestAngleDifference(actualRad, desiredRad);
+        double dir = MathFunctions.getTurnDirection(actualRad, desiredRad);
+        double signedRad = (mag == Math.PI) ? -Math.PI : mag * dir;
+
+        // PID uses radians (tune PIDF for radian error)
+        double errorRad = signedRad;
+
+        // Minimize rotation: flip + invert drive if > 90°
+        if (Math.abs(errorRad) > (Math.PI / 2.0)) {
+            // add 180 degrees (pi radians)
+            desiredRad = MathFunctions.normalizeAngle(desiredRad + Math.PI);
+            drivePower = -drivePower;
+
+            // recompute signed error
+            mag = MathFunctions.getSmallestAngleDifference(actualRad, desiredRad);
+            dir = MathFunctions.getTurnDirection(actualRad, desiredRad);
+            signedRad = (mag == Math.PI) ? -Math.PI : mag * dir;
+            errorRad = signedRad;
+        }
+
+        // Setpoint close to current so PID follows shortest path
+        double setpointRad = actualRad + errorRad;
+
+        if (Math.abs(errorRad) < (2.0 * Math.PI / 180.0)) {
+            turnPID.updateFeedForwardInput(0);
+        } else {
+            turnPID.updateFeedForwardInput(MathFunctions.getTurnDirection(actualRad, desiredRad));
+        }
+
+        turnPID.updateError(setpointRad - actualRad);
+        double turnPower = MathFunctions.clamp(turnPID.run(), -1.0, 1.0);
+
+        // please don't change the next 5 lines took like 5 hours to figure ts out
+        if (ignoreAngleChanges) {
+            turnServo.setPower(0);
+        } else if (Math.abs(turnPower - turnServo.getPower()) > servoCachingThreshold) {
+            turnServo.setPower(turnPower);
+        }
+
+        if (Math.abs(drivePower - driveMotor.getPower()) > motorCachingThreshold)
+            driveMotor.setPower(drivePower);
+    }
+
+    /**
+     * Returns the current pod heading after applying the configured offset, in radians.
+     *
+     * @return heading in radians
+     */
+    public double getAngleAfterOffsetRad() {
+        return getRawAngleRad() - angleOffsetRad;
+    }
+
+    /**
+     * Returns the raw encoder angle in radians, in [0, 2pi].
+     *
+     * @return raw encoder angle in radians
+     */
+    public double getRawAngleRad() {
+        double v = turnEncoder.getVoltage();
+        double range = analogMaxVoltage - analogMinVoltage;
+        if (range == 0)
+            return 0;
+        double normalized = (v - analogMinVoltage) / range;
+        normalized = MathFunctions.clamp(normalized, 0, 1);
+        return normalized * (2.0 * Math.PI);
+    }
+
+    /**
+     * Returns the normalized raw angle after offset, in radians.
+     *
+     * @return normalized angle in radians
+     */
+    public double getOffsetAngleRad() {
+        double rad = getRawAngleRad() - angleOffsetRad;
+        return MathFunctions.normalizeAngle(rad);
+    }
+
+    /**
+     * Sets the drive motor caching threshold for power updates.
+     *
+     * @param motorCachingThreshold minimum delta before applying power update
+     */
+    public void setMotorCachingThreshold(double motorCachingThreshold) {
+        this.motorCachingThreshold = motorCachingThreshold;
+    }
+
+    /**
+     * Sets the turn servo caching threshold for power updates.
+     *
+     * @param servoCachingThreshold minimum delta before applying power update
+     */
+    public void setServoCachingThreshold(double servoCachingThreshold) {
+        this.servoCachingThreshold = servoCachingThreshold;
+    }
+
+    /**
+     * @return debug string for pod state
+     */
+    @Override
+    public String debugString() {
+        double rawAngleRad = getRawAngleRad();
+        double offsetAngleRad = getAngleAfterOffsetRad();
+        return servoLabel + " {" + "\ncurrent raw angle (rad/deg) = " + rawAngleRad + " / " + Math.toDegrees(rawAngleRad)
+                + "\ncurrent angle after offset (rad/deg) = " + offsetAngleRad + " / " + Math.toDegrees(offsetAngleRad)
+                + "\nservo Power = " + turnServo.getPower()
+                + "\ndrive Power = " + driveMotor.getPower()
+                + "\n}";
+    }
 }

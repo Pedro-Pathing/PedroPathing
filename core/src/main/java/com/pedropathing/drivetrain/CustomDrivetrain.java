@@ -9,6 +9,7 @@ import com.pedropathing.math.Vector;
  * It is intended to be used as a base class for custom drivetrain implementations.
  *
  * @author Havish Sripada - 12808 RevAmped Robotics
+ * @author Kabir Goyal
  */
 public abstract class CustomDrivetrain extends Drivetrain {
     protected Vector lastTranslationalVector = new Vector();
@@ -18,13 +19,17 @@ public abstract class CustomDrivetrain extends Drivetrain {
     protected double lastHeading = 0;
 
     /**
-     * This method takes in forward, strafe, and rotation values and applies them to the drivetrain.
-     * Intended to work exactly like an arcade drive would in a typical TeleOp, this method can be a copy pasted from
-     * a robot-centric arcade drive implementation.
+     * This method takes in forward, strafe, and rotation values and applies them to
+     * the drivetrain.
      *
-     * @param forward the forward power value, which would typically be -gamepad1.left_stick_y in a normal arcade drive setup.
-     * @param strafe the strafe power value, which would typically be -gamepad1.left_stick_x in a normal arcade drive setup.
-     * @param rotation the rotation power value, which would typically be -gamepad1.right_stick_x in a normal arcade drive setup.
+     * @param forward the forward power value, which would typically be
+     *                -gamepad1.left_stick_y in a normal arcade drive setup
+     * @param strafe the strafe power value, which would typically be
+     *               -gamepad1.left_stick_x in a normal arcade drive setup
+     *               because pedro treats left as positive
+     * @param rotation the rotation power value, which would typically be
+     *                 -gamepad1.right_stick_x in a normal arcade drive setup
+     *                 because CCW is positive
      */
     public abstract void arcadeDrive(double forward, double strafe, double rotation);
 
