@@ -154,7 +154,11 @@ public class CoaxialPod implements SwervePod {
         double actualDeg = Math.toDegrees(actualRad);
         double setpointDeg = actualDeg + errorDeg;
 
-        turnPID.updateFeedForwardInput(MathFunctions.getTurnDirection(actualRad, desiredRad));
+        if (Math.abs(errorDeg) < 2) {
+            turnPID.updateFeedForwardInput(0);
+        } else {
+            turnPID.updateFeedForwardInput(MathFunctions.getTurnDirection(actualRad, desiredRad));
+        }
 
         turnPID.updateError(setpointDeg - actualDeg);
         double turnPower = -MathFunctions.clamp(turnPID.run(), -1.0, 1.0);
