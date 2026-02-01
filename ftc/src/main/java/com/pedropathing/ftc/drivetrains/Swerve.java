@@ -209,20 +209,12 @@ public class Swerve extends CustomDrivetrain {
     public String debugString() {
         StringBuilder sb = new StringBuilder("Swerve {");
         for (int i = 0; i < pods.size(); i++) {
-            sb.append("\n pod").append(i).append(" angle(rad) = ").append(pods.get(i).getAngle())
-                    .append(" debug = ").append(pods.get(i).debugString());
+            sb.append("\npod").append(i)
+                    .append(": ").append(pods.get(i).debugString());
         }
-        sb.append("\n forward input=").append(lastForward)
-                .append("\n, strafe input=").append(lastStrafe)
-                .append("\n, rotation input=").append(lastRotation)
-                .append("\n, unrotated translationVector x").append(lastTranslationalVector.getXComponent())
-                .append("\n, unrotated translationVector y").append(lastTranslationalVector.getYComponent())
-                .append("\n, correctivePower x").append(lastCorrectivePower.getXComponent())
-                .append("\n, correctivePower y").append(lastCorrectivePower.getYComponent())
-                .append("\n, pathingPower x").append(lastPathingPower.getXComponent())
-                .append("\n, pathingPower y").append(lastPathingPower.getYComponent())
-                .append("\n, headingPower magnitude").append(lastHeadingPower.getMagnitude())
-                .append("\n, headingPower direction").append(lastHeadingPower.getTheta())
+        sb.append("\n\nforward input=").append(lastForward)
+                .append("\nstrafe input=").append(lastStrafe)
+                .append("\nrotation input=").append(lastRotation)
                 .append("\nrobot heading").append(lastHeading)
                 .append("\navg scaling").append(lastAvgScaling)
                 .append("\n}");

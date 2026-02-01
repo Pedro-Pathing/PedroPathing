@@ -45,8 +45,7 @@ public class CoaxialPod implements SwervePod {
         this.turnServo = hardwareMap.get(CRServo.class, servoName);
         this.turnEncoder = hardwareMap.get(AnalogInput.class, turnEncoderName);
 
-        this.servoLabel = turnServo.getConnectionInfo(); // Best guess for label without explicit
-                                                         // name
+        this.servoLabel = servoName;
 
         this.turnPID = new PIDFController(turnPIDFCoefficients);
         this.angleOffsetRad = angleOffsetRad;
@@ -203,7 +202,10 @@ public class CoaxialPod implements SwervePod {
 
     @Override
     public String debugString() {
-        return servoLabel + "{" + "current Angle(rad)=" + getRawAngleRad() + ", servo Power="
-                + turnServo.getPower() + ", drive Power=" + driveMotor.getPower() + " }";
+        return servoLabel + " {" + "\ncurrent raw angle (rad/deg) = " + getRawAngleRad() + " / " + Math.toDegrees(getRawAngleRad())
+                + "\ncurrent angle after offset (rad/deg) = " + getAngleAfterOffsetRad() + " / " + Math.toDegrees(getAngleAfterOffsetRad())
+                + "\nservo Power = " + turnServo.getPower()
+                + "\ndrive Power = " + driveMotor.getPower()
+                + "\n}";
     }
 }
