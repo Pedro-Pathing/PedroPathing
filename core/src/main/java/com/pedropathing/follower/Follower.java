@@ -94,6 +94,7 @@ public class Follower {
         breakFollowing();
     }
 
+
     public void updateConstants() {
         this.BEZIER_CURVE_SEARCH_LIMIT = constants.BEZIER_CURVE_SEARCH_LIMIT;
         this.holdPointTranslationalScaling = constants.holdPointTranslationalScaling;
@@ -101,7 +102,7 @@ public class Follower {
         this.centripetalScaling = constants.centripetalScaling;
         this.turnHeadingErrorThreshold = constants.turnHeadingErrorThreshold;
         this.automaticHoldEnd = constants.automaticHoldEnd;
-        this.usePredictiveBraking = constants.usePredictiveBraking;
+        this.usePredictiveBraking = !manualDrive && constants.usePredictiveBraking;
     }
 
     /**
