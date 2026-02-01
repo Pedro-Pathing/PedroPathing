@@ -105,22 +105,17 @@ public class Swerve extends CustomDrivetrain {
         double avgScaling = 0;
 
         for (int i = 0; i < pods.size(); i++) {
-            double currentAngle = pods.get(i).getAngle();
+            double currentRad = pods.get(i).getAngle();
 
             // ask the pod to translate the wheel-space theta into the encoder frame
-            double encodedRad = pods.get(i).adjustThetaForEncoder(podVectors[i].getTheta());
-
-            // current and target in radians
-            double currentRad = Math.toRadians(currentAngle);
-            double targetRad = encodedRad; // already normalized in radians by implementations
+            double targetRad = pods.get(i).adjustThetaForEncoder(podVectors[i].getTheta());
 
             // compute shortest signed error in radians using MathFunctions
             double mag = MathFunctions.getSmallestAngleDifference(currentRad, targetRad);
             double dir = MathFunctions.getTurnDirection(currentRad, targetRad);
-            double signedRad = (mag == Math.PI) ? -Math.PI : mag * dir;
-            double errorDeg = Math.toDegrees(signedRad);
+            double errorRad = (mag == Math.PI) ? -Math.PI : mag * dir;
 
-            avgScaling += Math.abs(Math.cos(Math.toRadians(errorDeg)));
+            avgScaling += Math.abs(Math.cos(errorRad));
         }
 
         avgScaling /= pods.size();
@@ -148,7 +143,7 @@ public class Swerve extends CustomDrivetrain {
     @Override
     public void breakFollowing() {
         for (SwervePod pod : pods) {
-            pod.move(Math.toRadians(pod.getAngle()), 0, true);
+            pod.move(pod.getAngle(), 0, true);
             pod.setToFloat();
         }
     }
@@ -214,7 +209,7 @@ public class Swerve extends CustomDrivetrain {
     public String debugString() {
         StringBuilder sb = new StringBuilder("Swerve {");
         for (int i = 0; i < pods.size(); i++) {
-            sb.append("\n pod").append(i).append(" angle = ").append(pods.get(i).getAngle())
+            sb.append("\n pod").append(i).append(" angle(rad) = ").append(pods.get(i).getAngle())
                     .append(" debug = ").append(pods.get(i).debugString());
         }
         sb.append("\n forward input=").append(lastForward)

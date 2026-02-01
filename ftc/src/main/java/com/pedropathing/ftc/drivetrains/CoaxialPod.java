@@ -21,7 +21,8 @@ public class CoaxialPod implements SwervePod {
     private final PIDFController turnPID;
     private final Pose offset;
 
-    private final double angleOffsetDeg;
+    // Angle offset in radians applied to raw encoder angle
+    private final double angleOffsetRad;
 
     private final String servoLabel;
 
@@ -37,7 +38,7 @@ public class CoaxialPod implements SwervePod {
     public CoaxialPod(HardwareMap hardwareMap, String motorName, String servoName,
             String turnEncoderName, PIDFCoefficients turnPIDFCoefficients,
             DcMotorSimple.Direction driveDirection, CRServo.Direction servoDirection,
-            double angleOffsetDeg, Pose podOffset, double analogMinVoltage, double analogMaxVoltage,
+            double angleOffsetRad, Pose podOffset, double analogMinVoltage, double analogMaxVoltage,
             boolean encoderReversed) {
 
         this.driveMotor = hardwareMap.get(DcMotorEx.class, motorName);
@@ -48,7 +49,7 @@ public class CoaxialPod implements SwervePod {
                                                          // name
 
         this.turnPID = new PIDFController(turnPIDFCoefficients);
-        this.angleOffsetDeg = angleOffsetDeg;
+        this.angleOffsetRad = angleOffsetRad;
 
         setMotorToFloat();
 
@@ -71,7 +72,7 @@ public class CoaxialPod implements SwervePod {
 
     @Override
     public double getAngle() {
-        return getAngleAfterOffsetDeg();
+        return getAngleAfterOffsetRad();
     }
 
     public void setServoPower(double power) {
@@ -120,8 +121,8 @@ public class CoaxialPod implements SwervePod {
      */
     @Override
     public void move(double targetAngleRad, double drivePower, boolean ignoreAngleChanges) {
-        // Convert hardware angle (degrees) to radians and normalize
-        double actualRad = Math.toRadians(getAngleAfterOffsetDeg());
+        // Convert hardware angle to radians and normalize
+        double actualRad = getAngleAfterOffsetRad();
         actualRad = MathFunctions.normalizeAngle(actualRad);
 
         //if encoder is reversed, ccw (top down) is positive, if unreversed than cw is positive
@@ -134,11 +135,11 @@ public class CoaxialPod implements SwervePod {
         double dir = MathFunctions.getTurnDirection(actualRad, desiredRad);
         double signedRad = (mag == Math.PI) ? -Math.PI : mag * dir;
 
-        // Convert to degrees for PID, preserving signedness
-        double errorDeg = Math.toDegrees(signedRad);
+        // PID uses radians (tune PIDF for radian error)
+        double errorRad = signedRad;
 
         // Minimize rotation: flip + invert drive if > 90°
-        if (Math.abs(errorDeg) > 90.0) {
+        if (Math.abs(errorRad) > (Math.PI / 2.0)) {
             // add 180 degrees (pi radians)
             desiredRad = MathFunctions.normalizeAngle(desiredRad + Math.PI);
             drivePower = -drivePower;
@@ -147,20 +148,19 @@ public class CoaxialPod implements SwervePod {
             mag = MathFunctions.getSmallestAngleDifference(actualRad, desiredRad);
             dir = MathFunctions.getTurnDirection(actualRad, desiredRad);
             signedRad = (mag == Math.PI) ? -Math.PI : mag * dir;
-            errorDeg = Math.toDegrees(signedRad);
+            errorRad = signedRad;
         }
 
         // Setpoint close to current so PID follows shortest path
-        double actualDeg = Math.toDegrees(actualRad);
-        double setpointDeg = actualDeg + errorDeg;
+        double setpointRad = actualRad + errorRad;
 
-        if (Math.abs(errorDeg) < 2) {
+        if (Math.abs(errorRad) < (2.0 * Math.PI / 180.0)) {
             turnPID.updateFeedForwardInput(0);
         } else {
             turnPID.updateFeedForwardInput(MathFunctions.getTurnDirection(actualRad, desiredRad));
         }
 
-        turnPID.updateError(setpointDeg - actualDeg);
+        turnPID.updateError(setpointRad - actualRad);
         double turnPower = MathFunctions.clamp(turnPID.run(), -1.0, 1.0);
 
         // please don't change the next 5 lines took like 5 hours to figure ts out
@@ -174,23 +174,23 @@ public class CoaxialPod implements SwervePod {
             driveMotor.setPower(drivePower);
     }
 
-    public double getAngleAfterOffsetDeg() {
-        return getRawAngleDeg() - angleOffsetDeg;
+    public double getAngleAfterOffsetRad() {
+        return getRawAngleRad() - angleOffsetRad;
     }
 
-    public double getRawAngleDeg() {
+    public double getRawAngleRad() {
         double v = turnEncoder.getVoltage();
         double range = analogMaxVoltage - analogMinVoltage;
         if (range == 0)
             return 0;
         double normalized = (v - analogMinVoltage) / range;
         normalized = MathFunctions.clamp(normalized, 0, 1);
-        return normalized * 360.0;
+        return normalized * (2.0 * Math.PI);
     }
 
-    public double getOffsetAngleDeg() {
-        double deg = getRawAngleDeg() - angleOffsetDeg;
-        return Math.toDegrees(MathFunctions.normalizeAngle(Math.toRadians(deg)));
+    public double getOffsetAngleRad() {
+        double rad = getRawAngleRad() - angleOffsetRad;
+        return MathFunctions.normalizeAngle(rad);
     }
 
     public void setMotorCachingThreshold(double motorCachingThreshold) {
@@ -203,7 +203,7 @@ public class CoaxialPod implements SwervePod {
 
     @Override
     public String debugString() {
-        return servoLabel + "{" + "current Angle=" + getRawAngleDeg() + ", servo Power="
+        return servoLabel + "{" + "current Angle(rad)=" + getRawAngleRad() + ", servo Power="
                 + turnServo.getPower() + ", drive Power=" + driveMotor.getPower() + " }";
     }
 }

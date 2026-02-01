@@ -16,7 +16,7 @@ public interface SwervePod {
     Pose getOffset();
 
     /**
-     * Returns the pod's current heading (angle after applying the configured offset), in degrees.
+     * Returns the pod's current heading (angle after applying the configured offset), in radians.
      */
     double getAngle();
 
