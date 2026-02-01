@@ -10,7 +10,8 @@ import com.qualcomm.robotcore.hardware.*;
  * CoaxialPod is a hardware-backed implementation of the core `SwervePod` interface. It owns the
  * drive motor, continuous rotation servo (turn), analog encoder and the PIDF controller used to
  * control pod rotation.
- * 
+ *
+ * @author Kabir Goyal
  * @author Baron Henderson
  */
 public class CoaxialPod implements SwervePod {
@@ -35,6 +36,20 @@ public class CoaxialPod implements SwervePod {
     private double motorCachingThreshold = 0.01;
     private double servoCachingThreshold = 0.01;
 
+    /**
+     * @param motorName drive motor name
+     * @param servoName turn servo name
+     * @param turnEncoderName analog encoder name
+     * @param turnPIDFCoefficients PIDF coefficients for servo control
+     * @param driveDirection drive motor direction
+     * @param servoDirection turn servo direction
+     * @param angleOffsetRad offset applied to raw encoder angle, in radians. This is the raw angle
+     *                       in radians when the wheel is facing forward.
+     * @param podOffset pod position offset from robot center, using the same axes as odometry pods
+     * @param analogMinVoltage minimum encoder voltage (e.g. 0.0)
+     * @param analogMaxVoltage maximum encoder voltage (e.g. 3.3)
+     * @param encoderReversed true if encoder increases CCW (top-down)
+     */
     public CoaxialPod(HardwareMap hardwareMap, String motorName, String servoName,
             String turnEncoderName, PIDFCoefficients turnPIDFCoefficients,
             DcMotorSimple.Direction driveDirection, CRServo.Direction servoDirection,
@@ -64,46 +79,87 @@ public class CoaxialPod implements SwervePod {
         turnServo.setPower(0);
     }
 
+    /**
+     * Returns the pod's offset from robot center.
+     *
+     * @return offset as a Pose
+     */
     @Override
     public Pose getOffset() {
         return offset;
     }
 
+    /**
+     * Returns the current pod heading after applying the configured offset, in radians.
+     *
+     * @return heading in radians
+     */
     @Override
     public double getAngle() {
         return getAngleAfterOffsetRad();
     }
 
+    /**
+     * Sets turn servo power in [-1, 1].
+     *
+     * @param power turn servo power
+     */
     public void setServoPower(double power) {
         turnServo.setPower(power);
     }
 
+    /**
+     * Sets drive motor power in [-1, 1].
+     *
+     * @param power drive motor power
+     */
     public void setMotorPower(double power) {
         driveMotor.setPower(power);
     }
 
+    /**
+     * Sets drive motor zero power behavior to FLOAT.
+     */
     @Override
     public void setToFloat() {
         setMotorToFloat();
     }
 
+    /**
+     * Sets drive motor zero power behavior to BRAKE.
+     */
     @Override
     public void setToBreak() {
         setMotorToBreak();
     }
 
+    /**
+     * Sets drive motor zero power behavior to FLOAT.
+     */
     public void setMotorToFloat() {
         driveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
     }
 
+    /**
+     * Sets drive motor zero power behavior to BRAKE.
+     */
     public void setMotorToBreak() {
         driveMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
+    /**
+     * @return encoder reversed status
+     */
     public boolean isEncoderReversed() {
         return encoderReversed;
     }
 
+    /**
+     * Converts wheel-space theta (radians) to encoder-space theta.
+     *
+     * @param wheelTheta wheel-space heading in radians
+     * @return encoder-space heading in radians
+     */
     @Override
     public double adjustThetaForEncoder(double wheelTheta) {
         // wheelTheta is in radians. If encoder is reversed, use wheelTheta directly; otherwise invert.
@@ -115,8 +171,11 @@ public class CoaxialPod implements SwervePod {
     }
 
     /**
-     * Commands pod to a wheel heading (radians) with a drive power [0, 1] This implementation pulls
-     * caching thresholds and feedforward from internal state.
+     * Commands pod to a wheel heading (radians) with a drive power in [-1, 1].
+     *
+     * @param targetAngleRad desired wheel heading in radians
+     * @param drivePower drive power in [0, 1]
+     * @param ignoreAngleChanges if true, turn servo power is set to 0 regardless of target angle
      */
     @Override
     public void move(double targetAngleRad, double drivePower, boolean ignoreAngleChanges) {
@@ -173,10 +232,20 @@ public class CoaxialPod implements SwervePod {
             driveMotor.setPower(drivePower);
     }
 
+    /**
+     * Returns the current pod heading after applying the configured offset, in radians.
+     *
+     * @return heading in radians
+     */
     public double getAngleAfterOffsetRad() {
         return getRawAngleRad() - angleOffsetRad;
     }
 
+    /**
+     * Returns the raw encoder angle in radians, in [0, 2pi].
+     *
+     * @return raw encoder angle in radians
+     */
     public double getRawAngleRad() {
         double v = turnEncoder.getVoltage();
         double range = analogMaxVoltage - analogMinVoltage;
@@ -187,19 +256,37 @@ public class CoaxialPod implements SwervePod {
         return normalized * (2.0 * Math.PI);
     }
 
+    /**
+     * Returns the normalized raw angle after offset, in radians.
+     *
+     * @return normalized angle in radians
+     */
     public double getOffsetAngleRad() {
         double rad = getRawAngleRad() - angleOffsetRad;
         return MathFunctions.normalizeAngle(rad);
     }
 
+    /**
+     * Sets the drive motor caching threshold for power updates.
+     *
+     * @param motorCachingThreshold minimum delta before applying power update
+     */
     public void setMotorCachingThreshold(double motorCachingThreshold) {
         this.motorCachingThreshold = motorCachingThreshold;
     }
 
+    /**
+     * Sets the turn servo caching threshold for power updates.
+     *
+     * @param servoCachingThreshold minimum delta before applying power update
+     */
     public void setServoCachingThreshold(double servoCachingThreshold) {
         this.servoCachingThreshold = servoCachingThreshold;
     }
 
+    /**
+     * @return debug string for pod state
+     */
     @Override
     public String debugString() {
         double rawAngleRad = getRawAngleRad();
