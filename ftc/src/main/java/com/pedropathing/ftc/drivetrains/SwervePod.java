@@ -17,12 +17,17 @@ public interface SwervePod {
 
     /**
      * Returns the pod's current heading (angle after applying the configured offset), in radians.
+     *
+     * @return heading in radians
      */
     double getAngle();
 
     /**
      * Convert a wheel-space theta (radians) to the encoder's expected theta/frame. This
      * encapsulates encoder orientation handling so callers don't need to branch.
+     *
+     * @param wheelTheta wheel-space heading in radians
+     * @return encoder-space heading in radians
      */
     double adjustThetaForEncoder(double wheelTheta);
 
@@ -30,6 +35,11 @@ public interface SwervePod {
      * Command the pod to a wheel heading (radians) with a drive power in [-1, 1].
      * Implementations own any hardware-specific thresholds/flags and pull those from
      * internal state; the interface exposes only the logical command inputs.
+     * If ignoreAngleChanges is true, implementations should avoid applying turn power.
+     *
+     * @param targetAngleRad desired wheel heading in radians
+     * @param drivePower drive power in [-1, 1]
+     * @param ignoreAngleChanges true to suppress turn power
      */
     void move(double targetAngleRad, double drivePower, boolean ignoreAngleChanges);
 
