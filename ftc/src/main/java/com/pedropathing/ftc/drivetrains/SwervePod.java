@@ -3,9 +3,8 @@ package com.pedropathing.ftc.drivetrains;
 import com.pedropathing.geometry.Pose;
 
 /**
- * Swerve pod interface that abstracts non-hardware-specific behavior of a swerve pod.
- * Implementations live in platform-specific modules and own the hardware (motors, servos,
- * encoders, controllers).
+ * Swerve pod interface so Swerve drivetrains can be constructed with coaxial or differential pods.
+ * @author Kabir Goyal
  * @author Baron Henderson
  */
 public interface SwervePod {
@@ -23,8 +22,7 @@ public interface SwervePod {
     double getAngle();
 
     /**
-     * Convert a wheel-space theta (radians) to the encoder's expected theta/frame. This
-     * encapsulates encoder orientation handling so callers don't need to branch.
+     * Convert a wheel-space theta (radians) to the encoder's expected theta/frame.
      *
      * @param wheelTheta wheel-space heading in radians
      * @return encoder-space heading in radians
@@ -33,12 +31,10 @@ public interface SwervePod {
 
     /**
      * Command the pod to a wheel heading (radians) with a drive power in [-1, 1].
-     * Implementations own any hardware-specific thresholds/flags and pull those from
-     * internal state; the interface exposes only the logical command inputs.
      * If ignoreAngleChanges is true, implementations should avoid applying turn power.
      *
      * @param targetAngleRad desired wheel heading in radians
-     * @param drivePower drive power in [-1, 1]
+     * @param drivePower drive power in [0, 1]
      * @param ignoreAngleChanges true to suppress turn power
      */
     void move(double targetAngleRad, double drivePower, boolean ignoreAngleChanges);
@@ -54,7 +50,7 @@ public interface SwervePod {
     void setToBreak();
 
     /**
-     * Returns a compact string useful for debugging the pod state.
+     * Returns a  string useful for debugging the pod state.
      */
     String debugString();
 }
