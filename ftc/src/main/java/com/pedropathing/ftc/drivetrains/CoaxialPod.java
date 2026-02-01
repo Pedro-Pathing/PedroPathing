@@ -202,8 +202,10 @@ public class CoaxialPod implements SwervePod {
 
     @Override
     public String debugString() {
-        return servoLabel + " {" + "\ncurrent raw angle (rad/deg) = " + getRawAngleRad() + " / " + Math.toDegrees(getRawAngleRad())
-                + "\ncurrent angle after offset (rad/deg) = " + getAngleAfterOffsetRad() + " / " + Math.toDegrees(getAngleAfterOffsetRad())
+        double rawAngleRad = getRawAngleRad();
+        double offsetAngleRad = getAngleAfterOffsetRad();
+        return servoLabel + " {" + "\ncurrent raw angle (rad/deg) = " + rawAngleRad + " / " + Math.toDegrees(rawAngleRad)
+                + "\ncurrent angle after offset (rad/deg) = " + offsetAngleRad + " / " + Math.toDegrees(offsetAngleRad)
                 + "\nservo Power = " + turnServo.getPower()
                 + "\ndrive Power = " + driveMotor.getPower()
                 + "\n}";
