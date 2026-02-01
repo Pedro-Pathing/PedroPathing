@@ -130,8 +130,6 @@ public class Swerve extends CustomDrivetrain {
             // Normalizing if necessary while preserving relative sizes
             Vector finalVector = podVectors[podNum].times(maxPowerScaling / maxMagnitude);
 
-            // 2*Pi-theta because servos have positive clockwise rotation, while our angles
-            // are counterclockwise, and we want to see if motor/servo caching is an issue
             pods.get(podNum).move(finalVector.getTheta(), finalVector.getMagnitude() * avgScaling,
     zeroTrans && zeroRotation && constants.getZeroPowerBehavior() == SwerveConstants.ZeroPowerBehavior.IGNORE_ANGLE_CHANGES);
         }
