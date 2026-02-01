@@ -11,18 +11,15 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Swerve Drivetrain implementation
- * 
- * @author Kabir Goyal - 365 MOE
+ * Swerve Drivetrain implementation.
+ * Angles are in radians and positive rotation is to the left (CCW, top-down).
+ *
+ * @author Kabir Goyal
  * @author Baron Henderson
  */
 public class Swerve extends CustomDrivetrain {
     private final SwerveConstants constants;
 
-    protected Vector lastTranslationalVector = new Vector();
-    protected Vector lastHeadingPower = new Vector();
-    protected Vector lastCorrectivePower = new Vector();
-    protected Vector lastPathingPower = new Vector();
     protected double lastHeading = 0;
 
     private boolean useBrakeModeInTeleOp;
@@ -38,6 +35,10 @@ public class Swerve extends CustomDrivetrain {
 
     private final VoltageSensor voltageSensor;
 
+    /**
+     * @param constants Swerve Contants for your bot
+     * @param pods SwervePods, coaxial or differential
+     */
     public Swerve(HardwareMap hardwareMap, SwerveConstants constants, SwervePod... pods) {
         this.constants = constants;
         this.voltageSensor = hardwareMap.voltageSensor.iterator().next();
@@ -49,12 +50,14 @@ public class Swerve extends CustomDrivetrain {
      * This method takes in forward, strafe, and rotation values and applies them to
      * the drivetrain.
      *
-     * @param forward  the forward power value, which would typically be
-     *                 -gamepad1.left_stick_y in a normal arcade drive setup.
-     * @param strafe   the strafe power value, which would typically be
-     *                 gamepad1.left_stick_x in a normal arcade drive setup.
+     * @param forward the forward power value, which would typically be
+     *                -gamepad1.left_stick_y in a normal arcade drive setup
+     * @param strafe the strafe power value, which would typically be
+     *               -gamepad1.left_stick_x in a normal arcade drive setup
+     *               because pedro treats left as positive
      * @param rotation the rotation power value, which would typically be
-     *                 gamepad1.right_stick_x in a normal arcade drive setup.
+     *                 -gamepad1.right_stick_x in a normal arcade drive setup
+     *                 because CCW is positive
      */
     public void arcadeDrive(double forward, double strafe, double rotation) {
         strafe *= -1;
@@ -130,6 +133,9 @@ public class Swerve extends CustomDrivetrain {
         }
     }
 
+    /**
+     * Updates cached values from the constants object.
+     */
     @Override
     public void updateConstants() {
         this.useBrakeModeInTeleOp = constants.getUseBrakeModeInTeleOp();
@@ -140,6 +146,9 @@ public class Swerve extends CustomDrivetrain {
         this.epsilon = constants.getEpsilon();
     }
 
+    /**
+     * Stops following and holds pod angles while floating drive motors.
+     */
     @Override
     public void breakFollowing() {
         for (SwervePod pod : pods) {
@@ -148,6 +157,9 @@ public class Swerve extends CustomDrivetrain {
         }
     }
 
+    /**
+     * Starts teleop drive with the configured brake mode.
+     */
     @Override
     public void startTeleopDrive() {
         if (useBrakeModeInTeleOp) {
@@ -157,6 +169,9 @@ public class Swerve extends CustomDrivetrain {
         }
     }
 
+    /**
+     * @param brakeMode set to true to enable brake mode in teleop
+     */
     @Override
     public void startTeleopDrive(boolean brakeMode) {
         if (brakeMode) {
@@ -170,41 +185,65 @@ public class Swerve extends CustomDrivetrain {
         }
     }
 
+    /**
+     * @return maximum x velocity
+     */
     @Override
     public double xVelocity() {
         return constants.getXVelocity();
     }
 
+    /**
+     * @return maximum y velocity
+     */
     @Override
     public double yVelocity() {
         return constants.getYVelocity();
     }
 
+    /**
+     * @param xMovement maximum x velocity
+     */
     @Override
     public void setXVelocity(double xMovement) {
         constants.setXVelocity(xMovement);
     }
 
+    /**
+     * @param yMovement maximum y velocity
+     */
     @Override
     public void setYVelocity(double yMovement) {
         constants.setYVelocity(yMovement);
     }
 
+    /**
+     * @return static friction coefficient used for voltage compensation
+     */
     public double getStaticFrictionCoefficient() {
         return staticFrictionCoefficient;
     }
 
+    /**
+     * @return current battery voltage
+     */
     @Override
     public double getVoltage() {
         return voltageSensor.getVoltage();
     }
 
+    /**
+     * @return normalized voltage for voltage compensation
+     */
     private double getVoltageNormalized() {
         double voltage = getVoltage();
         return (nominalVoltage - (nominalVoltage * staticFrictionCoefficient)) / (voltage
                 - ((nominalVoltage * nominalVoltage / voltage) * staticFrictionCoefficient));
     }
 
+    /**
+     * @return debug string for drivetrain state
+     */
     @Override
     public String debugString() {
         StringBuilder sb = new StringBuilder("Swerve {");
