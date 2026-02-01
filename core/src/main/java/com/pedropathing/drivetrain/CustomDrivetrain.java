@@ -9,6 +9,7 @@ import com.pedropathing.math.Vector;
  * It is intended to be used as a base class for custom drivetrain implementations.
  *
  * @author Havish Sripada - 12808 RevAmped Robotics
+ * @author Kabir Goyal
  */
 public abstract class CustomDrivetrain extends Drivetrain {
     protected Vector lastTranslationalVector = new Vector();

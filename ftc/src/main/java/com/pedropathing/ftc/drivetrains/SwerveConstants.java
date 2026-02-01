@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 /**
  * Constants for swerve drive configuration.
  *
- * @author Kabir Goyal - 365 MOE
+ * @author Kabir Goyal
  * @author Baron Henderson
  */
 public class SwerveConstants {
