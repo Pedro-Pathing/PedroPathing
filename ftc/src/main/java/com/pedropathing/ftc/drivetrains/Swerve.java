@@ -88,9 +88,10 @@ public class Swerve extends CustomDrivetrain {
             rotationVector.rotateVector(Math.PI / 2);
 
             podVectors[i] = translationVector.plus(rotationVector);
-            if (constants.getZeroPowerBehavior() == SwerveConstants.ZeroPowerBehavior.RESIST_MOVEMENT
+            if (constants.getZeroPowerBehavior() == SwerveConstants.ZeroPowerBehavior.X_LOCK
                     && zeroTrans && zeroRotation) {
-                podVectors[i] = rotationVector;
+                    rotationVector.rotateVector(-Math.PI / 2);
+                    podVectors[i] = rotationVector;
             }
         }
 
