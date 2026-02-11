@@ -26,11 +26,11 @@ public class SwerveConstants {
     public double epsilon = 0.05;
 
     enum ZeroPowerBehavior {
-        RESIST_MOVEMENT,
+        X_LOCK,
         IGNORE_ANGLE_CHANGES
     }
 
-    public ZeroPowerBehavior zeroPowerBehavior = ZeroPowerBehavior.IGNORE_ANGLE_CHANGES;
+    public ZeroPowerBehavior zeroPowerBehavior = ZeroPowerBehavior.X_LOCK;
 
     public SwerveConstants() {
         defaults();
@@ -280,6 +280,6 @@ public class SwerveConstants {
         nominalVoltage = 12.0;
         staticFrictionCoefficient = 0.1;
         epsilon = 0.05;
-        zeroPowerBehavior = ZeroPowerBehavior.IGNORE_ANGLE_CHANGES;
+        zeroPowerBehavior = ZeroPowerBehavior.X_LOCK;
     }
 }
