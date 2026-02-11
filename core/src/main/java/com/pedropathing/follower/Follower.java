@@ -529,13 +529,12 @@ public class Follower {
             zeroVelocityDetectedTimer = new Timer();
         }
         
-        boolean skipToNextPath =
-            followingPathChain && chainIndex < currentPathChain.size() - 2 && usePredictiveBraking
-                && vectorCalculator.predictiveBrakingController
-                .computeOutput(getDistanceRemaining(), getTangentialVelocity()) < 1;
+        boolean nextPathWithinBrakingDistance =
+            followingPathChain && chainIndex < currentPathChain.size() - 1 && usePredictiveBraking
+                && vectorCalculator.driveVector.dot(getClosestPointTangentVector()) < 1;
         
-        if (//!skipToNextPath &&
-            !(currentPath.isAtParametricEnd()
+        if (!(currentPath.isAtParametricEnd()
+              //|| nextPathWithinBrakingDistance
                 || (zeroVelocityDetectedTimer != null
                 && zeroVelocityDetectedTimer.getElapsedTime() > 500.0))) {
             return;
