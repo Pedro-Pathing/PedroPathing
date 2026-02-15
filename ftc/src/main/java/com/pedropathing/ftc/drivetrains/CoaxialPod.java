@@ -108,6 +108,7 @@ public class CoaxialPod implements SwervePod {
      * @param power turn servo power
      */
     public void setServoPower(double power) {
+        lastTurnPower = power;
         turnServo.setPower(power);
     }
 
@@ -117,6 +118,7 @@ public class CoaxialPod implements SwervePod {
      * @param power drive motor power
      */
     public void setMotorPower(double power) {
+        lastDrivePower = power;
         driveMotor.setPower(power);
     }
 
