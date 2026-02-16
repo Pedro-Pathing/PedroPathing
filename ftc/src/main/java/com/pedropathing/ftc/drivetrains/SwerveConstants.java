@@ -25,7 +25,7 @@ public class SwerveConstants {
     // Input deadband for translational/rotational joystick values.
     public double epsilon = 0.05;
 
-    enum ZeroPowerBehavior {
+    public enum ZeroPowerBehavior {
         X_LOCK,
         IGNORE_ANGLE_CHANGES
     }

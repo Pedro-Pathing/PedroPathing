@@ -36,6 +36,9 @@ public class CoaxialPod implements SwervePod {
     private double motorCachingThreshold = 0.01;
     private double servoCachingThreshold = 0.01;
 
+    private double lastDrivePower = 0;
+    private double lastTurnPower = 0;
+
     /**
      * @param motorName drive motor name
      * @param servoName turn servo name
@@ -105,6 +108,7 @@ public class CoaxialPod implements SwervePod {
      * @param power turn servo power
      */
     public void setServoPower(double power) {
+        lastTurnPower = power;
         turnServo.setPower(power);
     }
 
@@ -114,6 +118,7 @@ public class CoaxialPod implements SwervePod {
      * @param power drive motor power
      */
     public void setMotorPower(double power) {
+        lastDrivePower = power;
         driveMotor.setPower(power);
     }
 
@@ -223,13 +228,17 @@ public class CoaxialPod implements SwervePod {
 
         // please don't change the next 5 lines took like 5 hours to figure ts out
         if (ignoreAngleChanges) {
+            lastTurnPower = 0;
             turnServo.setPower(0);
-        } else if (Math.abs(turnPower - turnServo.getPower()) > servoCachingThreshold) {
+        } else if (Math.abs(turnPower - lastTurnPower) > servoCachingThreshold || (turnPower == 0 && lastTurnPower != 0)) {
+            lastTurnPower = turnPower;
             turnServo.setPower(turnPower);
         }
 
-        if (Math.abs(drivePower - driveMotor.getPower()) > motorCachingThreshold)
+        if (Math.abs(drivePower - lastDrivePower) > motorCachingThreshold || (drivePower == 0 && lastDrivePower != 0)) {
+            lastDrivePower = drivePower;
             driveMotor.setPower(drivePower);
+        }
     }
 
     /**

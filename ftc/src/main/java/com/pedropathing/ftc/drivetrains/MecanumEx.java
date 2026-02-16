@@ -1,9 +1,6 @@
 package com.pedropathing.ftc.drivetrains;
 
-import static com.pedropathing.math.MathFunctions.findNormalizingScaling;
-
 import com.pedropathing.drivetrain.CustomDrivetrain;
-import com.pedropathing.drivetrain.Drivetrain;
 import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -26,6 +23,7 @@ public class MecanumEx extends CustomDrivetrain {
     private final DcMotorEx rightFront;
     private final DcMotorEx rightRear;
     private final List<DcMotorEx> motors;
+    private final double[] lastMotorPowers;
     private final VoltageSensor voltageSensor;
     private double motorCachingThreshold;
     private boolean useBrakeModeInTeleOp;
@@ -54,6 +52,7 @@ public class MecanumEx extends CustomDrivetrain {
         rightFront = hardwareMap.get(DcMotorEx.class, mecanumConstants.rightFrontMotorName);
 
         motors = Arrays.asList(leftFront, leftRear, rightFront, rightRear);
+        lastMotorPowers = new double[] {0,0,0,0};
 
         for (DcMotorEx motor : motors) {
             MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();
@@ -89,8 +88,8 @@ public class MecanumEx extends CustomDrivetrain {
         double[] wheelPowers = new double[4];
 
         wheelPowers[0] = forward + strafe - rotation; //leftFront
-        wheelPowers[1] = forward - strafe + rotation; //rightFront
-        wheelPowers[2] = forward - strafe - rotation; //leftRear
+        wheelPowers[1] = forward - strafe - rotation; //leftRear
+        wheelPowers[2] = forward - strafe + rotation; //rightFront
         wheelPowers[3] = forward + strafe + rotation; //rightRear
 
         double denom = 1;
@@ -102,10 +101,13 @@ public class MecanumEx extends CustomDrivetrain {
             wheelPowers[i] = wheelPowers[i] / denom;
         }
 
-        leftFront.setPower(wheelPowers[0]);
-        rightFront.setPower(wheelPowers[1]);
-        leftRear.setPower(wheelPowers[2]);
-        rightRear.setPower(wheelPowers[3]);
+        for (int i = 0; i < motors.size(); i++) {
+            if (Math.abs(lastMotorPowers[i] - wheelPowers[i]) > motorCachingThreshold ||
+                    (wheelPowers[i] == 0 && lastMotorPowers[i] != 0)) {
+                lastMotorPowers[i] = wheelPowers[i];
+                motors.get(i).setPower(wheelPowers[i]);
+            }
+        }
     }
 
     @Override
@@ -142,8 +144,9 @@ public class MecanumEx extends CustomDrivetrain {
 
     @Override
     public void breakFollowing() {
-        for (DcMotorEx motor : motors) {
-            motor.setPower(0);
+        for (int i = 0; i < motors.size(); i++) {
+            lastMotorPowers[i] = 0;
+            motors.get(i).setPower(0);
         }
         setMotorsToFloat();
     }

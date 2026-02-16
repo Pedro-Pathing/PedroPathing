@@ -29,6 +29,7 @@ public class Mecanum extends Drivetrain {
     private final DcMotorEx rightFront;
     private final DcMotorEx rightRear;
     private final List<DcMotorEx> motors;
+    private final double[] lastMotorPowers;
     private final VoltageSensor voltageSensor;
     private double motorCachingThreshold;
     private boolean useBrakeModeInTeleOp;
@@ -57,6 +58,7 @@ public class Mecanum extends Drivetrain {
         rightFront = hardwareMap.get(DcMotorEx.class, mecanumConstants.rightFrontMotorName);
 
         motors = Arrays.asList(leftFront, leftRear, rightFront, rightRear);
+        lastMotorPowers = new double[] {0,0,0,0};
 
         for (DcMotorEx motor : motors) {
             MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();
@@ -211,8 +213,9 @@ public class Mecanum extends Drivetrain {
 
     @Override
     public void breakFollowing() {
-        for (DcMotorEx motor : motors) {
-            motor.setPower(0);
+        for (int i = 0; i < motors.size(); i++) {
+            lastMotorPowers[i] = 0;
+            motors.get(i).setPower(0);
         }
         setMotorsToFloat();
     }
@@ -220,7 +223,9 @@ public class Mecanum extends Drivetrain {
     @Override
     public void runDrive(double[] drivePowers) {
         for (int i = 0; i < motors.size(); i++) {
-            if (Math.abs(motors.get(i).getPower() - drivePowers[i]) > motorCachingThreshold) {
+            if (Math.abs(lastMotorPowers[i] - drivePowers[i]) > motorCachingThreshold ||
+                    (drivePowers[i] == 0 && lastMotorPowers[i] != 0)) {
+                lastMotorPowers[i] = drivePowers[i];
                 motors.get(i).setPower(drivePowers[i]);
             }
         }
