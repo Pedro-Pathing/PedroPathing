@@ -2,6 +2,7 @@ package com.pedropathing.follower;
 
 import com.pedropathing.control.FilteredPIDFCoefficients;
 import com.pedropathing.control.PIDFCoefficients;
+import com.pedropathing.control.PredictiveBrakingCoefficients;
 
 /**
  * This is the FollowerConstants class. It holds many constants and parameters for various parts of
@@ -111,6 +112,16 @@ public class FollowerConstants {
             0.000005,
             0.6,
             0.01);
+    
+    /**
+     * Default Value: new PredictiveBrakingCoefficients(0.15, 0.1, 0.001)
+     */
+    public PredictiveBrakingCoefficients predictiveBrakingCoefficients = new PredictiveBrakingCoefficients(
+            0.15,
+            0.1,
+            0.001);
+    
+    public boolean usePredictiveBraking = false;
 
     /**
      * This scales the translational error correction power when the Follower is holding a Point.
@@ -246,7 +257,13 @@ public class FollowerConstants {
         useSecondaryDrivePIDF = true;
         return this;
     }
-
+    
+    public FollowerConstants predictiveBrakingCoefficients(PredictiveBrakingCoefficients predictiveBrakingCoefficients) {
+        this.predictiveBrakingCoefficients = predictiveBrakingCoefficients;
+        usePredictiveBraking = true;
+        return this;
+    }
+    
     public FollowerConstants holdPointTranslationalScaling(double holdPointTranslationalScaling) {
         this.holdPointTranslationalScaling = holdPointTranslationalScaling;
         return this;

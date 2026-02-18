@@ -4,7 +4,7 @@ import com.pedropathing.ErrorCalculator;
 import com.pedropathing.VectorCalculator;
 import com.pedropathing.control.FilteredPIDFCoefficients;
 import com.pedropathing.control.PIDFCoefficients;
-import com.pedropathing.Drivetrain;
+import com.pedropathing.drivetrain.Drivetrain;
 import com.pedropathing.paths.PathConstraints;
 import com.pedropathing.paths.PathPoint;
 import com.pedropathing.util.PoseHistory;
@@ -20,6 +20,9 @@ import com.pedropathing.paths.callbacks.PathCallback;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.math.Vector;
 import com.pedropathing.util.Timer;
+
+import java.util.ArrayDeque;
+import java.util.Queue;
 
 /**
  * This is the Follower class. It handles the actual following of the paths and all the on-the-fly
@@ -58,8 +61,10 @@ public class Follower {
     public boolean useCentripetal = true;
     public boolean useHeading = true;
     public boolean useDrive = true;
+    public boolean usePredictiveBraking = true;
     private Timer zeroVelocityDetectedTimer = null;
     private Runnable resetFollowing = null;
+    private Queue<PathCallback> currentCallbacks;
 
     /**
      * This creates a new Follower given a HardwareMap.
@@ -84,9 +89,11 @@ public class Follower {
         centripetalScaling = constants.centripetalScaling;
         turnHeadingErrorThreshold = constants.turnHeadingErrorThreshold;
         automaticHoldEnd = constants.automaticHoldEnd;
+        usePredictiveBraking = constants.usePredictiveBraking;
 
         breakFollowing();
     }
+
 
     public void updateConstants() {
         this.BEZIER_CURVE_SEARCH_LIMIT = constants.BEZIER_CURVE_SEARCH_LIMIT;
@@ -95,6 +102,7 @@ public class Follower {
         this.centripetalScaling = constants.centripetalScaling;
         this.turnHeadingErrorThreshold = constants.turnHeadingErrorThreshold;
         this.automaticHoldEnd = constants.automaticHoldEnd;
+        this.usePredictiveBraking = !manualDrive && constants.usePredictiveBraking;
     }
 
     /**
@@ -238,6 +246,15 @@ public class Follower {
     }
 
     /**
+     * This holds a Point.
+     *
+     * @param pose the Point (as a Pose) to stay at.
+     */
+    public void holdPoint(Pose pose, boolean useHoldScaling) {
+        holdPoint(new BezierPoint(pose), pose.getHeading(), useHoldScaling);
+    }
+
+    /**
      * This follows a Path.
      * This also makes the Follower hold the last Point on the Path.
      *
@@ -304,11 +321,10 @@ public class Follower {
         previousClosestPose = closestPose;
         closestPose = currentPath.updateClosestPose(poseTracker.getPose(), BEZIER_CURVE_SEARCH_LIMIT);
         currentPathChain.resetCallbacks();
+        currentCallbacks = currentPathChain.getNextPathCallbacks(chainIndex);
 
-        for (PathCallback callback : currentPathChain.getCallbacks()) {
-            if (callback.getPathIndex() == chainIndex) {
-                callback.initialize();
-            }
+        for (PathCallback callback : currentCallbacks) {
+            callback.initialize();
         }
     }
 
@@ -448,12 +464,20 @@ public class Follower {
 
     /** Calls an update to the ErrorCalculator, which updates the robot's current error. */
     public void updateErrors() {
-        errorCalculator.update(currentPose, currentPath, currentPathChain, followingPathChain, closestPose.getPose(), poseTracker.getVelocity(), chainIndex, drivetrain.xVelocity(), drivetrain.yVelocity(), getClosestPointHeadingGoal());
+        errorCalculator.update(currentPose, currentPath, currentPathChain, followingPathChain, closestPose.getPose(), poseTracker.getVelocity(), chainIndex, drivetrain.xVelocity(), drivetrain.yVelocity(), getClosestPointHeadingGoal(), usePredictiveBraking);
     }
 
     /** Calls an update to the VectorCalculator, which updates the robot's current vectors to correct. */
     public void updateVectors() {
-        vectorCalculator.update(useDrive, useHeading, useTranslational, useCentripetal, manualDrive, chainIndex, drivetrain.getMaxPowerScaling(), followingPathChain, centripetalScaling, currentPose, closestPose.getPose(), poseTracker.getVelocity(), currentPath, currentPathChain, useDrive && !holdingPosition ? getDriveError() : -1, getTranslationalError(), getHeadingError(), getClosestPointHeadingGoal());
+        vectorCalculator.update(useDrive, useHeading, useTranslational, useCentripetal,
+                                manualDrive, chainIndex,
+                                drivetrain.getMaxPowerScaling(), followingPathChain,
+                                centripetalScaling, currentPose, closestPose.getPose(),
+                                poseTracker.getVelocity(), currentPath,
+                                currentPathChain, useDrive && !holdingPosition ?
+                                    getDriveError() : -1, getTranslationalError(),
+                                getHeadingError(), getClosestPointHeadingGoal(),
+                                getTotalDistanceRemaining(), usePredictiveBraking);
     }
 
     public void updateErrorAndVectors() {updateErrors(); updateVectors();}
@@ -509,8 +533,15 @@ public class Follower {
                 && zeroVelocityDetectedTimer == null && isBusy) {
             zeroVelocityDetectedTimer = new Timer();
         }
-
-        if (!(currentPath.isAtParametricEnd() || ( zeroVelocityDetectedTimer != null && zeroVelocityDetectedTimer.getElapsedTime() > 500.0))) {
+        
+        boolean nextPathWithinBrakingDistance =
+            followingPathChain && chainIndex < currentPathChain.size() - 1 && usePredictiveBraking
+                && vectorCalculator.driveVector.dot(getClosestPointTangentVector()) < 1;
+        
+        if (!(currentPath.isAtParametricEnd()
+              //|| nextPathWithinBrakingDistance
+                || (zeroVelocityDetectedTimer != null
+                && zeroVelocityDetectedTimer.getElapsedTime() > 500.0))) {
             return;
         }
 
@@ -524,11 +555,10 @@ public class Follower {
             if (followingPathChain) currentPathChain.update();
             closestPose = currentPath.updateClosestPose(poseTracker.getPose(), BEZIER_CURVE_SEARCH_LIMIT);
             updateErrorAndVectors();
+            currentCallbacks = currentPathChain.getNextPathCallbacks(chainIndex);
 
-            for (PathCallback callback : currentPathChain.getCallbacks()) {
-                if (callback.getPathIndex() == chainIndex) {
-                    callback.initialize();
-                }
+            for (PathCallback callback : currentCallbacks) {
+                callback.initialize();
             }
 
             return;
@@ -572,8 +602,8 @@ public class Follower {
 
     /** This checks if any PathCallbacks should be run right now, and runs them if applicable. */
     public void updateCallbacks() {
-        for (PathCallback callback : currentPathChain.getCallbacks()) {
-            if (callback.isReady() && callback.getPathIndex() == chainIndex) {
+        for (PathCallback callback : currentCallbacks) {
+            if (callback.isReady()) {
                 callback.run();
             }
         }
@@ -587,6 +617,7 @@ public class Follower {
         manualDrive = false;
         holdingPosition = false;
         isBusy = false;
+        isTurning = false;
         reachedParametricPathEnd = false;
         zeroVelocityDetectedTimer = null;
     }
@@ -618,6 +649,10 @@ public class Follower {
      * @return returns whether the Follower is at the parametric end of its Path.
      */
     public boolean atParametricEnd() {
+        if (currentPath == null){
+            return true;
+        }
+
         if (followingPathChain) {
             if (chainIndex == currentPathChain.size() - 1) return currentPath.isAtParametricEnd();
             return false;
@@ -707,6 +742,7 @@ public class Follower {
         isTurning = true;
         isBusy = true;
     }
+
 
     /** Turns to a specific heading
      * @param radians the heading in radians to turn to
@@ -1138,7 +1174,36 @@ public class Follower {
         return previousClosestPose;
     }
 
+    /**
+     * This gets the tangential velocity of the robot along the path
+     * @return the tangential velocity of the robot
+     */
+    public double getTangentialVelocity() {
+        return getVelocity().dot(getClosestPointTangentVector().normalize());
+    }
+
     public double getHeading() {
         return getPose().getHeading();
+    }
+
+    /**
+     * Gets the total distance remaining for the robot to follow along the entire PathChain
+     * @return the distance left on the current PathChain to follow
+     */
+    public double getTotalDistanceRemaining() {
+        if (currentPath == null) {
+            return 0;
+        }
+
+        if (!followingPathChain) {
+            return currentPath.getDistanceRemaining();
+        }
+        
+        PathChain.DecelerationType type = currentPathChain.getDecelerationType();
+        if (type == PathChain.DecelerationType.NONE) {
+            return -1;
+        }
+        
+        return currentPathChain.getDistanceRemaining(chainIndex);
     }
 }

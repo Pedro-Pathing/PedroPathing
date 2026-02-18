@@ -37,6 +37,7 @@ public class KalmanFilter implements NoiseFilter {
         reset(startState, startVariance, startGain);
     }
 
+    @Override
     public void reset(double startState, double startVariance, double startGain) {
         state = startState;
         previousState = startState;
@@ -45,10 +46,12 @@ public class KalmanFilter implements NoiseFilter {
         kalmanGain = startGain;
     }
 
+    @Override
     public void reset() {
         reset(0, 1, 1);
     }
 
+    @Override
     public void update(double updateData, double updateProjection) {
         state = previousState + updateData;
         variance = previousVariance + parameters.modelCovariance;
@@ -59,6 +62,7 @@ public class KalmanFilter implements NoiseFilter {
         previousVariance = variance;
     }
 
+    @Override
     public double getState() {
         return state;
     }

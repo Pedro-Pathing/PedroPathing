@@ -30,6 +30,7 @@ public class ErrorCalculator {
     private Double driveError;
     private Vector velocityVector = new Vector();
     private double headingGoal;
+    private boolean usePredictiveBraking;
     
     public ErrorCalculator(FollowerConstants constants) {
         this.constants = constants;
@@ -42,7 +43,10 @@ public class ErrorCalculator {
 
     }
 
-    public void update(Pose currentPose, Path currentPath, PathChain currentPathChain, boolean followingPathChain, Pose closestPose, Vector velocity, int chainIndex, double xMovement, double yMovement, double headingGoal) {
+    public void update(Pose currentPose, Path currentPath, PathChain currentPathChain,
+                       boolean followingPathChain, Pose closestPose, Vector velocity,
+                       int chainIndex, double xMovement, double yMovement,
+                       double headingGoal, boolean usePredictiveBraking) {
         this.currentPose = currentPose;
         this.velocityVector = velocity;
         this.currentPath = currentPath;
@@ -53,6 +57,7 @@ public class ErrorCalculator {
         this.xVelocity = xMovement;
         this.yVelocity = yMovement;
         this.headingGoal = headingGoal;
+        this.usePredictiveBraking = usePredictiveBraking;
         driveError = null;
     }
 
@@ -61,12 +66,35 @@ public class ErrorCalculator {
      *
      * @return This returns the raw translational error as a Vector.
      */
-    public Vector getTranslationalError() {
+    public Vector getTranslationalError(Pose current, Pose target) {
         Vector error = new Vector();
-        double x = closestPose.getX() - currentPose.getX();
-        double y = closestPose.getY() - currentPose.getY();
+        double x = target.getX() - current.getX();
+        double y = target.getY() - current.getY();
         error.setOrthogonalComponents(x, y);
         return error;
+    }
+
+    /**
+     * This returns the raw translational error, or how far off the closest point the robot is.
+     *
+     * @return This returns the raw translational error as a Vector.
+     */
+    public Vector getTranslationalError() {
+        return getTranslationalError(currentPose, closestPose);
+    }
+
+    /**
+     * This returns the raw heading error from a targetHeading
+     *
+     * @return This returns the raw heading error as a double.
+     */
+    public double getHeadingError(double current, double target) {
+        if (currentPath == null) {
+            return 0;
+        }
+
+        headingError = MathFunctions.getTurnDirection(current, target) * MathFunctions.getSmallestAngleDifference(current, target);
+        return headingError;
     }
 
     /**
@@ -75,13 +103,9 @@ public class ErrorCalculator {
      * @return This returns the raw heading error as a double.
      */
     public double getHeadingError() {
-        if (currentPath == null) {
-            return 0;
-        }
-
-        headingError = MathFunctions.getTurnDirection(currentPose.getHeading(), headingGoal) * MathFunctions.getSmallestAngleDifference(currentPose.getHeading(), headingGoal);
-        return headingError;
+        return getHeadingError(currentPose.getHeading(), headingGoal);
     }
+
 
     /**
      * This returns the error in the velocity the robot needs to be at to make it to the end of the Path
@@ -156,6 +180,7 @@ public class ErrorCalculator {
      * @return The drive error as a double.
      */
     public double getDriveError() {
+        if (usePredictiveBraking) return 0;
         if (driveError != null) return driveError;
 
         double distanceToGoal;
@@ -168,15 +193,7 @@ public class ErrorCalculator {
             if (followingPathChain) {
                 PathChain.DecelerationType type = currentPathChain.getDecelerationType();
                 if (type == PathChain.DecelerationType.GLOBAL) {
-                    double remainingLength = 0;
-
-                    if (chainIndex < currentPathChain.size()) {
-                        for (int i = chainIndex + 1; i < currentPathChain.size(); i++) {
-                            remainingLength += currentPathChain.getPath(i).length();
-                        }
-                    }
-
-                    distanceToGoal = remainingLength + currentPath.getDistanceRemaining();
+                    distanceToGoal = currentPathChain.getDistanceRemaining(chainIndex);
 
                     Vector tangent = currentPath.getClosestPointTangentVector().normalize();
                     Vector forwardTheoreticalHeadingVector = new Vector(1.0, headingGoal);

@@ -12,8 +12,9 @@ package com.pedropathing.control;
  * @author Harrison Womack - 10158 Scott's Bots
  * @version 1.0, 3/5/2024
  */
-public class PIDFController implements Controller {
+public class PIDFController {
     private PIDFCoefficients coefficients;
+    private PIDFCoefficientSupplier coefficientSupplier;
 
     private double previousError;
     private double error;
@@ -31,8 +32,9 @@ public class PIDFController implements Controller {
      *
      * @param set the coefficients to use.
      */
-    public PIDFController(PIDFCoefficients set) {
-        setCoefficients(set);
+    public PIDFController(PIDFCoefficientSupplier set) {
+        coefficientSupplier = set;
+        setCoefficients(set.get(0.0));
         reset();
     }
 
@@ -42,6 +44,7 @@ public class PIDFController implements Controller {
      * @return this returns the value of the PIDF from the current error.
      */
     public double run() {
+        coefficients = coefficientSupplier.get(error);
         return error * P() + errorDerivative * D() + errorIntegral * I() + feedForwardInput * F();
     }
 
