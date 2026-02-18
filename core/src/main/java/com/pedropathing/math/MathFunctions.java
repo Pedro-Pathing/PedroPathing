@@ -44,6 +44,22 @@ public class MathFunctions {
     }
 
     /**
+     * This normalizes an angle to be between -PI and PI radians.
+     * <p>
+     * IMPORTANT NOTE: This method operates in radians.
+     *
+     * @param angleRadians the angle to be normalized.
+     * @return returns the normalized angle between -PI (inclusive) and PI (exclusive).
+     */
+    public static double normalizeAngleSigned(double angleRadians) {
+        double angle = normalizeAngle(angleRadians);
+        if (angle >= Math.PI) {
+            return angle - 2*Math.PI;
+        }
+        return angle;
+    }
+
+    /**
      * This returns the smallest angle between two angles. This operates in radians.
      *
      * @param one one of the angles.

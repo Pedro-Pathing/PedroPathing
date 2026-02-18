@@ -221,6 +221,7 @@ public class Follower {
         closestPose = currentPath.updateClosestPose(poseTracker.getPose(), 1);
     }
 
+
     /**
      * This holds a Point.
      *
@@ -231,13 +232,17 @@ public class Follower {
         holdPoint(point, heading, true);
     }
 
+    public void holdPoint(Pose pose, boolean useHoldScaling) {
+        holdPoint(new BezierPoint(pose), pose.getHeading(), useHoldScaling);
+    }
+
     /**
      * This holds a Point.
      *
      * @param pose the Point (as a Pose) to stay at.
      */
     public void holdPoint(Pose pose) {
-        holdPoint(new BezierPoint(pose), pose.getHeading());
+        holdPoint(new BezierPoint(pose), pose.getHeading(), true);
     }
 
     /**
@@ -717,13 +722,15 @@ public class Follower {
         return poseTracker.getLocalizer().isNAN();
     }
 
-    /** Turns a certain amount of radians left
+    /** Turns a certain amount of degrees
      * @param radians the amount of radians to turn
-     * @param isLeft true if turning left, false if turning right
+     * @param counterClockwise true if turning counterclockwise, false if turning clockwise
      */
-    @Deprecated
-    public void turn(double radians, boolean isLeft) {
-        turn(isLeft ? radians : -radians);
+    public void turn(double radians, boolean counterClockwise) {
+        Pose temp = new Pose(getPose().getX(), getPose().getY(), getPose().getHeading() + (counterClockwise ? radians : -radians));
+        holdPoint(temp, false);
+        isTurning = true;
+        isBusy = true;
     }
 
     /** Turns a certain amount of degrees counterclockwise
@@ -731,7 +738,7 @@ public class Follower {
      */
     public void turn(double radians) {
         Pose temp = new Pose(getPose().getX(), getPose().getY(), getPose().getHeading() + radians);
-        holdPoint(temp);
+        holdPoint(temp, false);
         isTurning = true;
         isBusy = true;
     }
@@ -741,7 +748,8 @@ public class Follower {
      * @param radians the heading in radians to turn to
      */
     public void turnTo(double radians) {
-        holdPoint(new Pose(getPose().getX(), getPose().getY(), radians));
+        double heading = MathFunctions.normalizeAngleSigned(getHeading() + MathFunctions.getSmallestAngleDifference(getHeading(), radians));
+        holdPoint(new Pose(getPose().getX(), getPose().getY(), heading), false);
         isTurning = true;
         isBusy = true;
     }
