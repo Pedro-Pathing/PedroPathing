@@ -232,10 +232,6 @@ public class Follower {
         holdPoint(point, heading, true);
     }
 
-    public void holdPoint(Pose pose, boolean useHoldScaling) {
-        holdPoint(new BezierPoint(pose), pose.getHeading(), useHoldScaling);
-    }
-
     /**
      * This holds a Point.
      *

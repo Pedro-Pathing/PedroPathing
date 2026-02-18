@@ -203,13 +203,14 @@ public class MathFunctions {
     
     private static double[][] replaceColumn(double[][] matrix, double[] column, int colIndex) {
         double[][] newMatrix = new double[matrix.length][matrix[0].length];
-        
+
         for (int i = 0; i < matrix.length; i++) {
             System.arraycopy(matrix[i], 0, newMatrix[i], 0, matrix[i].length);
             newMatrix[i][colIndex] = column[i];
         }
-        
+
         return newMatrix;
+    }
 
     public static double lerp(double a, double b, double t) {
         return a + t * (b - a);

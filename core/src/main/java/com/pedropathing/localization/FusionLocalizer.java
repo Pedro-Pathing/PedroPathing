@@ -3,7 +3,6 @@ package com.pedropathing.localization;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.MathFunctions;
 import com.pedropathing.math.Matrix;
-import com.pedropathing.math.MatrixUtil;
 import com.pedropathing.math.Vector;
 
 import java.util.NavigableMap;
@@ -90,7 +89,7 @@ public class FusionLocalizer implements Localizer {
      * @param dt the time step Δt in seconds
      */
     private void updateCovariance(double dt) {
-        Matrix G = MatrixUtil.createRotation(getPose().getHeading()).multiply(dt);
+        Matrix G = Matrix.createRotation(getPose().getHeading()).multiply(dt);
         P = P.plus(G.multiply(Q.multiply(G.transposed())));
     }
 
@@ -133,7 +132,7 @@ public class FusionLocalizer implements Localizer {
         });
 
         // Measurement mask M
-        Matrix M = MatrixUtil.diag(
+        Matrix M = Matrix.diag(
                 measX ? 1 : 0,
                 measY ? 1 : 0,
                 measH ? 1 : 0
@@ -146,7 +145,7 @@ public class FusionLocalizer implements Localizer {
         Matrix S = Pm.plus(measurementR);
 
         // Apply gain K = P * (P + R)^(-1)
-        Matrix K = Pm.multiply(S.inverted());
+        Matrix K = Pm.multiply(S.inverse());
 
         // Apply mask
         K = M.multiply(K);
@@ -162,7 +161,7 @@ public class FusionLocalizer implements Localizer {
         poseHistory.put(timestamp, updatedPast);
 
         // Joseph-form covariance update
-        Matrix I = MatrixUtil.identity(3);
+        Matrix I = Matrix.identity(3);
         Matrix IK = I.minus(K);
         Matrix updatedCovariance =
                 IK.multiply(Pm).multiply(IK.transposed())
@@ -189,7 +188,7 @@ public class FusionLocalizer implements Localizer {
             poseHistory.put(t, nextPose);
 
             // Covariance propagation: P ← P + Q dt²
-            Matrix G = MatrixUtil.createRotation(prevPose.getHeading()).multiply(dt);
+            Matrix G = Matrix.createRotation(prevPose.getHeading()).multiply(dt);
             prevCov = prevCov.plus(G.multiply(Q.multiply(G.transposed())));
             covarianceHistory.put(t, prevCov);
 
