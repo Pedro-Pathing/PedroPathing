@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.hardware.*;
 
 import org.firstinspires.ftc.robotcore.external.function.Supplier;
 
+import java.util.function.DoubleSupplier;
+
 
 /**
  * CoaxialPod is a hardware-backed implementation of the core `SwervePod` interface. It owns the
@@ -18,7 +20,7 @@ import org.firstinspires.ftc.robotcore.external.function.Supplier;
  * @author Baron Henderson
  */
 public class CoaxialPod implements SwervePod {
-    private final Supplier<Double> turnEncoder; // for rotation of servo
+    private final DoubleSupplier turnEncoder; // for rotation of servo
     private final CRServo turnServo;
     private final DcMotorEx driveMotor;
 
@@ -99,7 +101,7 @@ public class CoaxialPod implements SwervePod {
      * @param encoderReversed true if encoder increases CCW (top-down)
      */
     public CoaxialPod(HardwareMap hardwareMap, String motorName, String servoName,
-                      Supplier<Double> absoluteTurnEncoder, PIDFCoefficients turnPIDFCoefficients,
+                     DoubleSupplier absoluteTurnEncoder, PIDFCoefficients turnPIDFCoefficients,
                       DcMotorSimple.Direction driveDirection, CRServo.Direction servoDirection,
                       double angleOffsetRad, Pose podOffset, double minEncoderPosition, double maxEncoderPosition,
                       boolean encoderReversed) {
@@ -301,7 +303,7 @@ public class CoaxialPod implements SwervePod {
      * @return raw encoder angle in radians
      */
     public double getRawAngleRad() {
-        double v = turnEncoder.get();
+        double v = turnEncoder.getAsDouble();
         double range = analogMaxVoltage - analogMinVoltage;
         if (range == 0)
             return 0;
