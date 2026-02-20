@@ -6,6 +6,11 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.MathFunctions;
 import com.qualcomm.robotcore.hardware.*;
 
+import org.firstinspires.ftc.robotcore.external.function.Supplier;
+
+import java.util.function.DoubleSupplier;
+
+
 /**
  * CoaxialPod is a hardware-backed implementation of the core `SwervePod` interface. It owns the
  * drive motor, continuous rotation servo (turn), analog encoder and the PIDF controller used to
@@ -15,7 +20,7 @@ import com.qualcomm.robotcore.hardware.*;
  * @author Baron Henderson
  */
 public class CoaxialPod implements SwervePod {
-    private final AnalogInput turnEncoder; // for rotation of servo
+    private final DoubleSupplier turnEncoder; // for rotation of servo
     private final CRServo turnServo;
     private final DcMotorEx driveMotor;
 
@@ -54,14 +59,14 @@ public class CoaxialPod implements SwervePod {
      * @param encoderReversed true if encoder increases CCW (top-down)
      */
     public CoaxialPod(HardwareMap hardwareMap, String motorName, String servoName,
-            String turnEncoderName, PIDFCoefficients turnPIDFCoefficients,
-            DcMotorSimple.Direction driveDirection, CRServo.Direction servoDirection,
-            double angleOffsetRad, Pose podOffset, double analogMinVoltage, double analogMaxVoltage,
-            boolean encoderReversed) {
+                      String turnEncoderName, PIDFCoefficients turnPIDFCoefficients,
+                      DcMotorSimple.Direction driveDirection, CRServo.Direction servoDirection,
+                      double angleOffsetRad, Pose podOffset, double analogMinVoltage, double analogMaxVoltage,
+                      boolean encoderReversed) {
 
         this.driveMotor = hardwareMap.get(DcMotorEx.class, motorName);
         this.turnServo = hardwareMap.get(CRServo.class, servoName);
-        this.turnEncoder = hardwareMap.get(AnalogInput.class, turnEncoderName);
+        this.turnEncoder = hardwareMap.get(AnalogInput.class, turnEncoderName)::getVoltage;
 
         this.servoLabel = servoName;
 
@@ -75,6 +80,48 @@ public class CoaxialPod implements SwervePod {
 
         this.analogMinVoltage = analogMinVoltage;
         this.analogMaxVoltage = analogMaxVoltage;
+        this.encoderReversed = encoderReversed;
+
+        this.offset = podOffset;
+
+        turnServo.setPower(0);
+    }
+    /**
+     * @param motorName drive motor name
+     * @param servoName turn servo name
+     * @param absoluteTurnEncoder supplier to absolute encoder position
+     * @param turnPIDFCoefficients PIDF coefficients for servo control
+     * @param driveDirection drive motor direction
+     * @param servoDirection turn servo direction
+     * @param angleOffsetRad offset applied to raw encoder angle, in radians. This is the raw angle
+     *                       in radians when the wheel is facing forward.
+     * @param podOffset pod position offset from robot center, using the same axes as odometry pods
+     * @param minEncoderPosition minimum encoder position (e.g. 0.0)
+     * @param maxEncoderPosition maximum encoder position (e.g. 4000)
+     * @param encoderReversed true if encoder increases CCW (top-down)
+     */
+    public CoaxialPod(HardwareMap hardwareMap, String motorName, String servoName,
+                     DoubleSupplier absoluteTurnEncoder, PIDFCoefficients turnPIDFCoefficients,
+                      DcMotorSimple.Direction driveDirection, CRServo.Direction servoDirection,
+                      double angleOffsetRad, Pose podOffset, double minEncoderPosition, double maxEncoderPosition,
+                      boolean encoderReversed) {
+
+        this.driveMotor = hardwareMap.get(DcMotorEx.class, motorName);
+        this.turnServo = hardwareMap.get(CRServo.class, servoName);
+        this.turnEncoder =absoluteTurnEncoder;
+
+        this.servoLabel = servoName;
+
+        this.turnPID = new PIDFController(turnPIDFCoefficients);
+        this.angleOffsetRad = angleOffsetRad;
+
+        setMotorToFloat();
+
+        driveMotor.setDirection(driveDirection);
+        turnServo.setDirection(servoDirection);
+
+        this.analogMinVoltage = minEncoderPosition;
+        this.analogMaxVoltage = maxEncoderPosition;
         this.encoderReversed = encoderReversed;
 
         this.offset = podOffset;
@@ -256,7 +303,7 @@ public class CoaxialPod implements SwervePod {
      * @return raw encoder angle in radians
      */
     public double getRawAngleRad() {
-        double v = turnEncoder.getVoltage();
+        double v = turnEncoder.getAsDouble();
         double range = analogMaxVoltage - analogMinVoltage;
         if (range == 0)
             return 0;
