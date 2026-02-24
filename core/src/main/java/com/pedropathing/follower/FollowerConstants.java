@@ -591,5 +591,9 @@ public class FollowerConstants {
 
         forwardZeroPowerAcceleration = -41.278;
         lateralZeroPowerAcceleration = -59.7819;
+
+        stuckVelocity = 1.0;
+        stuckTValue = 0.8;
+        stuckTimeout = 500.0;
     }
 }
