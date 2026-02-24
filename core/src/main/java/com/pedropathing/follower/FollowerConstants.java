@@ -345,6 +345,16 @@ public class FollowerConstants {
         return this;
     }
 
+    public FollowerConstants driveKalmanFilterModelCovariance(double driveKalmanFilterModelCovariance) {
+        this.driveKalmanFilterModelCovariance = driveKalmanFilterModelCovariance;
+        return this;
+    }
+
+    public FollowerConstants driveKalmanFilterDataCovariance(double driveKalmanFilterDataCovariance) {
+        this.driveKalmanFilterDataCovariance = driveKalmanFilterDataCovariance;
+        return this;
+    }
+
     public PIDFCoefficients getCoefficientsTranslationalPIDF() {
         return coefficientsTranslationalPIDF;
     }
@@ -536,6 +546,22 @@ public class FollowerConstants {
         this.lateralZeroPowerAcceleration = lateralZeroPowerAcceleration;
     }
 
+    public double getDriveKalmanFilterModelCovariance() { 
+        return driveKalmanFilterModelCovariance; 
+    }
+
+    public void setDriveKalmanFilterModelCovariance(double driveKalmanFilterModelCovariance) { 
+        this.driveKalmanFilterModelCovariance = driveKalmanFilterModelCovariance; 
+    }
+
+    public double getDriveKalmanFilterDataCovariance() { 
+        return driveKalmanFilterDataCovariance; 
+    }
+
+    public void setDriveKalmanFilterDataCovariance(double driveKalmanFilterDataCovariance) { 
+        this.driveKalmanFilterDataCovariance = driveKalmanFilterDataCovariance; 
+    }
+
     public void defaults() {
         coefficientsTranslationalPIDF.setCoefficients(0.1, 0, 0, 0);
         integralTranslational.setCoefficients(0, 0, 0, 0.015);
@@ -570,5 +596,8 @@ public class FollowerConstants {
 
         forwardZeroPowerAcceleration = -41.278;
         lateralZeroPowerAcceleration = -59.7819;
+
+        driveKalmanFilterModelCovariance = 6;
+        driveKalmanFilterDataCovariance = 1;
     }
 }
