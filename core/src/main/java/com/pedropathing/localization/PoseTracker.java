@@ -291,7 +291,7 @@ public class PoseTracker {
      * @return returns the normalized IMU heading.
      */
     public double getNormalizedIMUHeading() {
-        if (Double.isNaN(getIMUHeadingEstimate()) || Double.isInfinite(getIMUHeadingEstimate())) {
+        if (!Double.isNaN(getIMUHeadingEstimate()) && !Double.isInfinite(getIMUHeadingEstimate())) {
             return MathFunctions.normalizeAngle(-getIMUHeadingEstimate());
         }
         return 0;
