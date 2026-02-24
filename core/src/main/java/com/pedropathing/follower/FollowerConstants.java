@@ -211,6 +211,22 @@ public class FollowerConstants {
      * This value is found via 'LateralZeroPowerAccelerationTuner'*/
     public double lateralZeroPowerAcceleration = -78.15554;
 
+    /**
+     * 'Drive Kalman Filter Model Covariance' (Q: Process noise covariance)
+     *
+     * Controls prediction vs measurement trust, higher = faster response, lower = smoother motion.
+     * Default Value: 6
+     */
+    public double driveKalmanFilterModelCovariance = 6;
+
+    /**
+     * 'Drive Kalman Filter Data Covariance' (R: Measurement noise covariance)
+     *
+     * Controls measurement accuracy/noise level, higher = ignore noisy data, lower = trust measurements more.
+     * Default Value: 1
+     */
+    public double driveKalmanFilterDataCovariance = 1;
+
     public FollowerConstants() {
         defaults();
     }
