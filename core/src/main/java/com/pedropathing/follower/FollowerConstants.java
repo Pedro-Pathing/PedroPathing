@@ -211,6 +211,28 @@ public class FollowerConstants {
      * This value is found via 'LateralZeroPowerAccelerationTuner'*/
     public double lateralZeroPowerAcceleration = -78.15554;
 
+    /**
+     * The velocity threshold for stuck detection. If the robot's velocity is below this value,
+     * the stuck detection timer will start.
+     * 
+     * Default Value: 1.0
+    */
+    public double stuckVelocity = 1.0;
+
+    /**
+     * The t-value threshold for stuck detection. If the robot is below this t-value on the path,
+     * stuck detection will not trigger.
+     * 
+     * Default Value: 0.8
+     */
+    public double stuckTValue = 0.8;
+
+    /**
+     * The time in ms the robot must be stuck before the path is considered complete.
+     * Default Value: 500.0
+     */
+    public double stuckTimeout = 500.0;
+
     public FollowerConstants() {
         defaults();
     }
@@ -326,6 +348,21 @@ public class FollowerConstants {
 
     public FollowerConstants lateralZeroPowerAcceleration(double lateralZeroPowerAcceleration) {
         this.lateralZeroPowerAcceleration = lateralZeroPowerAcceleration;
+        return this;
+    }
+
+    public FollowerConstants stuckVelocity(double stuckVelocity) {
+        this.stuckVelocity = stuckVelocity;
+        return this;
+    }
+
+    public FollowerConstants stuckTValue(double stuckTValue) {
+        this.stuckTValue = stuckTValue;
+        return this;
+    }
+
+    public FollowerConstants stuckTimeout(double stuckTimeout) {
+        this.stuckTimeout = stuckTimeout;
         return this;
     }
 
@@ -554,5 +591,9 @@ public class FollowerConstants {
 
         forwardZeroPowerAcceleration = -41.278;
         lateralZeroPowerAcceleration = -59.7819;
+
+        stuckVelocity = 1.0;
+        stuckTValue = 0.8;
+        stuckTimeout = 500.0;
     }
 }
