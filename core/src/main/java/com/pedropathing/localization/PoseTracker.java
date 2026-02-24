@@ -269,7 +269,7 @@ public class PoseTracker {
      * This resets the heading of the robot to the IMU's heading, using Road Runner's pose reset.
      */
     public void resetHeadingToIMU() {
-        if (Double.isNaN(getIMUHeadingEstimate()) || Double.isInfinite(getIMUHeadingEstimate())) {
+        if (!Double.isNaN(getIMUHeadingEstimate()) && !Double.isInfinite(getIMUHeadingEstimate())) {
             localizer.setPose(new Pose(getPose().getX(), getPose().getY(), getNormalizedIMUHeading() + startingPose.getHeading()));
         }
     }
@@ -280,7 +280,7 @@ public class PoseTracker {
      * method.
      */
     public void resetHeadingToIMUWithOffsets() {
-        if (Double.isNaN(getIMUHeadingEstimate()) || Double.isInfinite(getIMUHeadingEstimate())) {
+        if (!Double.isNaN(getIMUHeadingEstimate()) && !Double.isInfinite(getIMUHeadingEstimate())) {
             setCurrentPoseWithOffset(new Pose(getPose().getX(), getPose().getY(), getNormalizedIMUHeading() + startingPose.getHeading()));
         }
     }
