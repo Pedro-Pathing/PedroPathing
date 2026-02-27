@@ -92,7 +92,8 @@ public abstract class CustomDrivetrain extends Drivetrain {
     }
 
     @Override
-    public void runDrive(Vector correctivePower, Vector headingPower, Vector pathingPower, double robotHeading) {
+    public void runDrive(Vector correctivePower, Vector headingPower,
+                         Vector pathingPower, double robotHeading, Vector robotVelocity) {
         double[] calculatedDrive = calculateDrive(correctivePower, headingPower, pathingPower, robotHeading);
         Vector translationalVector = new Vector();
         translationalVector.setOrthogonalComponents(calculatedDrive[0], calculatedDrive[1]);
@@ -102,12 +103,44 @@ public abstract class CustomDrivetrain extends Drivetrain {
         lastTranslationalVector = translationalVector; //before rotation
         lastHeadingPower = headingPower;
         lastHeading = robotHeading;
-
+        
+        robotVelocity.rotateVector(-robotHeading); // converts field relative velocity
+        // to robot relative
+        
         translationalVector.rotateVector(-robotHeading); // this should make it field centric when field centric is desired and robot centric otherwise
-        arcadeDrive(translationalVector.getXComponent(), translationalVector.getYComponent(), calculatedDrive[2]);
+        
+        double clampedForward = clampReversePower(translationalVector.getXComponent(),
+                                                  robotVelocity.getXComponent());
+        double clampedStrafe = clampReversePower(translationalVector.getYComponent(),
+                                                 robotVelocity.getYComponent());
+        
+        arcadeDrive(clampedForward, clampedStrafe, calculatedDrive[2]);
     }
 
     @Deprecated
     @Override
     public void runDrive(double[] drivePowers) {}
+    
+    /**
+     * Prevents the robot from applying too much power in the opposite direction of
+     * the robot's momentum. Alternating full forward (+1) and full reverse (-1) power
+     * causes the control hub to restart due to low voltage spikes. This fixes it by
+     * capping the amount of voltage applied opposite to the direction of motion to be
+     * very minimal. Even a tiny opposite voltage (e.g., -0.0001) locks the wheels like
+     * zero-power brake mode, using the motor’s own momentum for braking without consuming
+     * significant energy.
+     */
+    private double clampReversePower(double power, double directionOfMotion) {
+        boolean isOpposingMotion = directionOfMotion * power < 0;
+        if (!isOpposingMotion) {
+            return power;
+        }
+        double clampedPower;
+        if (power < 0) {
+            clampedPower = Math.max(power, -0.2);
+        } else {
+            clampedPower = Math.min(power, 0.2);
+        }
+        return clampedPower;
+    }
 }
