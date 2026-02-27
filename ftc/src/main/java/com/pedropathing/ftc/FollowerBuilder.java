@@ -72,7 +72,7 @@ public class FollowerBuilder {
     }
 
     public FollowerBuilder mecanumDrivetrain(MecanumConstants mecanumConstants) {
-        return setDrivetrain(new Mecanum(hardwareMap, mecanumConstants));
+        return setDrivetrain(new MecanumEx(hardwareMap, mecanumConstants));
     }
 
     public FollowerBuilder swerveDrivetrain(SwerveConstants swerveConstants, SwervePod... pods) {
