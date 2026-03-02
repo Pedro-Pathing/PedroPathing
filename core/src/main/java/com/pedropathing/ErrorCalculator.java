@@ -36,8 +36,9 @@ public class ErrorCalculator {
         this.constants = constants;
         
         KalmanFilterParameters driveKalmanFilterParameters = new KalmanFilterParameters(
-                6,
-                1);
+                constants.driveKalmanFilterModelCovariance,
+                constants.driveKalmanFilterDataCovariance
+            );
 
         driveKalmanFilter = new KalmanFilter(driveKalmanFilterParameters);
 
