@@ -101,7 +101,7 @@ public abstract class Drivetrain {
      * @param robotHeading this is the current heading of the robot, which is used to calculate how
      *                     much power to allocate to each wheel.
      */
-    public void runDrive(Vector correctivePower, Vector headingPower, Vector pathingPower, double robotHeading) {
+    public void runDrive(Vector correctivePower, Vector headingPower, Vector pathingPower, double robotHeading, Vector robotVelocity) {
         runDrive(calculateDrive(correctivePower, headingPower, pathingPower, robotHeading));
     }
 
