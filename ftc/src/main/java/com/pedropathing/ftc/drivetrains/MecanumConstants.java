@@ -6,34 +6,69 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 public class MecanumConstants {
     /** The Forward Velocity of the Robot - Different for each robot
-     *  Default Value: 81.34056 */
-    public  double xVelocity = 81.34056;
+     *  Default Value: 81.34056 
+     */
+    public double xVelocity = 81.34056;
 
     /** The Lateral Velocity of the Robot - Different for each robot
-     *  Default Value: 65.43028 */
-    public  double yVelocity = 65.43028;
+     *  Default Value: 65.43028 
+     */
+    public double yVelocity = 65.43028;
 
-    private  double[] convertToPolar = Pose.cartesianToPolar(xVelocity, -yVelocity);
+    private double[] convertToPolar = Pose.cartesianToPolar(xVelocity, -yVelocity);
 
     /** The actual drive vector for the front left wheel, if the robot is facing a heading of 0 radians with the wheel centered at (0,0)
      *  Default Value: new Vector(convertToPolar[0], convertToPolar[1])
-     * @implNote This vector should not be changed, but only accessed.
+     *  @implNote This vector should not be changed, but only accessed.
      */
-    public  Vector frontLeftVector = new Vector(convertToPolar[0], convertToPolar[1]).normalize();
-    public  double maxPower = 1;
-    public  String leftFrontMotorName = "leftFront";
-    public  String leftRearMotorName = "leftRear";
-    public  String rightFrontMotorName = "rightFront";
-    public  String rightRearMotorName = "rightRear";
-    public  DcMotorSimple.Direction leftFrontMotorDirection = DcMotorSimple.Direction.REVERSE;
-    public  DcMotorSimple.Direction leftRearMotorDirection = DcMotorSimple.Direction.REVERSE;
-    public  DcMotorSimple.Direction rightFrontMotorDirection = DcMotorSimple.Direction.FORWARD;
-    public  DcMotorSimple.Direction rightRearMotorDirection = DcMotorSimple.Direction.FORWARD;
-    public  double motorCachingThreshold = 0.01;
-    public  boolean useBrakeModeInTeleOp = false;
-    public  boolean useVoltageCompensation = false;
-    public  double nominalVoltage = 12.0;
-    public  double staticFrictionCoefficient = 0.1;
+    public Vector frontLeftVector = new Vector(convertToPolar[0], convertToPolar[1]).normalize();
+
+    /** The maximum power the robot can run at.
+     *  Default Value: 1 
+     */
+    public double maxPower = 1;
+
+    /** Gain applied to each side pathing vector before conversion to wheel powers.
+     *  Default Value: 2.0 (legacy behavior) 
+     */
+    public double pathingVectorGain = 2.0;
+
+    /** Motor Names */
+    public String leftFrontMotorName = "leftFront";
+    public String leftRearMotorName = "leftRear";
+    public String rightFrontMotorName = "rightFront";
+    public String rightRearMotorName = "rightRear";
+
+    /** Motor Directions */
+    public DcMotorSimple.Direction leftFrontMotorDirection = DcMotorSimple.Direction.REVERSE;
+    public DcMotorSimple.Direction leftRearMotorDirection = DcMotorSimple.Direction.REVERSE;
+    public DcMotorSimple.Direction rightFrontMotorDirection = DcMotorSimple.Direction.FORWARD;
+    public DcMotorSimple.Direction rightRearMotorDirection = DcMotorSimple.Direction.FORWARD;
+
+    /** The threshold for motor caching.
+     *  Default Value: 0.01 
+     */
+    public double motorCachingThreshold = 0.01;
+
+    /** Whether to use brake mode in TeleOp.
+     *  Default Value: false 
+     */
+    public boolean useBrakeModeInTeleOp = false;
+
+    /** Whether to use voltage compensation.
+     *  Default Value: false 
+     */
+    public boolean useVoltageCompensation = false;
+
+    /** The nominal voltage for voltage compensation.
+     *  Default Value: 12.0 
+     */
+    public double nominalVoltage = 12.0;
+
+    /** The static friction coefficient for the robot.
+     *  Default Value: 0.1 
+     */
+    public double staticFrictionCoefficient = 0.1;
 
     public MecanumConstants() {
         defaults();
@@ -51,6 +86,11 @@ public class MecanumConstants {
 
     public MecanumConstants maxPower(double maxPower) {
         this.maxPower = maxPower;
+        return this;
+    }
+
+    public MecanumConstants pathingVectorGain(double pathingVectorGain) {
+        this.pathingVectorGain = pathingVectorGain;
         return this;
     }
 
@@ -151,6 +191,14 @@ public class MecanumConstants {
         this.maxPower = maxPower;
     }
 
+    public double getPathingVectorGain() {
+        return pathingVectorGain;
+    }
+
+    public void setPathingVectorGain(double pathingVectorGain) {
+        this.pathingVectorGain = pathingVectorGain;
+    }
+
     public String getLeftFrontMotorName() {
         return leftFrontMotorName;
     }
@@ -236,19 +284,29 @@ public class MecanumConstants {
      * It is called in the constructor of the MecanumConstants class.
      */
     public void defaults() {
+        // velocity settings
         xVelocity = 81.34056;
         yVelocity = 65.43028;
         convertToPolar = Pose.cartesianToPolar(xVelocity, -yVelocity);
         frontLeftVector = new Vector(convertToPolar[0], convertToPolar[1]).normalize();
+
+        // power settings
         maxPower = 1;
+        pathingVectorGain = 2.0;
+
+        // motor names
         leftFrontMotorName = "leftFront";
         leftRearMotorName = "leftRear";
         rightFrontMotorName = "rightFront";
         rightRearMotorName = "rightRear";
+
+        // motor directions
         leftFrontMotorDirection = DcMotorSimple.Direction.REVERSE;
         leftRearMotorDirection = DcMotorSimple.Direction.REVERSE;
         rightFrontMotorDirection = DcMotorSimple.Direction.FORWARD;
         rightRearMotorDirection = DcMotorSimple.Direction.FORWARD;
+
+        // misc settings
         motorCachingThreshold = 0.01;
         useBrakeModeInTeleOp = false;
         useVoltageCompensation = false;

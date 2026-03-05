@@ -24,16 +24,20 @@ import java.util.List;
  */
 public class Mecanum extends Drivetrain {
     public MecanumConstants constants;
+    
     private final DcMotorEx leftFront;
     private final DcMotorEx leftRear;
     private final DcMotorEx rightFront;
     private final DcMotorEx rightRear;
     private final List<DcMotorEx> motors;
+    
     private final double[] lastMotorPowers;
     private final VoltageSensor voltageSensor;
+    
     private double motorCachingThreshold;
     private boolean useBrakeModeInTeleOp;
     private double staticFrictionCoefficient;
+    private double pathingVectorGain;
 
     /**
      * This creates a new Mecanum, which takes in various movement vectors and outputs
@@ -49,6 +53,7 @@ public class Mecanum extends Drivetrain {
         this.maxPowerScaling = mecanumConstants.maxPower;
         this.motorCachingThreshold = mecanumConstants.motorCachingThreshold;
         this.useBrakeModeInTeleOp = mecanumConstants.useBrakeModeInTeleOp;
+        this.pathingVectorGain = mecanumConstants.pathingVectorGain;
 
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
@@ -83,11 +88,13 @@ public class Mecanum extends Drivetrain {
         leftRear.setDirection(constants.leftRearMotorDirection);
         rightFront.setDirection(constants.rightFrontMotorDirection);
         rightRear.setDirection(constants.rightRearMotorDirection);
+        
         this.motorCachingThreshold = constants.motorCachingThreshold;
         this.useBrakeModeInTeleOp = constants.useBrakeModeInTeleOp;
         this.voltageCompensation = constants.useVoltageCompensation;
         this.nominalVoltage = constants.nominalVoltage;
         this.staticFrictionCoefficient = constants.staticFrictionCoefficient;
+        this.pathingVectorGain = constants.pathingVectorGain;
     }
 
     /**
@@ -159,8 +166,8 @@ public class Mecanum extends Drivetrain {
             }
         }
 
-        truePathingVectors[0] = truePathingVectors[0].times(2.0);
-        truePathingVectors[1] = truePathingVectors[1].times(2.0);
+        truePathingVectors[0] = truePathingVectors[0].times(pathingVectorGain);
+        truePathingVectors[1] = truePathingVectors[1].times(pathingVectorGain);
 
         for (int i = 0; i < mecanumVectorsCopy.length; i++) {
             // this copies the vectors from mecanumVectors but creates new references for them
