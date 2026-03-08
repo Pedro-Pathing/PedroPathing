@@ -233,15 +233,7 @@ public class FollowerConstants {
      * Default Value: 1.0
      */
     public double stuckVelocity = 1.0;
-
-    /**
-     * The t-value threshold for stuck detection. If the robot is below this t-value on the path,
-     * stuck detection will not trigger.
-     * 
-     * Default Value: 0.8
-     */
-    public double stuckTValue = 0.8;
-
+    
     /**
      * The time in ms the robot must be stuck before the path is considered complete.
      * Default Value: 500.0
