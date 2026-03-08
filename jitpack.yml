@@ -1,0 +1,7 @@
+jdk:
+  - openjdk21
+
+install:
+  - ./gradlew clean
+  - ./gradlew :core:publishToMavenLocal
+  - ./gradlew :ftc:publishToMavenLocal
