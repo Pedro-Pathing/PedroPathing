@@ -233,6 +233,20 @@ public class FollowerConstants {
      * Default Value: 1.0
      */
     public double stuckVelocity = 1.0;
+
+    /**
+     * If the t value is below this, the robot can't be considered stuck (still accelerating)
+     * 
+     * Default Value: 0.8
+     */
+    public double stuckTValueLow = 0.1;
+
+    /**
+     * If the t value is above this, the robot can't be considered stuck (decelerating)
+     * 
+     * Default Value: 0.8
+     */
+    public double stuckTValueHigh = 0.1;
     
     /**
      * The time in ms the robot must be stuck before the path is considered complete.
@@ -373,8 +387,13 @@ public class FollowerConstants {
         return this;
     }
 
-    public FollowerConstants stuckTValue(double stuckTValue) {
-        this.stuckTValue = stuckTValue;
+    public FollowerConstants stuckTValueLow(double stuckTValueLow) {
+        this.stuckTValueLow = stuckTValueLow;
+        return this;
+    }
+
+    public FollowerConstants stuckTValueHigh(double stuckTValueHigh) {
+        this.stuckTValueHigh = stuckTValueHigh;
         return this;
     }
 
