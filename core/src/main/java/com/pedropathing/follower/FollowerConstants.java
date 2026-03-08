@@ -237,7 +237,7 @@ public class FollowerConstants {
     /**
      * If the t value is below this, the robot can't be considered stuck (still accelerating)
      * 
-     * Default Value: 0.8
+     * Default Value: 0.1
      */
     public double stuckTValueLow = 0.1;
 
@@ -246,7 +246,7 @@ public class FollowerConstants {
      * 
      * Default Value: 0.8
      */
-    public double stuckTValueHigh = 0.1;
+    public double stuckTValueHigh = 0.8;
     
     /**
      * The time in ms the robot must be stuck before the path is considered complete.
