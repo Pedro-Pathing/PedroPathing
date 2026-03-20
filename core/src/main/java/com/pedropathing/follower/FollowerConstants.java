@@ -2,6 +2,7 @@ package com.pedropathing.follower;
 
 import com.pedropathing.control.FilteredPIDFCoefficients;
 import com.pedropathing.control.PIDFCoefficients;
+import com.pedropathing.control.PredictiveBrakingCoefficients;
 
 /**
  * This is the FollowerConstants class. It holds many constants and parameters for various parts of
@@ -111,6 +112,16 @@ public class FollowerConstants {
             0.000005,
             0.6,
             0.01);
+    
+    /**
+     * Default Value: new PredictiveBrakingCoefficients(0.15, 0.1, 0.001)
+     */
+    public PredictiveBrakingCoefficients predictiveBrakingCoefficients = new PredictiveBrakingCoefficients(
+            0.15,
+            0.1,
+            0.001);
+    
+    public boolean usePredictiveBraking = false;
 
     /**
      * This scales the translational error correction power when the Follower is holding a Point.
@@ -200,6 +211,43 @@ public class FollowerConstants {
      * This value is found via 'LateralZeroPowerAccelerationTuner'*/
     public double lateralZeroPowerAcceleration = -78.15554;
 
+    /**
+     * 'Drive Kalman Filter Model Covariance' (Q: Process noise covariance)
+     *
+     * Controls prediction vs measurement trust, higher = faster response, lower = smoother motion.
+     * Default Value: 6
+     */
+    public double driveKalmanFilterModelCovariance = 6;
+
+    /**
+     * 'Drive Kalman Filter Data Covariance' (R: Measurement noise covariance)
+     *
+     * Controls measurement accuracy/noise level, higher = ignore noisy data, lower = trust measurements more.
+     * Default Value: 1
+     */
+    public double driveKalmanFilterDataCovariance = 1;
+  
+    /** The velocity threshold for stuck detection. If the robot's velocity is below this value,
+     * the stuck detection timer will start.
+     * 
+     * Default Value: 1.0
+     */
+    public double stuckVelocity = 1.0;
+
+    /**
+     * The t-value threshold for stuck detection. If the robot is below this t-value on the path,
+     * stuck detection will not trigger.
+     * 
+     * Default Value: 0.8
+     */
+    public double stuckTValue = 0.8;
+
+    /**
+     * The time in ms the robot must be stuck before the path is considered complete.
+     * Default Value: 500.0
+     */
+    public double stuckTimeout = 500.0;
+
     public FollowerConstants() {
         defaults();
     }
@@ -246,7 +294,13 @@ public class FollowerConstants {
         useSecondaryDrivePIDF = true;
         return this;
     }
-
+    
+    public FollowerConstants predictiveBrakingCoefficients(PredictiveBrakingCoefficients predictiveBrakingCoefficients) {
+        this.predictiveBrakingCoefficients = predictiveBrakingCoefficients;
+        usePredictiveBraking = true;
+        return this;
+    }
+    
     public FollowerConstants holdPointTranslationalScaling(double holdPointTranslationalScaling) {
         this.holdPointTranslationalScaling = holdPointTranslationalScaling;
         return this;
@@ -309,6 +363,31 @@ public class FollowerConstants {
 
     public FollowerConstants lateralZeroPowerAcceleration(double lateralZeroPowerAcceleration) {
         this.lateralZeroPowerAcceleration = lateralZeroPowerAcceleration;
+        return this;
+    }
+
+    public FollowerConstants driveKalmanFilterModelCovariance(double driveKalmanFilterModelCovariance) {
+        this.driveKalmanFilterModelCovariance = driveKalmanFilterModelCovariance;
+        return this;
+    }
+
+    public FollowerConstants driveKalmanFilterDataCovariance(double driveKalmanFilterDataCovariance) {
+        this.driveKalmanFilterDataCovariance = driveKalmanFilterDataCovariance;
+        return this;
+    }
+  
+    public FollowerConstants stuckVelocity(double stuckVelocity) {
+        this.stuckVelocity = stuckVelocity;
+        return this;
+    }
+
+    public FollowerConstants stuckTValue(double stuckTValue) {
+        this.stuckTValue = stuckTValue;
+        return this;
+    }
+
+    public FollowerConstants stuckTimeout(double stuckTimeout) {
+        this.stuckTimeout = stuckTimeout;
         return this;
     }
 
@@ -503,6 +582,22 @@ public class FollowerConstants {
         this.lateralZeroPowerAcceleration = lateralZeroPowerAcceleration;
     }
 
+    public double getDriveKalmanFilterModelCovariance() { 
+        return driveKalmanFilterModelCovariance; 
+    }
+
+    public void setDriveKalmanFilterModelCovariance(double driveKalmanFilterModelCovariance) { 
+        this.driveKalmanFilterModelCovariance = driveKalmanFilterModelCovariance; 
+    }
+
+    public double getDriveKalmanFilterDataCovariance() { 
+        return driveKalmanFilterDataCovariance; 
+    }
+
+    public void setDriveKalmanFilterDataCovariance(double driveKalmanFilterDataCovariance) { 
+        this.driveKalmanFilterDataCovariance = driveKalmanFilterDataCovariance; 
+    }
+
     public void defaults() {
         coefficientsTranslationalPIDF.setCoefficients(0.1, 0, 0, 0);
         integralTranslational.setCoefficients(0, 0, 0, 0.015);
@@ -537,5 +632,12 @@ public class FollowerConstants {
 
         forwardZeroPowerAcceleration = -41.278;
         lateralZeroPowerAcceleration = -59.7819;
+
+        driveKalmanFilterModelCovariance = 6;
+        driveKalmanFilterDataCovariance = 1;
+      
+        stuckVelocity = 1.0;
+        stuckTValue = 0.8;
+        stuckTimeout = 500.0;
     }
 }

@@ -239,6 +239,7 @@ public class PinpointLocalizer implements Localizer {
      *
      * @return returns whether the robot's position is NaN
      */
+    @Override
     public boolean isNAN() {
         return Double.isNaN(getPose().getX()) || Double.isNaN(getPose().getY()) || Double.isNaN(getPose().getHeading());
     }

@@ -1,7 +1,6 @@
 package com.pedropathing.geometry;
 import com.pedropathing.math.MathFunctions;
 import com.pedropathing.math.Matrix;
-import com.pedropathing.math.MatrixUtil;
 import com.pedropathing.math.Vector;
 import com.pedropathing.paths.PathConstraints;
 import static com.pedropathing.math.AbstractBijectiveMap.NumericBijectiveMap;
@@ -613,7 +612,6 @@ public class BezierCurve implements Curve {
      * Generates a BezierCurve that passes through the given points
      * @param points vararg of points; requirements more than two points
      * @return the BezierCurve passing through the points
-     * @author William Phomphakdee - 7462 Not to Scale Alumni
      */
     public static BezierCurve through(Pose... points){
         double[] tValues = new double[points.length];
@@ -636,7 +634,7 @@ public class BezierCurve implements Curve {
             targetPointMatrix.setRow(i, points[i].getX(), points[i].getY());
         }
 
-        Matrix outputControlPoints = Matrix.rref(tMatrix.multiply(bezier), MatrixUtil.eye(points.length))[1].multiply(targetPointMatrix);
+        Matrix outputControlPoints = Matrix.rref(tMatrix.multiply(bezier), Matrix.identity(points.length))[1].multiply(targetPointMatrix);
         Pose[] output = new Pose[points.length];
 
         for (int i = 0; i < outputControlPoints.getRows(); i++) {

@@ -82,3 +82,12 @@ lint/tmp/
 
 # kls
 kls_database.db
+
+
+# Eclipse project files
+.project
+.settings/
+.classpath
+
+# Claude Code documentation
+CLAUDE.md
