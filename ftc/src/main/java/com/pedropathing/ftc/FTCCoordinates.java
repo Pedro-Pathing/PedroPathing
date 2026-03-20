@@ -3,12 +3,17 @@ package com.pedropathing.ftc;
 import com.pedropathing.geometry.CoordinateSystem;
 import com.pedropathing.geometry.PedroCoordinates;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.math.MathFunctions;
 
 /**
  * An enum that contains the FTC standard coordinate system.
  * This enum implements the {@link CoordinateSystem} interface, which specifies a way to convert to and from FTC standard coordinates.
  *
+ * <p>This implementation performs numeric transforms directly on the Pose components
+ * to avoid calling {@code Pose} methods that may themselves trigger coordinate conversions.</p>
+ *
  * @author BeepBot99
+ * @author Baron Henderson
  */
 public enum FTCCoordinates implements CoordinateSystem {
     INSTANCE;
@@ -21,11 +26,8 @@ public enum FTCCoordinates implements CoordinateSystem {
      */
     @Override
     public Pose convertFromPedro(Pose pose) {
-        // Center the pose (subtract offset without using minus to avoid coordinate conversion issues)
-        Pose centered = new Pose(pose.getX() - 72, pose.getY() - 72, pose.getHeading());
-        Pose rotated = centered.rotate(-Math.PI / 2, true);
-        // Return with FTC coordinate system
-        return new Pose(rotated.getX(), rotated.getY(), rotated.getHeading(), FTCCoordinates.INSTANCE);
+        Pose newPose = pose.minus(new Pose(72, 72)).rotate(-Math.PI / 2, true);
+        return new Pose(newPose.getX(), newPose.getY(), newPose.getHeading(), INSTANCE);
     }
 
     /**
@@ -36,9 +38,7 @@ public enum FTCCoordinates implements CoordinateSystem {
      */
     @Override
     public Pose convertToPedro(Pose pose) {
-        // Rotate first (inverse rotation of convertFromPedro)
-        Pose rotated = pose.rotate(Math.PI / 2, true);
-        // Add offset and return with Pedro coordinate system
-        return new Pose(rotated.getX() + 72, rotated.getY() + 72, rotated.getHeading(), PedroCoordinates.INSTANCE);
+        Pose newPose = new Pose (pose.getX(), pose.getY(), pose.getHeading(), PedroCoordinates.INSTANCE);
+        return newPose.rotate(-Math.PI / 2, true).plus(new Pose(72, 72));
     }
 }

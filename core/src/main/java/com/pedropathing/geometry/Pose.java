@@ -298,22 +298,38 @@ public final class Pose implements FuturePose {
     }
 
     /**
-     * This mirrors this pose across x = 72 in Pedro coordinates. This will return a new Pose in Pedro coordinates.
+     * This mirrors this pose across the field (default of 141.5 inches in length + width) in Pedro coordinates. This will return a new Pose in Pedro coordinates.
      * @return the mirrored Pose.
      */
     public Pose mirror() {
+        return mirror(141.5);
+    }
+
+    /**
+     * This mirrors this pose across the field in Pedro coordinates. This will return a new Pose in Pedro coordinates.
+     * @param fieldLength Distance from one end of the field to the other along the x-axis.
+     * @return the mirrored Pose.
+     */
+    public Pose mirror(double fieldLength) {
         Pose k = getAsCoordinateSystem(PedroCoordinates.INSTANCE);
-        return new Pose(144 - k.getX(), k.getY(), MathFunctions.normalizeAngle(Math.PI - k.getHeading()), PedroCoordinates.INSTANCE);
+        return new Pose(fieldLength - k.getX(), k.getY(), MathFunctions.normalizeAngle(Math.PI - k.getHeading()), PedroCoordinates.INSTANCE);
     }
 
     /**
      * Converts this pose to the specified coordinate system.
-     *
+     * Thank you to johnlaur for pointing out an error in an earlier version of this method.
      * @param coordinateSystem the target coordinate system
      * @return the pose in the target coordinate system
      */
     public Pose getAsCoordinateSystem(CoordinateSystem coordinateSystem) {
-        return coordinateSystem.convertFromPedro(this.coordinateSystem.convertToPedro(this));
+        if (this.coordinateSystem == coordinateSystem)
+            return this.copy();
+
+        Pose inPedro = this.coordinateSystem.convertToPedro(this);
+        if (coordinateSystem == PedroCoordinates.INSTANCE)
+            return inPedro;
+
+        return coordinateSystem.convertFromPedro(inPedro);
     }
 
     /**
@@ -354,13 +370,13 @@ public final class Pose implements FuturePose {
     }
 
     /**
-     * Returns a string representation of the pose in the format (x, y, heading in degrees).
+     * Returns a string representation of the pose in the format (x, y, heading in degrees, coordinate system).
      *
      * @return a string representation of the pose
      */
     @Override
     public String toString() {
-        return "(" + getX() + ", " + getY() + ", " + Math.toDegrees(getHeading()) + ")";
+        return "(" + getX() + ", " + getY() + ", " + Math.toDegrees(getHeading()) + ", " + getCoordinateSystem().getClass() + ")";
     }
 
     /**

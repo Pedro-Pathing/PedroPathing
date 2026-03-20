@@ -167,8 +167,10 @@ public class MecanumEx extends CustomDrivetrain {
         }
     }
 
-    public void getAndRunDrivePowers(Vector correctivePower, Vector headingPower, Vector pathingPower, double robotHeading) {
-        super.runDrive(correctivePower, headingPower, pathingPower, robotHeading);
+    public void getAndRunDrivePowers(Vector correctivePower, Vector headingPower,
+                                     Vector pathingPower, double robotHeading, Vector robotVelocity) {
+        super.runDrive(correctivePower, headingPower, pathingPower, robotHeading,
+                       robotVelocity);
     }
 
     @Override
