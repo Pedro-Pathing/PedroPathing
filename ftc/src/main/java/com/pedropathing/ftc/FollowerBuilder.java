@@ -72,6 +72,10 @@ public class FollowerBuilder {
     }
 
     public FollowerBuilder mecanumDrivetrain(MecanumConstants mecanumConstants) {
+        return setDrivetrain(new Mecanum(hardwareMap, mecanumConstants));
+    }
+
+    public FollowerBuilder mecanumExDrivetrain(MecanumConstants mecanumConstants) {
         return setDrivetrain(new MecanumEx(hardwareMap, mecanumConstants));
     }
 

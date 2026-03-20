@@ -388,6 +388,7 @@ public class FollowerConstants {
 
     public FollowerConstants stuckTimeout(double stuckTimeout) {
         this.stuckTimeout = stuckTimeout;
+        return this;
     }
 
     public PIDFCoefficients getCoefficientsTranslationalPIDF() {
