@@ -19,7 +19,7 @@
  * SOFTWARE.
  */
 
-package org.firstinspires.ftc.teamcode;
+package com.pedropathing.ftc.localization.constants;
 import com.qualcomm.hardware.digitalchickenlabs.OctoQuad;
 
 public class OctoQuadConstants

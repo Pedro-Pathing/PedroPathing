@@ -19,8 +19,9 @@
  * SOFTWARE.
  */
 
-package org.firstinspires.ftc.teamcode;
+package com.pedropathing.ftc.localization.localizers;
 
+import com.pedropathing.ftc.localization.constants.OctoQuadConstants;
 import com.qualcomm.hardware.digitalchickenlabs.OctoQuad;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -56,7 +57,7 @@ public class OctoQuadLocalizer implements Localizer
 
         /**
          * Do NOT perform any initialization on the hardware: any values supplied
-         * to the constructor in the {@link OctoQuadConstants} object will be ignored!!
+         * to the constructor in the {@link com.pedropathing.ftc.localization.constants.OctoQuadConstants} object will be ignored!!
          */
         ASSUME_EXTERNAL_INITIALIZATION
     }

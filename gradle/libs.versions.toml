@@ -1,5 +1,5 @@
 [versions]
-ftc = "11.0.0"
+ftc = "11.1.0"
 
 [libraries]
 ftc-robot-core = { group = "org.firstinspires.ftc", name = "RobotCore", version.ref = "ftc" }
