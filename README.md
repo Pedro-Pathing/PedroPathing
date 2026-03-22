@@ -1,5 +1,7 @@
 # Welcome to the Official Pedro Pathing Library Repository 
 
+[![gitcgr](https://gitcgr.com/badge/Pedro-Pathing/PedroPathing.svg)](https://gitcgr.com/Pedro-Pathing/PedroPathing)
+
 Follow the steps on our [website](https://pedropathing.com/) to setup your project and tune!  
 Feel free to reach out on the [Offical Pedro Pathing Discord Server](https://discord.gg/2GfC4qBP5s)!
 <!--
