@@ -461,7 +461,7 @@ public class PathChain {
     }
 
     private int getLastCallbackIndex() {
-        if (currentCallbackIndex == 0) return 0;
+        if (currentCallbackIndex == 0) return -1;
         return callbacks.get(currentCallbackIndex).getPathIndex() - 1;
     }
 }
