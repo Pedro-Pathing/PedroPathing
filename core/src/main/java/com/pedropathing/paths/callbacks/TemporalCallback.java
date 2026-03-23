@@ -55,7 +55,7 @@ public class TemporalCallback implements PathCallback {
      */
     @Override
     public boolean isReady() {
-        return TimeUnit.NANOSECONDS.convert(System.nanoTime(), TimeUnit.MILLISECONDS) - startTime >= startCondition;
+        return TimeUnit.MILLISECONDS.convert(System.nanoTime(), TimeUnit.NANOSECONDS) - startTime >= startCondition;
     }
     
     /**
@@ -63,7 +63,7 @@ public class TemporalCallback implements PathCallback {
      */
     @Override
     public void initialize() {
-        startTime = TimeUnit.NANOSECONDS.convert(System.nanoTime(), TimeUnit.MILLISECONDS);
+        startTime = TimeUnit.MILLISECONDS.convert(System.nanoTime(), TimeUnit.NANOSECONDS);
     }
 
     /**
