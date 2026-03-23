@@ -440,28 +440,17 @@ public class PathChain {
     public Queue<PathCallback> getNextPathCallbacks(int chainIndex) {
         Queue<PathCallback> nextCallbacks = new ArrayDeque<>();
         if (callbacks.isEmpty() || currentCallbackIndex >= callbacks.size()) return nextCallbacks;
-        int lastIndex = getLastCallbackIndex();
-
-        if (chainIndex > lastIndex + 1)
-            while (currentCallbackIndex < callbacks.size() &&
-                    callbacks.get(currentCallbackIndex).getPathIndex() < chainIndex)
-                currentCallbackIndex++;
-        else if (chainIndex < lastIndex + 1)
-            while (currentCallbackIndex > 0 &&
-                    callbacks.get(currentCallbackIndex - 1).getPathIndex() >= chainIndex)
-                currentCallbackIndex--;
 
         while (currentCallbackIndex < callbacks.size() &&
-                callbacks.get(currentCallbackIndex).getPathIndex() == lastIndex + 1) {
+                callbacks.get(currentCallbackIndex).getPathIndex() < chainIndex)
+            currentCallbackIndex++;
+
+        while (currentCallbackIndex < callbacks.size() &&
+                callbacks.get(currentCallbackIndex).getPathIndex() == chainIndex) {
             nextCallbacks.add(callbacks.get(currentCallbackIndex));
             currentCallbackIndex++;
         }
 
         return nextCallbacks;
-    }
-
-    private int getLastCallbackIndex() {
-        if (currentCallbackIndex == 0) return -1;
-        return callbacks.get(currentCallbackIndex).getPathIndex() - 1;
     }
 }
