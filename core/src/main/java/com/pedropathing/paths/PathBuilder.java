@@ -354,12 +354,35 @@ public class PathBuilder {
     }
 
     /**
+     * This sets the heading interpolation on the last Path added to the PathBuilder using a
+     * HeadingInterpolatorBuilder.
+     *
+     * @param builder The HeadingInterpolatorBuilder that has been configured with the desired
+     *         heading segments.
+     * @return This returns itself with the updated data.
+     */
+    public PathBuilder setHeadingInterpolation(HeadingInterpolatorBuilder builder) {
+        return setHeadingInterpolation(builder.build());
+    }
+
+    /**
      * This sets the global heading interpolation to custom.
      * @param function A function that describes the target heading as a function of t, the parametric variable. Use a lambda expression here.
      */
     public PathBuilder setGlobalHeadingInterpolation(HeadingInterpolator function) {
         this.headingInterpolator = function;
         return this;
+    }
+
+    /**
+     * This sets the global heading interpolation using a HeadingInterpolatorBuilder.
+     *
+     * @param builder The HeadingInterpolatorBuilder that has been configured with the desired
+     *         heading segments.
+     * @return This returns itself with the updated data.
+     */
+    public PathBuilder setGlobalHeadingInterpolation(HeadingInterpolatorBuilder builder) {
+        return setGlobalHeadingInterpolation(builder.build());
     }
 
     /**
