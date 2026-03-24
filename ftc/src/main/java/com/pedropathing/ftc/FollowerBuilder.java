@@ -75,6 +75,7 @@ public class FollowerBuilder {
         return setDrivetrain(new Mecanum(hardwareMap, mecanumConstants));
     }
 
+    @Deprecated
     public FollowerBuilder mecanumExDrivetrain(MecanumConstants mecanumConstants) {
         return setDrivetrain(new MecanumEx(hardwareMap, mecanumConstants));
     }
