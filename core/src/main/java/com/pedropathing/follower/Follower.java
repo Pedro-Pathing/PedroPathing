@@ -525,7 +525,8 @@ public class Follower {
             drivetrain.runDrive(getCorrectiveVector(), getHeadingVector(), getDriveVector(), poseTracker.getPose().getHeading(), getVelocity());
         }
 
-        if (poseTracker.getVelocity().getMagnitude() < constants.stuckVelocity && currentPath.getClosestPointTValue() > constants.stuckTValue && zeroVelocityDetectedTimer == null && isBusy) {
+        if (poseTracker.getVelocity().getMagnitude() < constants.stuckVelocity && zeroVelocityDetectedTimer == null && isBusy &&
+               currentPath.getClosestPointTValue() > constants.stuckTValueLow && currentPath.getClosestPointTValue() < constants.stuckTValueHigh) {
             zeroVelocityDetectedTimer = new Timer();
         }
         
