@@ -16,6 +16,7 @@ import java.util.List;
  * @author Kabir Goyal
  * @version 1.0, 4/30/2025
  */
+@Deprecated
 public class MecanumEx extends CustomDrivetrain {
     public MecanumConstants constants;
     private final DcMotorEx leftFront;
