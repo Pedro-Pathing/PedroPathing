@@ -258,7 +258,8 @@ public class PathBuilder {
     public PathBuilder setLinearHeadingInterpolation(double startHeading, double endHeading, double endTime, double startTime) {
         HeadingInterpolator interpolator = HeadingInterpolator.piecewise(
                 new HeadingInterpolator.PiecewiseNode(0, startTime, HeadingInterpolator.constant(startHeading)),
-                HeadingInterpolator.PiecewiseNode.linear(startTime, endTime, startHeading, endHeading)
+                HeadingInterpolator.PiecewiseNode.linear(startTime, endTime, startHeading, endHeading),
+                new HeadingInterpolator.PiecewiseNode(endTime, 1, HeadingInterpolator.constant(endHeading))
         );
 
         this.paths.get(paths.size() - 1).setHeadingInterpolation(interpolator);
@@ -279,7 +280,8 @@ public class PathBuilder {
     public PathBuilder setGlobalLinearHeadingInterpolation(double startHeading, double endHeading, double endTime, double startTime) {
         headingInterpolator = HeadingInterpolator.piecewise(
                 new HeadingInterpolator.PiecewiseNode(0, startTime, HeadingInterpolator.constant(startHeading)),
-                HeadingInterpolator.PiecewiseNode.linear(startTime, endTime, startHeading, endHeading)
+                HeadingInterpolator.PiecewiseNode.linear(startTime, endTime, startHeading, endHeading),
+                new HeadingInterpolator.PiecewiseNode(endTime, 1, HeadingInterpolator.constant(endHeading))
         );
         return this;
     }
