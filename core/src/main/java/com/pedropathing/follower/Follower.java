@@ -903,8 +903,8 @@ public class Follower {
     public Vector getCentripetalForceCorrection() { return vectorCalculator.getCentripetalForceCorrection(); }
 
     /**
-     * This returns the PoseHistory, which is a history of the robot's poses.
-     * @return returns the PoseHistory
+     * This returns the PathConstraints for the current path the follower is following
+     * @return returns the PathConstraints
      */
     public PathConstraints getConstraints() { return pathConstraints; }
 
