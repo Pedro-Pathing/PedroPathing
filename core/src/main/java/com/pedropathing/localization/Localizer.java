@@ -109,6 +109,13 @@ public interface Localizer {
     boolean isNAN();
 
     /**
+     * This returns the current (unnormalized) angular velocity estimate from the Localizer, in radians per second.
+     *
+     * @return returns the angular velocity in radians per second
+     */
+    double getAngularVelocity();
+
+    /**
      * This sets the current x-position estimate of the localizer. Units are inferred from localizer constants where necessary.
      * @param x the x-position estimate to set
      */

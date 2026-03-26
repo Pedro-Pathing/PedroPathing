@@ -30,6 +30,8 @@ public class PoseTracker {
 
     private Vector currentAcceleration = new Vector();
 
+    private Double currentAngularVelocity = 0d;
+
     private double xOffset = 0;
     private double yOffset = 0;
     private double headingOffset = 0;
@@ -64,6 +66,7 @@ public class PoseTracker {
         currentPose = null;
         currentVelocity = null;
         currentAcceleration = null;
+        currentAngularVelocity = null;
         previousPoseTime = currentPoseTime;
         currentPoseTime = System.nanoTime();
         localizer.update();
@@ -246,8 +249,8 @@ public class PoseTracker {
      * @return returns the angular velocity of the robot.
      */
     public double getAngularVelocity() {
-        if (currentVelocity == null) currentVelocity = localizer.getVelocity();
-        return currentVelocity.getHeading();
+        if (currentAngularVelocity == null) currentAngularVelocity = localizer.getAngularVelocity();
+        return currentAngularVelocity;
     }
 
     /**

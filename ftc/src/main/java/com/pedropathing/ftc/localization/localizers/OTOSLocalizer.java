@@ -213,4 +213,9 @@ public class OTOSLocalizer implements Localizer {
     public boolean isNAN() {
         return Double.isNaN(getPose().getX()) || Double.isNaN(getPose().getY()) || Double.isNaN(getPose().getHeading());
     }
+
+    @Override
+    public double getAngularVelocity() {
+        return otosVel.h;
+    }
 }

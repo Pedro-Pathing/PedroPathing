@@ -37,6 +37,7 @@ public class PinpointLocalizer implements Localizer {
     private Pose startPose;
     private Pose currentVelocity;
     private Pose pinpointPose;
+    private double angularVelocity;
 
     /**
      * This creates a new PinpointLocalizer from a HardwareMap, with a starting Pose at (0,0)
@@ -149,7 +150,8 @@ public class PinpointLocalizer implements Localizer {
         // Thank you to GoldenElf58 of FTC Team 16657 for spotting a bug here; it was resolved by adding the turn direction.
         totalHeading += MathFunctions.getSmallestAngleDifference(currentPinpointPose.getHeading(), previousHeading) * MathFunctions.getTurnDirection(previousHeading, currentPinpointPose.getHeading());
         previousHeading = currentPinpointPose.getHeading();
-        currentVelocity = new Pose(odo.getVelX(DistanceUnit.INCH), odo.getVelY(DistanceUnit.INCH), odo.getHeadingVelocity(AngleUnit.RADIANS.getUnnormalized()));
+        angularVelocity = odo.getHeadingVelocity(AngleUnit.RADIANS.getUnnormalized());
+        currentVelocity = new Pose(odo.getVelX(DistanceUnit.INCH), odo.getVelY(DistanceUnit.INCH), angularVelocity);
         pinpointPose = currentPinpointPose;
     }
 
@@ -242,6 +244,11 @@ public class PinpointLocalizer implements Localizer {
     @Override
     public boolean isNAN() {
         return Double.isNaN(getPose().getX()) || Double.isNaN(getPose().getY()) || Double.isNaN(getPose().getHeading());
+    }
+
+    @Override
+    public double getAngularVelocity() {
+        return angularVelocity;
     }
 
     /**

@@ -360,6 +360,11 @@ public class OctoQuadLocalizer implements Localizer
         return false;
     }
 
+    @Override
+    public double getAngularVelocity() {
+        return localizerData.velHeading_radS;
+    }
+
     /**
      * Get a handle to the backing OctoQuad object pulled from the hardwareMap
      * @return the backing OctoQuad object pulled from the hardwareMap

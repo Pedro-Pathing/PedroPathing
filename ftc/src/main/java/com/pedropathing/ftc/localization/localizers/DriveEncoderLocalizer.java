@@ -31,6 +31,7 @@ public class DriveEncoderLocalizer implements Localizer {
     private final Encoder leftRear;
     private final Encoder rightRear;
     private double totalHeading;
+    private double angularVelocity;
     public static double FORWARD_TICKS_TO_INCHES;
     public static double STRAFE_TICKS_TO_INCHES;
     public static double TURN_TICKS_TO_RADIANS;
@@ -179,7 +180,8 @@ public class DriveEncoderLocalizer implements Localizer {
         globalDeltas = Matrix.multiply(Matrix.multiply(prevRotationMatrix, transformation), robotDeltas);
 
         displacementPose = displacementPose.plus(new Pose(globalDeltas.get(0, 0), globalDeltas.get(1, 0), globalDeltas.get(2, 0)));
-        currentVelocity = new Pose(globalDeltas.get(0, 0) / (deltaTimeNano / Math.pow(10.0, 9)), globalDeltas.get(1, 0) / (deltaTimeNano / Math.pow(10.0, 9)), globalDeltas.get(2, 0) / (deltaTimeNano / Math.pow(10.0, 9)));
+        angularVelocity = globalDeltas.get(2, 0) / (deltaTimeNano / Math.pow(10.0, 9));
+        currentVelocity = new Pose(globalDeltas.get(0, 0) / (deltaTimeNano / Math.pow(10.0, 9)), globalDeltas.get(1, 0) / (deltaTimeNano / Math.pow(10.0, 9)), angularVelocity);
 
         totalHeading += globalDeltas.get(2, 0);
     }
@@ -285,6 +287,11 @@ public class DriveEncoderLocalizer implements Localizer {
     @Override
     public boolean isNAN() {
         return Double.isNaN(getPose().getX()) || Double.isNaN(getPose().getY()) || Double.isNaN(getPose().getHeading());
+    }
+
+    @Override
+    public double getAngularVelocity() {
+        return angularVelocity;
     }
 
 

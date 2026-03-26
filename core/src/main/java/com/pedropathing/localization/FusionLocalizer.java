@@ -286,4 +286,9 @@ public class FusionLocalizer implements Localizer {
     public boolean isNAN() {
         return Double.isNaN(currentPosition.getX()) || Double.isNaN(currentPosition.getY()) || Double.isNaN(currentPosition.getHeading());
     }
+
+    @Override
+    public double getAngularVelocity() {
+        return deadReckoning.getAngularVelocity();
+    }
 }
