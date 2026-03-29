@@ -640,6 +640,48 @@ public class PathBuilder {
         return this;
     }
 
+    /**
+     * Sets the max velocity for all paths in the PathBuilder
+     * @param maxVelocity the max velocity in inches per second
+     */
+    public PathBuilder setGlobalMaxVelocity(double maxVelocity) {
+        for (Path path : paths) path.setMaxVelocity(maxVelocity);
+        return this;
+    }
+
+    /**
+     * Sets the max acceleration for all paths in the PathBuilder
+     * @param maxAcceleration the max acceleration in inches per second squared
+     */
+    public PathBuilder setGlobalMaxAcceleration(double maxAcceleration) {
+        for (Path path : paths) path.setMaxAcceleration(maxAcceleration);
+        return this;
+    }
+
+    /**
+     * Sets the max velocity for the last path in the PathBuilder
+     * @param maxVelocity the max velocity in inches per second
+     * @return This returns itself with the updated data.
+     */
+    public PathBuilder setMaxVelocity(double maxVelocity) {
+        this.paths.get(paths.size() - 1).setMaxVelocity(maxVelocity);
+        return this;
+    }
+
+    /**
+     * Sets the max acceleration for the last path in the PathBuilder
+     * @param maxAcceleration the max acceleration in inches per second squared
+     * @return This returns itself with the updated data.
+     */
+    public PathBuilder setMaxAcceleration(double maxAcceleration) {
+        this.paths.get(paths.size() - 1).setMaxAcceleration(maxAcceleration);
+        return this;
+    }
+
+    /**
+     * Sets the braking start for all paths in the PathBuilder
+     * @param start the braking start multiplier
+     */
     private void setBrakingStartForAll(double start) {
         for (Path path : paths) path.setBrakingStart(start);
     }
