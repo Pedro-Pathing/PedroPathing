@@ -5,5 +5,5 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.geometry.Velocity;
 
 public interface Algorithm {
-    Drivetrain.Powers calculate(Pose currentPose, Velocity currentVelocity, Path currentPath, PathProgress pathProgress);
+    Drivetrain.Powers calculate(FollowState state);
 }
