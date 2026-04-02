@@ -15,7 +15,7 @@ public class Twist {
     public Velocity toVelocity(double heading) {
         return new Velocity(
                 vx * Math.cos(heading) + vy * -Math.sin(heading),
-                vx + Math.sin(heading) + vy * Math.cos(heading),
+                vx * Math.sin(heading) + vy * Math.cos(heading),
                 omega
         );
     }
