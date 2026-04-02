@@ -31,6 +31,6 @@ public class Follower {
     }
 
     public Pose getPose() {
-        return state.pose;
+        return localizer.getPose();
     }
 }
