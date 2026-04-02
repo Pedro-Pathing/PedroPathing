@@ -1,4 +1,4 @@
-package com.pedropathing.control;
+package com.pedropathing.control.filter;
 
 /**
  * This is the NoiseFilter interface. This interface defines the methods that any noise filter should implement.

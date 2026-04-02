@@ -1,6 +1,6 @@
 package com.pedropathing.follower;
 
-import com.pedropathing.control.Controller;
+import com.pedropathing.control.controllers.Controller;
 import com.pedropathing.geometry.Angle;
 import com.pedropathing.geometry.Twist;
 

@@ -7,9 +7,9 @@ import com.pedropathing.localization.Localizer;
 import com.pedropathing.paths.Path;
 
 public class Follower {
-    private final Localizer localizer;
+    public final Localizer localizer;
+    public final Drivetrain drivetrain;
     private Algorithm algorithm;
-    private final Drivetrain drivetrain;
     private FollowState state;
 
     public Follower(Localizer localizer, Drivetrain drivetrain, Algorithm algorithm) {
@@ -33,4 +33,14 @@ public class Follower {
     public Pose getPose() {
         return localizer.getPose();
     }
+
+    public Algorithm getAlgorithm() {
+        return algorithm;
+    }
+
+    public void setAlgorithm(Algorithm algorithm) {
+        this.algorithm = algorithm;
+    }
 }
+
+// Follower follower = new Follower(localizer, drivetrain, new FieldCentricTeleOp(constants));

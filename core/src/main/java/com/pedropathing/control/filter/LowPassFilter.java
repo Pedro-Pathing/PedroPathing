@@ -1,4 +1,4 @@
-package com.pedropathing.control;
+package com.pedropathing.control.filter;
 
 /**
  * This is the LowPassFilter class. This class implements a simple low-pass filter to smooth out noisy data.

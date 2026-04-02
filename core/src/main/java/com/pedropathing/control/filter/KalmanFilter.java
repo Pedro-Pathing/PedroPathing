@@ -1,4 +1,4 @@
-package com.pedropathing.control;
+package com.pedropathing.control.filter;
 
 /**
  * This is the KalmanFilter class. This creates a Kalman filter that is used to smooth out data.

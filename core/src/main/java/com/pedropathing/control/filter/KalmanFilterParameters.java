@@ -1,4 +1,4 @@
-package com.pedropathing.control;
+package com.pedropathing.control.filter;
 
 /**
  * This is the KalmanFilterParameters class. This class handles holding parameters Kalman filters.
