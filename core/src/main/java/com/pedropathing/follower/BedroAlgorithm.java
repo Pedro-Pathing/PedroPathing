@@ -5,9 +5,9 @@ import com.pedropathing.geometry.Angle;
 import com.pedropathing.geometry.Twist;
 
 public class BedroAlgorithm implements Algorithm {
-    Controller<?> headingController;
+    Controller headingController;
 
-    public BedroAlgorithm(Controller<?> headingController) {
+    public BedroAlgorithm(Controller headingController) {
         this.headingController = headingController;
     }
 
