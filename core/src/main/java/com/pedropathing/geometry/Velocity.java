@@ -4,6 +4,7 @@ public class Velocity {
     public final double vx;
     public final double vy;
     public final double omega;
+    private static final Velocity ZERO = new Velocity(0, 0, 0);
 
     public Velocity(double vx, double vy, double omega) {
         this.vx = vx;
@@ -17,5 +18,13 @@ public class Velocity {
                 vx * -Math.sin(heading) + vy * Math.cos(heading),
                 omega
         );
+    }
+
+    public Vector toLinear() {
+        return new Vector(vx, vy);
+    }
+
+    public static Velocity zero() {
+        return ZERO;
     }
 }

@@ -45,6 +45,10 @@ public class Vector {
         return new Vector(x * other.y - y * other.x, x * other.x + y * other.y);
     }
 
+    public Vector projectOnto(Vector other) {
+        return other.times(dot(other) / other.dot(other));
+    }
+
     public double theta() {
         return Math.atan2(y, x);
     }

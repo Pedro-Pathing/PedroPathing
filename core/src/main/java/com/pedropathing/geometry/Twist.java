@@ -4,6 +4,7 @@ public class Twist {
     public final double vx;
     public final double vy;
     public final double omega;
+    private static final Twist ZERO = new Twist(0, 0, 0);
 
     public Twist(double vx, double vy, double omega) {
         this.vx = vx;
@@ -17,5 +18,9 @@ public class Twist {
                 vx + Math.sin(heading) + vy * Math.cos(heading),
                 omega
         );
+    }
+
+    public static Twist zero() {
+        return ZERO;
     }
 }

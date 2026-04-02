@@ -9,7 +9,6 @@ public class PIDController implements Controller<PIDCoefficients> {
         reset();
     }
 
-    @Override
     public PIDCoefficients getCoefficients() {
         return coefficients;
     }

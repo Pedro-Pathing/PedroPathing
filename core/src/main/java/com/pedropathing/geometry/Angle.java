@@ -17,6 +17,10 @@ public class Angle {
         return angle;
     }
 
+    public static double clamp(double num, double lower, double upper) {
+        return Math.max(lower, Math.min(num, upper));
+    }
+
     /**
      * This normalizes an angle to be between -PI and PI radians.
      * <p>

@@ -9,7 +9,6 @@ public class PIDFController implements Controller<PIDFCoefficients> {
         reset();
     }
 
-    @Override
     public PIDFCoefficients getCoefficients() {
         return coefficients;
     }

@@ -16,18 +16,18 @@ public class Follower {
         this.localizer = localizer;
         this.algorithm = algorithm;
         this.drivetrain = drivetrain;
+        this.state = new FollowState(null);
     }
 
     public void update() {
         localizer.update();
-        state = new FollowState(localizer.getPose(), localizer.getVelocity(), localizer.getTwist(), state.path, state.pathProgress);
+        state.update(localizer.getPose(), localizer.getVelocity(), localizer.getTwist());
         Twist powers = algorithm.calculate(state);
         drivetrain.drive(powers, algorithm);
     }
 
     public void follow(Path path) {
-        state.updatePath(path);
-        // update progress
+        state = new FollowState(path);
     }
 
     public Pose getPose() {

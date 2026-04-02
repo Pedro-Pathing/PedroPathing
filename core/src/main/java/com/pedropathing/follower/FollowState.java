@@ -4,20 +4,47 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.geometry.Twist;
 import com.pedropathing.geometry.Velocity;
 import com.pedropathing.paths.Path;
-import com.pedropathing.paths.PathProgress;
 
 public final class FollowState {
-    public final Pose pose;
-    public final Velocity velocity;
-    public final Twist twist;
-    public final Path path;
-    public final PathProgress pathProgress;
-    public FollowState(Pose pose, Velocity velocity, Twist twist, Path path, PathProgress pathProgress) {
+    private Pose pose = Pose.zero();
+    private Velocity velocity = Velocity.zero();
+    private Twist twist = Twist.zero();
+    private Path path;
+    private double tangentialSpeed = 0;
+
+    public FollowState(Path path) {
+        this.path = path;
+    }
+
+    public void update(Pose pose, Velocity velocity, Twist twist) {
         this.pose = pose;
         this.velocity = velocity;
         this.twist = twist;
-        this.path = path;
-        this.pathProgress = pathProgress;
+        tangentialSpeed = velocity.toLinear().dot(path.pathProgress.closestTangentVector);
+    }
+
+    public double tangentialSpeed() {
+        return tangentialSpeed;
+    }
+
+    public Pose getPose() {
+        return pose;
+    }
+
+    public Velocity getVelocity() {
+        return velocity;
+    }
+
+    public Twist getTwist() {
+        return twist;
+    }
+
+    public Path getPath() {
+        return path;
+    }
+
+    public double getTangentialSpeed() {
+        return tangentialSpeed;
     }
 }
 
