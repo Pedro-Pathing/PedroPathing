@@ -1,17 +1,9 @@
 package com.pedropathing.drivetrain;
 
+import com.pedropathing.follower.Algorithm;
+import com.pedropathing.geometry.Twist;
+
 public interface Drivetrain {
-    void drive(Powers powers);
-
-    class Powers {
-        public final double forward;
-        public final double strafe;
-        public final double turn;
-
-        public Powers(double forward, double strafe, double turn) {
-            this.forward = forward;
-            this.strafe = strafe;
-            this.turn = turn;
-        }
-    }
+    void drive(Twist powers, Algorithm algorithm); // TODO: algorithm is so that in the specific dts we can change behavior of the drivetrain, e.g. for mecanum we can have a field-centric algorithm and a robot-centric algorithm or brakeModeInTeleop
+    void stop();
 }

@@ -2,19 +2,27 @@ package com.pedropathing.follower;
 
 import com.pedropathing.drivetrain.Drivetrain;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.geometry.Twist;
 import com.pedropathing.localization.Localizer;
+import com.pedropathing.paths.Path;
 
 public class Follower {
-    Localizer localizer;
-    Algorithm algorithm;
-    Drivetrain drivetrain;
-    FollowState state;
+    private final Localizer localizer;
+    private Algorithm algorithm;
+    private final Drivetrain drivetrain;
+    private FollowState state;
+
+    public Follower(Localizer localizer, Drivetrain drivetrain, Algorithm algorithm) {
+        this.localizer = localizer;
+        this.algorithm = algorithm;
+        this.drivetrain = drivetrain;
+    }
 
     public void update() {
         localizer.update();
         state = new FollowState(localizer.getPose(), localizer.getVelocity(), localizer.getTwist(), state.path, state.pathProgress);
-        Drivetrain.Powers powers = algorithm.calculate(state);
-        drivetrain.drive(powers);
+        Twist powers = algorithm.calculate(state);
+        drivetrain.drive(powers, algorithm);
     }
 
     public void follow(Path path) {

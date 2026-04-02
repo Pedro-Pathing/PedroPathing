@@ -8,7 +8,7 @@ public class Pose {
     public Pose(double x, double y, double heading) {
         this.x = x;
         this.y = y;
-        this.heading = heading;
+        this.heading = Angle.normalize(heading);
     }
 
     public Vector toVector() {

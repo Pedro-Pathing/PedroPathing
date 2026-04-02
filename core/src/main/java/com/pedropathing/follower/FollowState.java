@@ -3,6 +3,8 @@ package com.pedropathing.follower;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.geometry.Twist;
 import com.pedropathing.geometry.Velocity;
+import com.pedropathing.paths.Path;
+import com.pedropathing.paths.PathProgress;
 
 public final class FollowState {
     public final Pose pose;

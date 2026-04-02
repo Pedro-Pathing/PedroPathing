@@ -1,9 +1,7 @@
 package com.pedropathing.follower;
 
-import com.pedropathing.drivetrain.Drivetrain;
-import com.pedropathing.geometry.Pose;
-import com.pedropathing.geometry.Velocity;
+import com.pedropathing.geometry.Twist;
 
 public interface Algorithm {
-    Drivetrain.Powers calculate(FollowState state);
+    Twist calculate(FollowState state);
 }
