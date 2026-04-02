@@ -1,5 +1,8 @@
 plugins {
-    id("com.android.library") version "8.7.3" apply false
+    alias(libs.plugins.android.library) apply false
+    alias(libs.plugins.dokka) apply false
+    alias(libs.plugins.deployer) apply false
+    alias(libs.plugins.kotlin.android) apply false
 }
 
 group = "com.pedropathing"
