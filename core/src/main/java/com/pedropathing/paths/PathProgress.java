@@ -7,5 +7,6 @@ public class PathProgress {
     public Pose closestPose;
     public Vector closestTangentVector;
     public double tValue;
+    public double remainingDistance;
     public boolean atParametricEnd;
 }

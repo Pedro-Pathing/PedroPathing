@@ -4,7 +4,6 @@ import java.util.TreeMap;
 import java.util.stream.Stream;
 
 public class PiecewiseController implements Controller {
-
     private final TreeMap<Double, Controller> controllers;
 
     public PiecewiseController(Controller baseline) {

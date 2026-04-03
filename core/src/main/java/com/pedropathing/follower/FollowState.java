@@ -23,10 +23,6 @@ public final class FollowState {
         tangentialSpeed = velocity.toLinear().dot(path.pathProgress.closestTangentVector);
     }
 
-    public double tangentialSpeed() {
-        return tangentialSpeed;
-    }
-
     public Pose getPose() {
         return pose;
     }

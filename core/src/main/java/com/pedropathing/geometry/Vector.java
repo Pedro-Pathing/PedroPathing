@@ -37,6 +37,12 @@ public class Vector {
         return new Vector(x * Math.cos(angle) - y * Math.sin(angle), x * Math.sin(angle) + y * Math.cos(angle));
     }
 
+    public Vector transform(Matrix m) {
+        if (m.getCols() != 2) throw new IllegalArgumentException("matrix must be 2x2");
+        if (m.getRows() != 2) throw new UnsupportedOperationException("matrix must be 2x2");
+        return new Vector(m.get(0, 0) * x + m.get(0, 1) * y, m.get(1, 0) * x + m.get(1,1)*y);
+    }
+
     public double dot(Vector other) {
         return x * other.x + y * other.y;
     }
