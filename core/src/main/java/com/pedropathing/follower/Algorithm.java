@@ -1,7 +1,7 @@
 package com.pedropathing.follower;
 
-import com.pedropathing.geometry.DriveCommand;
+import com.pedropathing.geometry.DrivePowers;
 
 public interface Algorithm {
-    DriveCommand calculate(FollowState state);
+    DrivePowers calculate(FollowState state);
 }
