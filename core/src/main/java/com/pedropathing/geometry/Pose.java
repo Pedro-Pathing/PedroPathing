@@ -30,11 +30,14 @@ public class Pose {
     }
 
     public Pose integrate(Twist twist, double time) {
-
-    }
-
-    public Pose integrateApprox(Twist twist, double time) {
-        return plus()
+        if (twist.omega < 1e-9) return integrate(twist.toVelocity(heading), time);
+        double theta = twist.omega * time;
+        double sin = Math.sin(theta);
+        double cos = Math.cos(theta);
+        Vector2D localDeltas = new Vector2D((sin * twist.vx - (1 - cos) * twist.vy) / twist.omega,
+                ((1 - cos) * twist.vx + sin * twist.vy) / twist.omega);
+        Vector2D globalDeltas = (Vector2D) localDeltas.transform(Matrix.rotation(heading)); //TODO: Implement Matrix2D or smth
+        return new Pose(x + globalDeltas.x, y + globalDeltas.y, heading + theta);
     }
 
     public Pose plus(Pose other) {
