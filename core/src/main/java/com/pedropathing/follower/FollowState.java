@@ -10,7 +10,7 @@ public final class FollowState {
     private Velocity velocity = Velocity.zero();
     private Twist twist = Twist.zero();
     private Path path;
-    private double tangentialSpeed = 0;
+    private double tangentialSpeed = 0; //Signed
 
     public FollowState(Path path) {
         this.path = path;
