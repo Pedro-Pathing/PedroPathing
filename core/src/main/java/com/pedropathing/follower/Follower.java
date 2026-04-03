@@ -1,6 +1,7 @@
 package com.pedropathing.follower;
 
 import com.pedropathing.drivetrain.Drivetrain;
+import com.pedropathing.geometry.DriveCommand;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.geometry.Twist;
 import com.pedropathing.localization.Localizer;
@@ -22,7 +23,7 @@ public class Follower {
     public void update() {
         localizer.update();
         state.update(localizer.getPose(), localizer.getVelocity(), localizer.getTwist());
-        Twist powers = algorithm.calculate(state);
+        DriveCommand powers = algorithm.calculate(state);
         drivetrain.drive(powers, algorithm);
     }
 
