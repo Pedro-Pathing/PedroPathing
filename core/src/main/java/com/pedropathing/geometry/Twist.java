@@ -20,6 +20,18 @@ public class Twist {
         );
     }
 
+    public Vector toVector() {
+        return new Vector(vx, vy, omega);
+    }
+
+    public Matrix toMatrix() {
+        return new Matrix(new double[][]{
+                {0.0, -omega, vx},
+                {omega,  0.0, vy},
+                {0.0,    0.0, 0.0}
+        });
+    }
+
     public Twist add(Twist other) {
         return new Twist(vx + other.vx, vy + other.vy, omega + other.omega);
     }

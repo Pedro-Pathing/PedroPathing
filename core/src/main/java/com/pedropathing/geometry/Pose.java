@@ -40,6 +40,11 @@ public class Pose {
         return new Pose(x + globalDeltas.x, y + globalDeltas.y, heading + theta);
     }
 
+    public Pose compose(Pose other) {
+        Vector2D translationDeltas = other.toVector().rotate(heading);
+        return new Pose(x + translationDeltas.x, y + translationDeltas.y, heading + other.heading);
+    }
+
     public Pose plus(Pose other) {
         return new Pose(x + other.x, y + other.y, heading + other.heading);
     }

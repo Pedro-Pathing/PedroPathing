@@ -20,6 +20,18 @@ public class Velocity {
         );
     }
 
+    public Vector toVector() {
+        return new Vector(vx, vy, omega);
+    }
+
+    public Matrix toMatrix() {
+        return new Matrix(new double[][]{
+                {0.0, -omega, vx},
+                {omega,  0.0, vy},
+                {0.0,    0.0, 0.0}
+        });
+    }
+
     public Velocity add(Velocity other) {
         return new Velocity(vx + other.vx, vy + other.vy, omega + other.omega);
     }
