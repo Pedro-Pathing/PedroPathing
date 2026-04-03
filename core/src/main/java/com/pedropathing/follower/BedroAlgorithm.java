@@ -3,11 +3,10 @@ package com.pedropathing.follower;
 import com.pedropathing.control.controllers.Controller;
 import com.pedropathing.geometry.Angle;
 import com.pedropathing.geometry.Curve;
+import com.pedropathing.geometry.DrivePowers;
 import com.pedropathing.geometry.Matrix;
-import com.pedropathing.geometry.Pose;
 import com.pedropathing.geometry.Twist;
 import com.pedropathing.geometry.Vector;
-import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathProgress;
 
 public class BedroAlgorithm implements Algorithm {
@@ -34,11 +33,11 @@ public class BedroAlgorithm implements Algorithm {
     }
 
     @Override
-    public Twist calculate(FollowState state) {
+    public DrivePowers calculate(FollowState state) {
         Vector translational = translational(state.getPose().toVector(), state.getPath().pathProgress, state.getPath().currentCurve());
         Vector centripetal = centripetal(state.getTangentialSpeed(), state.getPath().pathProgress, state.getPath().currentCurve());
         Vector drive = drive(state.getTangentialSpeed(), state.getPath().pathProgress);
-        return new Twist(0, 0, heading(state.getPose().heading, state.getPath().pathProgress.closestPose.heading));
+        return new DrivePowers(0, 0, heading(state.getPose().heading, state.getPath().pathProgress.closestPose.heading));
     }
 
     public double heading(double current, double target) {
