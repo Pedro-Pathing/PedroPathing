@@ -5,8 +5,7 @@ import com.pedropathing.geometry.Angle;
 import com.pedropathing.geometry.Curve;
 import com.pedropathing.geometry.DrivePowers;
 import com.pedropathing.geometry.Matrix;
-import com.pedropathing.geometry.Twist;
-import com.pedropathing.geometry.Vector;
+import com.pedropathing.geometry.Vector2D;
 import com.pedropathing.paths.PathProgress;
 
 public class BedroAlgorithm implements Algorithm {
@@ -14,12 +13,12 @@ public class BedroAlgorithm implements Algorithm {
     private final Controller translationalController;
     private final Controller driveController;
     private final Matrix ellipsoidMatrix;
-    private final Vector linearBraking;
+    private final Vector2D linearBraking;
     private final double centripetalScaling;
     private final double alpha;
 
     public BedroAlgorithm(Controller headingController, Controller translationalController, double centripetalScaling,
-                          Vector eigenvalues, Vector linearBraking, double alpha, Controller driveController) {
+                          Vector2D eigenvalues, Vector2D linearBraking, double alpha, Controller driveController) {
         this.headingController = headingController;
         this.translationalController = translationalController;
         this.driveController = driveController;
@@ -34,9 +33,9 @@ public class BedroAlgorithm implements Algorithm {
 
     @Override
     public DrivePowers calculate(FollowState state) {
-        Vector translational = translational(state.getPose().toVector(), state.getPath().pathProgress, state.getPath().currentCurve());
-        Vector centripetal = centripetal(state.getTangentialSpeed(), state.getPath().pathProgress, state.getPath().currentCurve());
-        Vector drive = drive(state.getTangentialSpeed(), state.getPath().pathProgress);
+        Vector2D translational = translational(state.getPose().toVector(), state.getPath().pathProgress, state.getPath().currentCurve());
+        Vector2D centripetal = centripetal(state.getTangentialSpeed(), state.getPath().pathProgress, state.getPath().currentCurve());
+        Vector2D drive = drive(state.getTangentialSpeed(), state.getPath().pathProgress);
         return new DrivePowers(0, 0, heading(state.getPose().heading, state.getPath().pathProgress.closestPose.heading));
     }
 
@@ -44,19 +43,19 @@ public class BedroAlgorithm implements Algorithm {
         return headingController.calculate(Angle.smallestDifference(current, target) * Angle.turnDirection(current, target));
     }
 
-    public Vector translational(Vector current, PathProgress progress, Curve curve) {
-        Vector target = progress.atParametricEnd ? curve.endPoint() : progress.closestPose.toVector();
-        Vector offset = target.minus(current);
+    public Vector2D translational(Vector2D current, PathProgress progress, Curve curve) {
+        Vector2D target = progress.atParametricEnd ? curve.endPoint() : progress.closestPose.toVector();
+        Vector2D offset = target.minus(current);
         return offset.times(translationalController.calculate(offset.magnitude()));
     }
 
-    public Vector centripetal(double speed, PathProgress progress, Curve curve) {
+    public Vector2D centripetal(double speed, PathProgress progress, Curve curve) {
         double curvature = curve.curvature(progress.tValue);
-        Vector normal = curve.getNormal(progress.tValue);
+        Vector2D normal = curve.getNormal(progress.tValue);
         return normal.times(speed * speed * curvature * centripetalScaling);
     }
 
-    public Vector drive(double tangentialVel, PathProgress progress) {
+    public Vector2D drive(double tangentialVel, PathProgress progress) {
         double quadraticBrakeDirection = alpha * progress.closestTangentVector.transform(ellipsoidMatrix).dot(progress.closestTangentVector); //k2
         double linearBrakeDirection = alpha * progress.closestTangentVector.dot(linearBraking); //k1
         double targetVel = (-linearBrakeDirection + Math.sqrt(linearBrakeDirection * linearBrakeDirection

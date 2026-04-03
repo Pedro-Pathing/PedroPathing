@@ -136,6 +136,34 @@ public class Matrix {
         return result;
     }
 
+    public static Matrix rotation(double theta) {
+        double sin = Math.sin(theta);
+        double cos = Math.cos(theta);
+        return new Matrix(new double[][]{
+                {cos, -sin},
+                {sin,  cos}
+        });
+    }
+
+    /**
+     * Multiplies this matrix by any n-dimensional Vector.
+     */
+    public Vector multiply(Vector v) {
+        if (this.cols != v.size()) {
+            throw new IllegalArgumentException("Dimension mismatch");
+        }
+
+        Vector result = new Vector(this.rows);
+        for (int i = 0; i < this.rows; i++) {
+            double sum = 0;
+            for (int j = 0; j < this.cols; j++) {
+                sum += this.get(i, j) * v.get(j);
+            }
+            result.set(i, sum);
+        }
+        return result;
+    }
+
     /**
      * Utility method to print the matrix to the console in a readable format.
      */

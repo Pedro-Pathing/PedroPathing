@@ -11,8 +11,30 @@ public class Pose {
         this.heading = Angle.normalize(heading);
     }
 
-    public Vector toVector() {
-        return Vector.cartesian(x, y);
+    public Vector2D toVector() {
+        return Vector2D.cartesian(x, y);
+    }
+
+    public Matrix toMatrix() {
+        double sin = Math.sin(heading);
+        double cos = Math.cos(heading);
+        return new Matrix(new double[][]{
+                {cos, -sin,   x},
+                {sin,  cos,   y},
+                {0.0,  0.0, 1.0}
+        });
+    }
+
+    public Pose integrate(Velocity velocity, double time) {
+        return new Pose(x + velocity.vx * time, y + velocity.vy * time, heading + velocity.omega * time);
+    }
+
+    public Pose integrate(Twist twist, double time) {
+
+    }
+
+    public Pose integrateApprox(Twist twist, double time) {
+        return plus()
     }
 
     public Pose plus(Pose other) {

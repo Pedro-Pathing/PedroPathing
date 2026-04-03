@@ -20,8 +20,16 @@ public class Velocity {
         );
     }
 
-    public Vector toLinear() {
-        return new Vector(vx, vy);
+    public Velocity add(Velocity other) {
+        return new Velocity(vx + other.vx, vy + other.vy, omega + other.omega);
+    }
+
+    public Velocity scale(double time) {
+        return new Velocity(vx * time, vy * time, omega * time);
+    }
+
+    public Vector2D toLinear() {
+        return new Vector2D(vx, vy);
     }
 
     public static Velocity zero() {

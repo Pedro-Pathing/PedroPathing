@@ -20,6 +20,10 @@ public class Twist {
         );
     }
 
+    public Twist add(Twist other) {
+        return new Twist(vx + other.vx, vy + other.vy, omega + other.omega);
+    }
+
     public static Twist zero() {
         return ZERO;
     }
