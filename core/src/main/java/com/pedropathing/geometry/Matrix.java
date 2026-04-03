@@ -115,6 +115,27 @@ public class Matrix {
         return result;
     }
 
+    public static Matrix diag(double... eigenvalues) {
+        Matrix result = new Matrix(eigenvalues.length, eigenvalues.length);
+        for (int i = 0; i < eigenvalues.length; i++)
+            result.data[i][i] = eigenvalues[i];
+        return result;
+    }
+
+    public static Matrix identity(int n) {
+        Matrix result = new Matrix(n, n);
+        for (int i = 0; i < n; i++)
+            result.data[i][i] = 1.0;
+        return result;
+    }
+
+    public static Matrix zero(int n) {
+        Matrix result = new Matrix(n, n);
+        for (int i = 0; i < n; i++)
+            result.data[i][i] = 0.0;
+        return result;
+    }
+
     /**
      * Utility method to print the matrix to the console in a readable format.
      */
