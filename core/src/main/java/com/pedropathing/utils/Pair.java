@@ -28,8 +28,8 @@ public final class Pair<T, U> {
 
     public boolean equals(Object other) {
         return other instanceof Pair<?,?> &&
-                first.equals(((Pair<?, ?>) other).first) &&
-                second.equals(((Pair<?, ?>) other).second);
+                Objects.equals(first, ((Pair<?, ?>) other).first) &&
+                Objects.equals(second, ((Pair<?, ?>) other).second);
     }
 
     public int hashCode() {
