@@ -1,4 +1,7 @@
-package com.pedropathing.geometry;
+package com.pedropathing.paths;
+
+import com.pedropathing.math.Pose;
+import com.pedropathing.math.Vector2D;
 
 public interface Curve {
     Vector2D get(double t);
@@ -10,7 +13,7 @@ public interface Curve {
             throw new IllegalArgumentException("Cannot follow degenerate curve");
         return deriv.normalized();
     }
-    double getClosestT(Pose pose);
+    double getClosestT(Vector2D pose);
 
     default double curvature(double t) {
         Vector2D derivative = getDerivative(t);

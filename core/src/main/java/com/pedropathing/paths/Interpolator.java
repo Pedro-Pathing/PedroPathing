@@ -1,8 +1,7 @@
 package com.pedropathing.paths;
 
-import com.pedropathing.geometry.Angle;
-import com.pedropathing.geometry.Curve;
-import com.pedropathing.geometry.Pose;
+import com.pedropathing.math.Angle;
+import com.pedropathing.math.Pose;
 
 @FunctionalInterface
 public interface Interpolator {
@@ -24,6 +23,6 @@ public interface Interpolator {
         return linear(start, end, 1);
     }
     static Interpolator facingPose(Pose pose) {
-        return (curve, t) -> pose.toVector().minus(curve.get(t)).theta();
+        return (curve, t) -> pose.toVector2D().minus(curve.get(t)).theta();
     }
 }

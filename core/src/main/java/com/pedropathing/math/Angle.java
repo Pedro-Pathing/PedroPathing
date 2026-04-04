@@ -1,4 +1,4 @@
-package com.pedropathing.geometry;
+package com.pedropathing.math;
 
 public class Angle {
     /**
