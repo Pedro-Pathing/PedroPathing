@@ -1,5 +1,6 @@
 package com.pedropathing.follower;
 
+import com.pedropathing.algorithm.Algorithm;
 import com.pedropathing.drivetrain.Drivetrain;
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.math.Pose;

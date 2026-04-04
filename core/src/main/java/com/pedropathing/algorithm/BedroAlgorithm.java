@@ -1,7 +1,8 @@
-package com.pedropathing.follower;
+package com.pedropathing.algorithm;
 
-import com.pedropathing.control.controllers.Controller;
+import com.pedropathing.control.Controller;
 import com.pedropathing.drivetrain.DrivePowers;
+import com.pedropathing.follower.FollowState;
 import com.pedropathing.math.Angle;
 import com.pedropathing.math.Matrix;
 import com.pedropathing.math.Pose;

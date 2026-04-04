@@ -1,4 +1,4 @@
-package com.pedropathing.control.controllers;
+package com.pedropathing.control;
 
 public class PIDFCoefficients {
     public double kP;
