@@ -1,13 +1,13 @@
 package com.pedropathing.follower;
 
 import com.pedropathing.control.controllers.Controller;
-import com.pedropathing.geometry.Angle;
-import com.pedropathing.geometry.Curve;
-import com.pedropathing.geometry.DrivePowers;
-import com.pedropathing.geometry.Matrix;
-import com.pedropathing.geometry.Pose;
-import com.pedropathing.geometry.Vector2D;
-import com.pedropathing.geometry.Velocity;
+import com.pedropathing.drivetrain.DrivePowers;
+import com.pedropathing.math.Angle;
+import com.pedropathing.math.Matrix;
+import com.pedropathing.math.Pose;
+import com.pedropathing.math.Vector2D;
+import com.pedropathing.math.Velocity;
+import com.pedropathing.paths.Curve;
 import com.pedropathing.paths.PathProgress;
 
 public class BedroAlgorithm implements Algorithm {
