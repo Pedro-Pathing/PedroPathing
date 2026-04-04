@@ -1,4 +1,4 @@
-package com.pedropathing.geometry;
+package com.pedropathing.math;
 
 public class Pose {
     public final double x;
@@ -11,7 +11,7 @@ public class Pose {
         this.heading = Angle.normalize(heading);
     }
 
-    public Vector2D toVector() {
+    public Vector2D toVector2D() {
         return Vector2D.cartesian(x, y);
     }
 
@@ -25,12 +25,12 @@ public class Pose {
         });
     }
 
-    public Pose integrate(Velocity velocity, double time) {
+    public Pose exp(Velocity velocity, double time) {
         return new Pose(x + velocity.vx * time, y + velocity.vy * time, heading + velocity.omega * time);
     }
 
-    public Pose integrate(Twist twist, double time) {
-        if (twist.omega < 1e-9) return integrate(twist.toVelocity(heading), time);
+    public Pose exp(Twist twist, double time) {
+        if (twist.omega < 1e-9) return exp(twist.toVelocity(heading), time);
         double theta = twist.omega * time;
         double sin = Math.sin(theta);
         double cos = Math.cos(theta);
@@ -41,7 +41,7 @@ public class Pose {
     }
 
     public Pose compose(Pose other) {
-        Vector2D translationDeltas = other.toVector().rotate(heading);
+        Vector2D translationDeltas = other.toVector2D().rotate(heading);
         return new Pose(x + translationDeltas.x, y + translationDeltas.y, heading + other.heading);
     }
 

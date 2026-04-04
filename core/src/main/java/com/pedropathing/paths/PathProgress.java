@@ -1,7 +1,7 @@
 package com.pedropathing.paths;
 
-import com.pedropathing.geometry.Pose;
-import com.pedropathing.geometry.Vector2D;
+import com.pedropathing.math.Pose;
+import com.pedropathing.math.Vector2D;
 
 public class PathProgress {
     public Pose closestPose;

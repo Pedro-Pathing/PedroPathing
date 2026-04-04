@@ -1,8 +1,8 @@
 package com.pedropathing.follower;
 
-import com.pedropathing.geometry.Pose;
-import com.pedropathing.geometry.Twist;
-import com.pedropathing.geometry.Velocity;
+import com.pedropathing.math.Pose;
+import com.pedropathing.math.Twist;
+import com.pedropathing.math.Velocity;
 import com.pedropathing.paths.Path;
 
 public final class FollowState {

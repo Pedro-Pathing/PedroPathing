@@ -1,8 +1,8 @@
 package com.pedropathing.follower;
 
 import com.pedropathing.drivetrain.Drivetrain;
-import com.pedropathing.geometry.DrivePowers;
-import com.pedropathing.geometry.Pose;
+import com.pedropathing.drivetrain.DrivePowers;
+import com.pedropathing.math.Pose;
 import com.pedropathing.localization.Localizer;
 import com.pedropathing.paths.Path;
 

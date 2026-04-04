@@ -1,4 +1,4 @@
-package com.pedropathing.geometry;
+package com.pedropathing.math;
 
 import java.util.Arrays;
 
@@ -6,31 +6,27 @@ import java.util.Arrays;
  * A generic n-dimensional vector class.
  */
 public class Vector {
-    protected final double[] elements;
-
-    /**
-     * Constructs a vector of a specific size initialized to zero.
-     * @param size The dimensionality of the vector.
-     */
-    public Vector(int size) {
-        this.elements = new double[size];
-    }
+    private final double[] elements;
 
     /**
      * Constructs a vector from an existing array.
+     *
      * @param elements The values to store.
      */
     public Vector(double... elements) {
         this.elements = Arrays.copyOf(elements, elements.length);
     }
 
-    /** @return The dimensionality (length) of the vector. */
+    /**
+     * @return The dimensionality (length) of the vector.
+     */
     public int size() {
         return elements.length;
     }
 
     /**
      * Gets a value at a specific index.
+     *
      * @param i 0-based index.
      */
     public double get(int i) {
@@ -38,22 +34,10 @@ public class Vector {
     }
 
     /**
-     * Sets a value at a specific index.
-     * @param i 0-based index.
-     * @param value The new value.
-     */
-    public void set(int i, double value) {
-        elements[i] = value;
-    }
-
-    /**
      * Calculates the Euclidean norm (magnitude).
      */
     public double magnitude() {
-        double sum = 0;
-        for (double val : elements) {
-            sum += val * val;
-        }
+        double sum = this.dot(this);
         return Math.sqrt(sum);
     }
 
@@ -61,10 +45,7 @@ public class Vector {
      * Multiplies this vector by a scalar.
      */
     public Vector times(double scalar) {
-        double[] result = new double[size()];
-        for (int i = 0; i < size(); i++) {
-            result[i] = elements[i] * scalar;
-        }
+        double[] result = Arrays.stream(elements).map(e -> e * scalar).toArray();
         return new Vector(result);
     }
 
@@ -100,43 +81,58 @@ public class Vector {
      * Transforms this vector by a matrix (Matrix * Vector).
      * In linear algebra, this is the standard way to apply rotations, scales, or shears.
      * * @param m The transformation matrix.
+     *
      * @return A new Vector resulting from the transformation.
      * @throws IllegalArgumentException if the matrix columns do not match vector size.
      */
     public Vector transform(Matrix m) {
-        if (m.getCols() != this.size()) {
+        if (m.cols != this.size()) {
             throw new IllegalArgumentException("Matrix columns must match vector size for transformation.");
         }
 
-        Vector result = new Vector(m.getRows());
-        for (int i = 0; i < m.getRows(); i++) {
+        double[] result = new double[m.rows];
+        for (int i = 0; i < m.rows; i++) {
             double sum = 0;
-            for (int j = 0; j < m.getCols(); j++) {
+            for (int j = 0; j < m.cols; j++) {
                 sum += m.get(i, j) * this.get(j);
             }
-            result.set(i, sum);
+            result[i] = sum;
         }
-        return result;
+        return new Vector(result);
+    }
+
+    public Vector2D toVector2D() {
+        if (elements.length != 2) throw new IllegalArgumentException("Vector must have exactly 2 elements.");
+        return new Vector2D(elements[0], elements[1]);
     }
 
     /**
-     * Computes the tensor product (outer product) of this vector and another vector.
-     * Result is a matrix where Matrix[i][j] = this[i] * other[j].
-     * * @param other The vector to multiply with.
-     * @return A Matrix representing the tensor product.
+     * Creates a unit vector of the specified dimensionality with a value of 1 at the specified index.
+     *
+     * @param i   The index at which the value is set to 1 (0-based indexing).
+     * @param dim The total number of dimensions in the vector.
+     * @return A unit vector with 1 at the specified index and 0 elsewhere.
+     * @throws ArrayIndexOutOfBoundsException if the specified index {@code i} is out of bounds.
      */
-    public Matrix tensorProduct(Vector other) {
-        Matrix result = new Matrix(this.size(), other.size());
-        for (int i = 0; i < this.size(); i++) {
-            for (int j = 0; j < other.size(); j++) {
-                result.set(i, j, this.get(i) * other.get(j));
-            }
-        }
-        return result;
+    public static Vector e(int i, int dim) {
+        double[] data = new double[dim];
+        data[i] = 1;
+        return new Vector(data);
     }
 
-    @Override
-    public String toString() {
-        return Arrays.toString(elements);
+    public static Vector zero(int dim) {
+        return new Vector(new double[dim]);
+    }
+
+    public Vector projectOnto(Vector other) {
+        return other.times(dot(other) / other.dot(other));
+    }
+
+    public Matrix toMatrix() {
+        double[][] data = new double[size()][size()];
+        for (int i = 0; i < size(); i++) {
+            data[i][0] = elements[i];
+        }
+        return new Matrix(data);
     }
 }

@@ -1,4 +1,4 @@
-package com.pedropathing.geometry;
+package com.pedropathing.math;
 
 public class Twist {
     public final double vx;
@@ -32,7 +32,7 @@ public class Twist {
         });
     }
 
-    public Twist add(Twist other) {
+    public Twist plus(Twist other) {
         return new Twist(vx + other.vx, vy + other.vy, omega + other.omega);
     }
 

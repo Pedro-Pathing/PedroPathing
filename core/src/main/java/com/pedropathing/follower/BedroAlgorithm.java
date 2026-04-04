@@ -1,11 +1,11 @@
 package com.pedropathing.follower;
 
 import com.pedropathing.control.controllers.Controller;
-import com.pedropathing.geometry.Angle;
-import com.pedropathing.geometry.Curve;
-import com.pedropathing.geometry.DrivePowers;
-import com.pedropathing.geometry.Matrix;
-import com.pedropathing.geometry.Vector2D;
+import com.pedropathing.math.Angle;
+import com.pedropathing.paths.Curve;
+import com.pedropathing.drivetrain.DrivePowers;
+import com.pedropathing.math.Matrix;
+import com.pedropathing.math.Vector2D;
 import com.pedropathing.paths.PathProgress;
 
 public class BedroAlgorithm implements Algorithm {
@@ -33,7 +33,7 @@ public class BedroAlgorithm implements Algorithm {
 
     @Override
     public DrivePowers calculate(FollowState state) {
-        Vector2D translational = translational(state.getPose().toVector(), state.getPath().pathProgress, state.getPath().currentCurve());
+        Vector2D translational = translational(state.getPose().toVector2D(), state.getPath().pathProgress, state.getPath().currentCurve());
         Vector2D centripetal = centripetal(state.getTangentialSpeed(), state.getPath().pathProgress, state.getPath().currentCurve());
         Vector2D drive = drive(state.getTangentialSpeed(), state.getPath().pathProgress);
         return new DrivePowers(0, 0, heading(state.getPose().heading, state.getPath().pathProgress.closestPose.heading));
@@ -44,7 +44,7 @@ public class BedroAlgorithm implements Algorithm {
     }
 
     public Vector2D translational(Vector2D current, PathProgress progress, Curve curve) {
-        Vector2D target = progress.atParametricEnd ? curve.endPoint() : progress.closestPose.toVector();
+        Vector2D target = progress.atParametricEnd ? curve.endPoint() : progress.closestPose.toVector2D();
         Vector2D offset = target.minus(current);
         return offset.times(translationalController.calculate(offset.magnitude()));
     }

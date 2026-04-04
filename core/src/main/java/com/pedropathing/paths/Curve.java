@@ -1,11 +1,14 @@
-package com.pedropathing.geometry;
+package com.pedropathing.paths;
+
+import com.pedropathing.math.Pose;
+import com.pedropathing.math.Vector2D;
 
 public interface Curve {
     Vector2D get(double t);
     Vector2D getDerivative(double t);
     Vector2D getSecondDerivative(double t);
     default Vector2D getTangent(double t) { return getDerivative(t).normalized(); }
-    double getClosestT(Pose pose);
+    double getClosestT(Vector2D pose);
 
     default double curvature(double t) {
         Vector2D derivative = getDerivative(t);

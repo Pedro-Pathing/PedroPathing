@@ -1,11 +1,10 @@
-package com.pedropathing.geometry;
+package com.pedropathing.math;
 
-public class Vector2D extends Vector {
+public class Vector2D {
     public final double x;
     public final double y;
 
     public Vector2D(double x, double y) {
-        super(x, y);
         this.x = x;
         this.y = y;
     }
@@ -62,6 +61,10 @@ public class Vector2D extends Vector {
         return new Vector2D(radius * Math.cos(angle), radius * Math.sin(angle));
     }
 
+    public static Vector2D unit(double angle) {
+        return polar(1, angle);
+    }
+
     public static Vector2D cartesian(double x, double y) {
         return new Vector2D(x, y);
     }
@@ -80,5 +83,13 @@ public class Vector2D extends Vector {
 
     public static Vector2D jHat() {
         return J_HAT;
+    }
+
+    public Vector toVector() {
+        return new Vector(x, y);
+    }
+
+    public Vector2D transform(Matrix m) {
+        return this.toVector().transform(m).toVector2D();
     }
 }
