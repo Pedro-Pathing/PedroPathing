@@ -15,7 +15,9 @@ public class Vector2D extends Vector {
     }
 
     public Vector2D normalized() {
-        return new Vector2D(x / magnitude(), y / magnitude());
+        double magnitude = magnitude();
+        if (magnitude == 0) throw new IllegalArgumentException("Cannot normalize 0 vector");
+        return new Vector2D(x / magnitude, y / magnitude);
     }
 
     public Vector2D plus(Vector2D other) {
@@ -80,5 +82,17 @@ public class Vector2D extends Vector {
 
     public static Vector2D jHat() {
         return J_HAT;
+    }
+
+    public boolean isZero() {
+        return x < 1e-9 && y < 1e-9;
+    }
+
+    public double quadraticForm(Matrix m) {
+        return transform(m).dot(this);
+    }
+
+    public double distance(Vector2D other) {
+        return Math.hypot(x - other.x, y - other.y);
     }
 }

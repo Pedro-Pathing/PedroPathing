@@ -82,4 +82,8 @@ public class Pose {
     public Pose withHeading(double heading) {
         return new Pose(x, y, heading);
     }
+
+    public double distance(Pose other) {
+        return Math.hypot(x - other.x, y - other.y);
+    }
 }

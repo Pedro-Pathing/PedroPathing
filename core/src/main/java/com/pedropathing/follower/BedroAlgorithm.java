@@ -5,7 +5,9 @@ import com.pedropathing.geometry.Angle;
 import com.pedropathing.geometry.Curve;
 import com.pedropathing.geometry.DrivePowers;
 import com.pedropathing.geometry.Matrix;
+import com.pedropathing.geometry.Pose;
 import com.pedropathing.geometry.Vector2D;
+import com.pedropathing.geometry.Velocity;
 import com.pedropathing.paths.PathProgress;
 
 public class BedroAlgorithm implements Algorithm {
@@ -33,7 +35,7 @@ public class BedroAlgorithm implements Algorithm {
 
     @Override
     public DrivePowers calculate(FollowState state) {
-        Vector2D translational = translational(state.getPose().toVector(), state.getPath().pathProgress, state.getPath().currentCurve());
+        Vector2D translational = translational(state.getPose(), state.getVelocity(), state.getPath().pathProgress, state.getPath().currentCurve());
         Vector2D centripetal = centripetal(state.getTangentialSpeed(), state.getPath().pathProgress, state.getPath().currentCurve());
         Vector2D drive = drive(state.getTangentialSpeed(), state.getPath().pathProgress);
         return new DrivePowers(0, 0, heading(state.getPose().heading, state.getPath().pathProgress.closestPose.heading));
@@ -43,15 +45,19 @@ public class BedroAlgorithm implements Algorithm {
         return headingController.calculate(Angle.smallestDifference(current, target) * Angle.turnDirection(current, target));
     }
 
-    public Vector2D translational(Vector2D current, PathProgress progress, Curve curve) {
-        Vector2D target = progress.atParametricEnd ? curve.endPoint() : progress.closestPose.toVector();
-        Vector2D offset = target.minus(current);
-        return offset.times(translationalController.calculate(offset.magnitude()));
+    public Vector2D translational(Pose currentPose, Velocity velocity, PathProgress progress, Curve curve) {
+        double error = currentPose.distance(progress.closestPose);
+        Vector2D gradient = curve.leftGradient(progress.tValue);
+        Vector2D gradientLinearVel = velocity.toLinear().projectOnto(gradient);
+        double quadraticDisp = gradientLinearVel.quadraticForm(ellipsoidMatrix);
+        double linearDisp = gradientLinearVel.dot(linearBraking);
+        return gradient.times(translationalController.calculate(error - quadraticDisp - linearDisp));
     }
 
     public Vector2D centripetal(double speed, PathProgress progress, Curve curve) {
         double curvature = curve.curvature(progress.tValue);
-        Vector2D normal = curve.getNormal(progress.tValue);
+        Vector2D normal = curve.principalNormal(progress.tValue);
+        if (normal.isZero()) return Vector2D.zero();
         return normal.times(speed * speed * curvature * centripetalScaling);
     }
 
