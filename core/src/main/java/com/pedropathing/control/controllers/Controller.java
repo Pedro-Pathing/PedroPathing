@@ -50,4 +50,18 @@ public interface Controller {
             }
         };
     }
+
+    default Controller times(double scalar) {
+        return new Controller() {
+            @Override
+            public double calculate(double target, double error) {
+                return Controller.this.calculate(target, error) * scalar;
+            }
+
+            @Override
+            public void reset() {
+                Controller.this.reset();
+            }
+        };
+    }
 }
