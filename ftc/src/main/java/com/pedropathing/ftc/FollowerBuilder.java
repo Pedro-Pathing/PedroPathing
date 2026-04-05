@@ -4,12 +4,14 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.FollowerConstants;
 import com.pedropathing.ftc.drivetrains.*;
 import com.pedropathing.ftc.localization.constants.DriveEncoderConstants;
+import com.pedropathing.ftc.localization.constants.OctoQuadConstants;
 import com.pedropathing.ftc.localization.constants.OTOSConstants;
 import com.pedropathing.ftc.localization.constants.PinpointConstants;
 import com.pedropathing.ftc.localization.constants.ThreeWheelConstants;
 import com.pedropathing.ftc.localization.constants.ThreeWheelIMUConstants;
 import com.pedropathing.ftc.localization.constants.TwoWheelConstants;
 import com.pedropathing.ftc.localization.localizers.DriveEncoderLocalizer;
+import com.pedropathing.ftc.localization.localizers.OctoQuadLocalizer;
 import com.pedropathing.ftc.localization.localizers.OTOSLocalizer;
 import com.pedropathing.ftc.localization.localizers.PinpointLocalizer;
 import com.pedropathing.ftc.localization.localizers.ThreeWheelIMULocalizer;
@@ -44,6 +46,10 @@ public class FollowerBuilder {
 
     public FollowerBuilder driveEncoderLocalizer(DriveEncoderConstants lConstants) {
         return setLocalizer(new DriveEncoderLocalizer(hardwareMap, lConstants));
+    }
+
+    public FollowerBuilder octoQuadLocalizer(OctoQuadConstants lConstants, OctoQuadLocalizer.InitMode initMode) {
+        return setLocalizer(new OctoQuadLocalizer(hardwareMap, lConstants, initMode));
     }
 
     public FollowerBuilder OTOSLocalizer(OTOSConstants lConstants) {
