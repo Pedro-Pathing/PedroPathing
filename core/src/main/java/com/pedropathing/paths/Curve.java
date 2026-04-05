@@ -7,13 +7,16 @@ public interface Curve {
     Vector2D get(double t);
     Vector2D getDerivative(double t);
     Vector2D getSecondDerivative(double t);
+    double getClosestParameter(Vector2D position);
+    double length();
+    double getPathCompletion(double t);
+    double getParameter(double completion);
+
     default Vector2D getTangent(double t) {
         Vector2D deriv = getDerivative(t);
-        if (deriv.isZero())
-            throw new IllegalArgumentException("Cannot follow degenerate curve");
+        if (deriv.isZero()) throw new IllegalArgumentException("Cannot follow degenerate curve");
         return deriv.normalized();
     }
-    double getClosestT(Vector2D pose);
 
     default double curvature(double t) {
         Vector2D derivative = getDerivative(t);
