@@ -648,7 +648,8 @@ public class FollowerConstants {
         driveKalmanFilterDataCovariance = 1;
       
         stuckVelocity = 1.0;
-        stuckTValue = 0.8;
+        stuckTValueLow = 0.1;
+        stuckTValueHigh = 0.8;
         stuckTimeout = 500.0;
     }
 }
