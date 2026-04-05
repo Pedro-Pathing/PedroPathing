@@ -5,5 +5,27 @@ plugins {
     alias(libs.plugins.kotlin.android) apply false
 }
 
-group = "com.pedropathing"
-version = "3.0.0-SNAPSHOT"
+subprojects {
+    group = "com.pedropathing"
+    version = property("version") as String
+}
+
+if (System.getenv("PUBLISH_PEDRO") == "yes please") {
+    tasks.register("deployCentralPortal") {
+        group = "publishing"
+        description = "Publishes all subprojects to Maven Central."
+        dependsOn(subprojects.map { it.tasks.named("deployCentralPortal") })
+    }
+
+    tasks.register("deployNexusSnapshot") {
+        group = "publishing"
+        description = "Publishes all subprojects to Maven Central Snapshots."
+        dependsOn(subprojects.map { it.tasks.named("deployNexusSnapshot") })
+    }
+}
+
+tasks.register("deployLocal") {
+    group = "publishing"
+    description = "Publishes all subprojects to Maven Local."
+    dependsOn(subprojects.map { it.tasks.named("deployLocal") })
+}
