@@ -1,4 +1,4 @@
-package com.pedropathing.control;
+package com.pedropathing.control.controllers;
 
 import java.util.NavigableMap;
 import java.util.TreeMap;
@@ -6,7 +6,7 @@ import java.util.TreeMap;
 public class PiecewiseController implements Controller {
     private final NavigableMap<Double, Controller> controllers;
 
-    public PiecewiseController(Controller baseline) {
+    PiecewiseController(Controller baseline) {
         this.controllers = new TreeMap<>();
         this.controllers.put(Double.NEGATIVE_INFINITY, baseline);
     }
@@ -23,8 +23,8 @@ public class PiecewiseController implements Controller {
     }
 
     @Override
-    public double calculate(double error) {
-        return controllers.floorEntry(error).getValue().calculate(error);
+    public double calculate(double target, double error) {
+        return controllers.floorEntry(error).getValue().calculate(target, error);
     }
 
     @Override

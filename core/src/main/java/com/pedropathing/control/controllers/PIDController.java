@@ -1,15 +1,15 @@
-package com.pedropathing.control;
+package com.pedropathing.control.controllers;
 
 public class PIDController implements Controller {
     public final PIDCoefficients coefficients;
     private double integral = 0, previousError = 0, previousTime = System.nanoTime();
 
-    public PIDController(PIDCoefficients coefficients) {
+    PIDController(PIDCoefficients coefficients) {
         this.coefficients = coefficients;
     }
 
     @Override
-    public double calculate(double error) {
+    public double calculate(double target, double error) {
         long nanoTime = System.nanoTime();
         double delta = nanoTime - previousTime;
         previousTime = nanoTime;

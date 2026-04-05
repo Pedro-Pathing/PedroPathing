@@ -1,6 +1,6 @@
 package com.pedropathing.algorithm;
 
-import com.pedropathing.control.Controller;
+import com.pedropathing.control.controllers.Controller;
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.follower.FollowState;
 import com.pedropathing.math.Angle;
@@ -43,7 +43,7 @@ public class BedroAlgorithm implements Algorithm {
     }
 
     public double heading(double current, double target) {
-        return headingController.calculate(Angle.smallestDifference(current, target) * Angle.turnDirection(current, target));
+        return headingController.calculate(target, Angle.smallestDifference(current, target) * Angle.turnDirection(current, target));
     }
 
     public Vector2D translational(Pose currentPose, Velocity velocity, PathProgress progress, Curve curve) {
@@ -52,7 +52,7 @@ public class BedroAlgorithm implements Algorithm {
         Vector2D gradientLinearVel = velocity.toLinear().projectOnto(gradient);
         double quadraticDisp = gradientLinearVel.quadraticForm(ellipsoidMatrix);
         double linearDisp = gradientLinearVel.dot(linearBraking);
-        return gradient.times(translationalController.calculate(error - quadraticDisp - linearDisp));
+        return gradient.times(translationalController.calculate(0, error - quadraticDisp - linearDisp));
     }
 
     public Vector2D centripetal(double speed, PathProgress progress, Curve curve) {
@@ -69,6 +69,6 @@ public class BedroAlgorithm implements Algorithm {
                 + 4 * quadraticBrakeDirection * progress.remainingDistance)) / (2 * quadraticBrakeDirection);
         double error = targetVel - tangentialVel;
         //TODO: do we need a Kalman Filter?
-        return progress.closestTangentVector.times(driveController.calculate(error));
+        return progress.closestTangentVector.times(driveController.calculate(targetVel, error));
     }
 }
