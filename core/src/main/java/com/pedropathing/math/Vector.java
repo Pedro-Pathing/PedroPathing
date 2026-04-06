@@ -64,6 +64,20 @@ public class Vector {
     }
 
     /**
+     * Adds another vector to this one.
+     */
+    public Vector minus(Vector other) {
+        if (this.size() != other.size()) {
+            throw new IllegalArgumentException("Vector sizes must match.");
+        }
+        double[] result = new double[size()];
+        for (int i = 0; i < size(); i++) {
+            result[i] = this.elements[i] - other.elements[i];
+        }
+        return new Vector(result);
+    }
+
+    /**
      * Computes the dot product of two vectors.
      */
     public double dot(Vector other) {
@@ -126,6 +140,18 @@ public class Vector {
 
     public Vector projectOnto(Vector other) {
         return other.times(dot(other) / other.dot(other));
+    }
+
+    public double quadraticForm(Matrix m) {
+        return dot(transform(m));
+    }
+
+    public double angleTo(Vector other) {
+        return Math.acos(dot(other) / (magnitude() * other.magnitude()));
+    }
+
+    public double distance(Vector other) {
+        return minus(other).magnitude();
     }
 
     public Matrix toMatrix() {

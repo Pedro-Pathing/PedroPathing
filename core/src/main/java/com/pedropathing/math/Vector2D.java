@@ -47,6 +47,10 @@ public class Vector2D {
         return new Vector2D(x * other.y - y * other.x, x * other.x + y * other.y);
     }
 
+    public double det(Vector2D other) {
+        return x * other.y - y * other.x;
+    }
+
     public Vector2D projectOnto(Vector2D other) {
         return other.times(dot(other) / other.dot(other));
     }
@@ -100,7 +104,11 @@ public class Vector2D {
     }
 
     public double quadraticForm(Matrix m) {
-        return transform(m).dot(this);
+        return dot(transform(m));
+    }
+
+    public double angleTo(Vector2D other) {
+        return Math.acos(dot(other) / (magnitude() * other.magnitude()));
     }
 
     public double distance(Vector2D other) {

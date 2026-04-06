@@ -4,6 +4,7 @@ import com.pedropathing.control.controllers.Controller;
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.follower.FollowState;
 import com.pedropathing.math.Angle;
+import com.pedropathing.math.Ellipse2D;
 import com.pedropathing.math.Matrix;
 import com.pedropathing.math.Pose;
 import com.pedropathing.math.Vector2D;
@@ -15,30 +16,32 @@ public class BedroAlgorithm implements Algorithm {
     private final Controller headingController;
     private final Controller translationalController;
     private final Controller driveController;
-    private final Matrix ellipsoidMatrix;
+    private final Ellipse2D quadraticBrake;
     private final Vector2D linearBraking;
+    private final Ellipse2D maxAchievableVelocity;
     private final double centripetalScaling;
     private final double alpha;
+    private final double maxVelocityConstraint;
 
     public BedroAlgorithm(Controller headingController, Controller translationalController, double centripetalScaling,
-                          Vector2D eigenvalues, Vector2D linearBraking, double alpha, Controller driveController) {
+                          Vector2D quadraticBrakeVals, Vector2D linearBraking, double alpha, Controller driveController,
+                          Ellipse2D maxAchievableVelocity, double maxVelocityConstraint) {
         this.headingController = headingController;
         this.translationalController = translationalController;
         this.driveController = driveController;
         this.centripetalScaling = centripetalScaling;
-        ellipsoidMatrix = new Matrix(new double[][]{
-                {eigenvalues.x, 0},
-                {0, eigenvalues.y}
-        });
+        quadraticBrake = new Ellipse2D(quadraticBrakeVals.x, quadraticBrakeVals.y);
         this.linearBraking = linearBraking;
         this.alpha = alpha;
+        this.maxAchievableVelocity = maxAchievableVelocity;
+        this.maxVelocityConstraint = maxVelocityConstraint;
     }
 
     @Override
     public DrivePowers calculate(FollowState state) {
         Vector2D translational = translational(state.getPose(), state.getVelocity(), state.getPath().pathProgress, state.getPath().currentCurve());
         Vector2D centripetal = centripetal(state.getTangentialSpeed(), state.getPath().pathProgress, state.getPath().currentCurve());
-        Vector2D drive = drive(state.getTangentialSpeed(), state.getPath().pathProgress);
+        Vector2D drive = drive(state.getTangentialSpeed(), state.getPath().pathProgress, state.getPose().heading);
         return new DrivePowers(0, 0, heading(state.getPose().heading, state.getPath().pathProgress.closestPose.heading));
     }
 
@@ -50,7 +53,7 @@ public class BedroAlgorithm implements Algorithm {
         double error = currentPose.distance(progress.closestPose);
         Vector2D gradient = curve.leftGradient(progress.tValue);
         Vector2D gradientLinearVel = velocity.toLinear().projectOnto(gradient);
-        double quadraticDisp = gradientLinearVel.quadraticForm(ellipsoidMatrix);
+        double quadraticDisp = gradientLinearVel.quadraticForm(quadraticBrake.characteristic);
         double linearDisp = gradientLinearVel.dot(linearBraking);
         return gradient.times(translationalController.calculate(0, error - quadraticDisp - linearDisp));
     }
@@ -62,11 +65,14 @@ public class BedroAlgorithm implements Algorithm {
         return normal.times(speed * speed * curvature * centripetalScaling);
     }
 
-    public Vector2D drive(double tangentialVel, PathProgress progress) {
-        double quadraticBrakeDirection = alpha * progress.closestTangentVector.transform(ellipsoidMatrix).dot(progress.closestTangentVector); //k2
+    public Vector2D drive(double tangentialVel, PathProgress progress, double heading) {
+        double quadraticBrakeDirection = alpha * progress.closestTangentVector.transform(quadraticBrake.characteristic).dot(progress.closestTangentVector); //k2
         double linearBrakeDirection = alpha * progress.closestTangentVector.dot(linearBraking); //k1
         double targetVel = (-linearBrakeDirection + Math.sqrt(linearBrakeDirection * linearBrakeDirection
                 + 4 * quadraticBrakeDirection * progress.remainingDistance)) / (2 * quadraticBrakeDirection);
+        targetVel = Math.min(targetVel, maxVelocityConstraint);
+        Vector2D forwardHeadingVector = Vector2D.unit(heading);
+        targetVel = Math.min(targetVel, maxAchievableVelocity.radius(forwardHeadingVector.angleTo(progress.closestTangentVector)));
         double error = targetVel - tangentialVel;
         //TODO: do we need a Kalman Filter?
         return progress.closestTangentVector.times(driveController.calculate(targetVel, error));
