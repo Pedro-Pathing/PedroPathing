@@ -76,6 +76,7 @@ public class PoseTracker {
      */
     public void setStartingPose(Pose set) {
         startingPose = set;
+        currentPose = startingPose;
         previousPose = startingPose;
         previousPoseTime = System.nanoTime();
         currentPoseTime = System.nanoTime();
