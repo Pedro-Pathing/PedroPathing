@@ -114,4 +114,8 @@ public class Vector2D {
     public double distance(Vector2D other) {
         return Math.hypot(x - other.x, y - other.y);
     }
+
+    public Vector2D hadamardProduct(Vector2D other) {
+        return new Vector2D(this.x * other.x, this.y * other.y);
+    }
 }
