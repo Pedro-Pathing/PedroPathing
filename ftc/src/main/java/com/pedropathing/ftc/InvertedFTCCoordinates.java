@@ -37,6 +37,6 @@ public enum InvertedFTCCoordinates implements CoordinateSystem {
     @Override
     public Pose convertToPedro(Pose pose) {
         Pose newPose = new Pose (pose.getX(), pose.getY(), pose.getHeading(), PedroCoordinates.INSTANCE);
-        return newPose.rotate(Math.PI / 2, true).plus(new Pose(72, 72));
+        return newPose.rotate(-Math.PI / 2, true).plus(new Pose(72, 72));
     }
 }
