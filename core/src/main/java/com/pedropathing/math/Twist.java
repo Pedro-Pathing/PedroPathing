@@ -39,4 +39,8 @@ public class Twist {
     public static Twist zero() {
         return ZERO;
     }
+
+    public static Twist fromVector(Vector2D vector) {
+        return new Twist(vector.x, vector.y, 0);
+    }
 }

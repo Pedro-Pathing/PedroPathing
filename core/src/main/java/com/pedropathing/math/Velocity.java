@@ -47,4 +47,8 @@ public class Velocity {
     public static Velocity zero() {
         return ZERO;
     }
+
+    public static Velocity fromVector(Vector2D vector) {
+        return new Velocity(vector.x, vector.y, 0);
+    }
 }

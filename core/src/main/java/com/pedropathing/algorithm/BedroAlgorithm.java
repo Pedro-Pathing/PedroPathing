@@ -8,6 +8,7 @@ import com.pedropathing.math.Ellipse2D;
 import com.pedropathing.math.MathFunctions;
 import com.pedropathing.math.Matrix;
 import com.pedropathing.math.Pose;
+import com.pedropathing.math.Twist;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.math.Velocity;
 import com.pedropathing.paths.Curve;
@@ -57,7 +58,8 @@ public class BedroAlgorithm implements Algorithm {
         Vector2D gradientLinearVel = velocity.toLinear().projectOnto(gradient);
         Vector2D gradientError = gradient.times(error);
         double theta = gradientLinearVel.angleTo(Vector2D.unit(currentPose.heading));
-        Vector2D adjustedError = gradientError.minus(getBrakeDistance(gradientLinearVel.magnitude(), theta));
+        Vector2D adjustedError = gradientError.minus(getBrakeDisplacement(gradientLinearVel.magnitude(), theta)
+                .toVelocity(currentPose.heading).toLinear());
         return gradient.times(translationalController.calculate(0, adjustedError.magnitude()));
     }
 
@@ -84,10 +86,10 @@ public class BedroAlgorithm implements Algorithm {
         return progress.closestTangentVector.times(driveController.calculate(targetVel, error));
     }
 
-    private Vector2D getBrakeDistance(double v, double theta) {
+    private Twist getBrakeDisplacement(double v, double theta) {
         Vector2D unit = Vector2D.unit(theta);
         Vector2D quadraticTerm = unit.hadamardProduct(unit).transform(quadraticBrake).times(v * v);
         Vector2D linearTerm = unit.transform(linearBrake).times(v);
-        return quadraticTerm.plus(linearTerm);
+        return Twist.fromVector(quadraticTerm.plus(linearTerm));
     }
 }
