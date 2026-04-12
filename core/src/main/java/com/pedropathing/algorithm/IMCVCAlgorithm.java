@@ -59,14 +59,29 @@ public class IMCVCAlgorithm implements Algorithm {
     }
 
     public Vector2D translational(Pose currentPose, Velocity velocity, PathProgress progress, Curve curve) {
+        if (progress.atParametricStart) {
+            Vector2D displacement = progress.closestPose.minus(currentPose).toVector2D();
+            return computeTranslationalCorrection(displacement, velocity, currentPose.heading);
+        }
+
+        if (progress.atParametricEnd) {
+            Vector2D displacement = curve.endPoint().minus(currentPose.toVector2D());
+            return computeTranslationalCorrection(displacement, velocity, currentPose.heading);
+        }
+
         double error = currentPose.distance(progress.closestPose);
-        Vector2D gradient = curve.leftGradient(progress.tValue);
-        Vector2D gradientLinearVel = velocity.toLinear().projectOnto(gradient);
-        Vector2D gradientError = gradient.times(error);
-        double theta = gradientLinearVel.angleTo(Vector2D.unit(currentPose.heading));
-        Vector2D adjustedError = gradientError.minus(getBrakeDisplacement(gradientLinearVel.magnitude(), theta)
-                .toVelocity(currentPose.heading).toLinear());
-        return gradient.times(translationalController.calculate(0, adjustedError.magnitude()));
+        Vector2D gradientError = curve.leftGradient(progress.tValue).times(error);
+        return computeTranslationalCorrection(gradientError, velocity, currentPose.heading);
+    }
+
+    private Vector2D computeTranslationalCorrection(Vector2D displacementVector, Velocity velocity, double currentHeading) {
+        Vector2D linearVel = velocity.toLinear().projectOnto(displacementVector);
+        double theta = linearVel.angleTo(Vector2D.unit(currentHeading));
+        Vector2D adjustedError = displacementVector.minus(getBrakeDisplacement(linearVel.magnitude(), theta)
+                .toVelocity(currentHeading).toLinear());
+        double distance = adjustedError.magnitude();
+        if (distance < 1e-3) return Vector2D.zero(); //TODO: Scale 1e-3 according to translational constraint?
+        return adjustedError.times(translationalController.calculate(0, distance)).div(distance);
     }
 
     public Vector2D centripetal(double speed, PathProgress progress, Curve curve) {

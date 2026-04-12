@@ -45,4 +45,6 @@ public interface Curve {
     default Vector2D endPoint() {
         return get(1.0);
     }
+
+    default Vector2D startPoint() {return get(0.0);}
 }

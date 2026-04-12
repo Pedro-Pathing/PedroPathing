@@ -9,4 +9,5 @@ public class PathProgress {
     public double tValue;
     public double remainingDistance;
     public boolean atParametricEnd;
+    public boolean atParametricStart;
 }
