@@ -27,10 +27,11 @@ public class IMCVCAlgorithm implements Algorithm {
     private final double centripetalScaling;
     private final double alpha; //default=1.0
     private final double maxVelocityConstraint;
+    private final boolean useCoast;
 
     public IMCVCAlgorithm(Controller headingController, Controller translationalController, Controller coastController, double centripetalScaling,
                           Vector2D quadraticBrakeVals, Vector2D linearBrakeVals, double alpha, Controller brakeController, double forwardMaxVel,
-                          double lateralMaxVel, double maxVelocityConstraint, double forwardZPA, double lateralZPA) {
+                          double lateralMaxVel, double maxVelocityConstraint, double forwardZPA, double lateralZPA, boolean useCoast, double coastStrength) {
         this.headingController = headingController;
         this.translationalController = translationalController;
         this.coastController = coastController;
@@ -40,8 +41,9 @@ public class IMCVCAlgorithm implements Algorithm {
         linearBrake = Matrix.diag(linearBrakeVals.x, linearBrakeVals.y);
         this.alpha = alpha;
         maxAchievableVelocity = Ellipse2D.fromAxes(forwardMaxVel, lateralMaxVel);
-        maxAchievableAcceleration = Ellipse2D.fromAxes(forwardZPA, lateralZPA);
+        maxAchievableAcceleration = Ellipse2D.fromAxes(forwardZPA * 4 * coastStrength, lateralZPA * 4 * coastStrength);
         this.maxVelocityConstraint = maxVelocityConstraint;
+        this.useCoast = useCoast;
     }
 
     @Override
@@ -76,14 +78,6 @@ public class IMCVCAlgorithm implements Algorithm {
 
     public Vector2D drive(double tangentialVel, PathProgress progress, double heading) {
         double theta = progress.closestTangentVector.angleTo(Vector2D.unit(heading));
-        double maximumDecel = maxAchievableAcceleration.radius(theta);
-        double coastTargetVel = Math.sqrt(2 * Math.abs(maximumDecel) * progress.remainingDistance);
-        double error = coastTargetVel - tangentialVel;
-
-        if (error > 0) {
-            //use coast
-            return progress.closestTangentVector.times(coastController.calculate(coastTargetVel, error));
-        }
 
         double cos = Math.cos(theta);
         double sin = Math.sin(theta);
@@ -94,7 +88,17 @@ public class IMCVCAlgorithm implements Algorithm {
         targetVel = Math.min(targetVel, maxVelocityConstraint);
         Vector2D forwardHeadingVector = Vector2D.unit(heading);
         targetVel = Math.min(targetVel, maxAchievableVelocity.radius(forwardHeadingVector.angleTo(progress.closestTangentVector)));
-        error = targetVel - tangentialVel;
+        double error = targetVel - tangentialVel;
+
+        if (error > 0) {
+            //use coast
+            if (useCoast) {
+                double maximumDecel = maxAchievableAcceleration.radius(theta);
+                double coastTargetVel = Math.sqrt(2 * Math.abs(maximumDecel) * progress.remainingDistance);
+                error = coastTargetVel - tangentialVel;
+                return progress.closestTangentVector.times(coastController.calculate(coastTargetVel, error));
+            } else return progress.closestTangentVector;
+        }
 
         //TODO: do we need a Kalman Filter?
         return progress.closestTangentVector.times(brakeController.calculate(targetVel, error));
