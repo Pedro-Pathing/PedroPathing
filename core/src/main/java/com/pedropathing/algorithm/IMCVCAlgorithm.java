@@ -15,6 +15,8 @@ import com.pedropathing.paths.Curve;
 import com.pedropathing.paths.PathProgress;
 import com.pedropathing.utils.Pair;
 
+import java.util.Optional;
+
 public class IMCVCAlgorithm implements Algorithm {
     private final Controller headingController;
     private final Controller translationalController;
@@ -22,16 +24,23 @@ public class IMCVCAlgorithm implements Algorithm {
     private final Controller coastController;
     private final Matrix quadraticBrake;
     private final Matrix linearBrake;
+    
     private final Ellipse2D maxAchievableVelocity;
-    private final Ellipse2D maxAchievableAcceleration;
+    private final Ellipse2D coastingDecelerationConstraint;
+    private final double maxAccelerationConstraint;
+    private final double maxVelocityConstraint;
+    private final double velocityToCoastToBeforeBraking;
+    
     private final double centripetalScaling;
     private final double alpha; //default=1.0
-    private final double maxVelocityConstraint;
-    private final boolean useCoast;
 
     public IMCVCAlgorithm(Controller headingController, Controller translationalController, Controller coastController, double centripetalScaling,
                           Vector2D quadraticBrakeVals, Vector2D linearBrakeVals, double alpha, Controller brakeController, double forwardMaxVel,
-                          double lateralMaxVel, double maxVelocityConstraint, double forwardZPA, double lateralZPA, boolean useCoast, double coastStrength) {
+                          double lateralMaxVel, Optional<Double> maxVelocityConstraint,
+                          double forwardZPA, double lateralZPA,
+                          Optional<Double> coastStrength,
+                          Optional<Double> maxAccelerationConstraint,
+                          Optional<Double> velocityToCoastToBeforeBraking) {
         this.headingController = headingController;
         this.translationalController = translationalController;
         this.coastController = coastController;
@@ -41,16 +50,24 @@ public class IMCVCAlgorithm implements Algorithm {
         linearBrake = Matrix.diag(linearBrakeVals.x, linearBrakeVals.y);
         this.alpha = alpha;
         maxAchievableVelocity = Ellipse2D.fromAxes(forwardMaxVel, lateralMaxVel);
-        maxAchievableAcceleration = Ellipse2D.fromAxes(forwardZPA * 4 * coastStrength, lateralZPA * 4 * coastStrength);
-        this.maxVelocityConstraint = maxVelocityConstraint;
-        this.useCoast = useCoast;
+        
+        coastingDecelerationConstraint =
+            coastStrength.map(aDouble -> Ellipse2D.fromAxes(forwardZPA * 4 * aDouble,
+                                                            lateralZPA * 4 * aDouble))
+                .orElseGet(() -> Ellipse2D.fromAxes(Double.POSITIVE_INFINITY,
+                                                    Double.POSITIVE_INFINITY));
+        this.maxVelocityConstraint =
+            maxVelocityConstraint.orElse(Double.POSITIVE_INFINITY);
+        this.maxAccelerationConstraint = maxAccelerationConstraint.orElse(Double.POSITIVE_INFINITY);
+        this.velocityToCoastToBeforeBraking = velocityToCoastToBeforeBraking.orElse(0.0);
     }
 
     @Override
     public DrivePowers calculate(FollowState state) {
         Vector2D translational = translational(state.getPose(), state.getVelocity(), state.getPath().pathProgress, state.getPath().currentCurve());
         Vector2D centripetal = centripetal(state.getTangentialSpeed(), state.getPath().pathProgress, state.getPath().currentCurve());
-        Vector2D drive = drive(state.getTangentialSpeed(), state.getPath().pathProgress, state.getPose().heading);
+        Vector2D drive = drive(state.getTangentialSpeed(), state.getPath().pathProgress
+            , state.getPose().heading, state.getDeltaTime());
         return new DrivePowers(0, 0, heading(state.getPose().heading, state.getPath().pathProgress.closestPose.heading));
     }
 
@@ -91,9 +108,14 @@ public class IMCVCAlgorithm implements Algorithm {
         return normal.times(speed * speed * curvature * centripetalScaling);
     }
 
-    public Vector2D drive(double tangentialVel, PathProgress progress, double heading) {
-        Vector2D forwardHeadingVector = Vector2D.unit(heading);
-        double constraintedVelocity = Math.min(maxAchievableVelocity.radius(forwardHeadingVector.angleTo(progress.closestTangentVector)), maxVelocityConstraint);
+    public Vector2D drive(double tangentialVel, PathProgress progress, double heading,
+                          double deltaTime) {
+        double maxVelocityToFitAccel =
+            tangentialVel + maxAccelerationConstraint * deltaTime;
+        double constrainedVelocity = Math.min(maxVelocityConstraint, maxVelocityToFitAccel);
+        double currentMaxAchievableVelocity =
+            maxAchievableVelocity.radius(Vector2D.unit(heading).angleTo(progress.closestTangentVector));
+        constrainedVelocity = Math.min(constrainedVelocity, currentMaxAchievableVelocity);
         
         double theta = progress.closestTangentVector.angleTo(Vector2D.unit(heading));
 
@@ -106,16 +128,15 @@ public class IMCVCAlgorithm implements Algorithm {
         
         boolean isBraking = tangentialVel >= targetVelocityToBrakeInTime;
         if (!isBraking) {
-            if (useCoast) {
-                double maximumDecel = maxAchievableAcceleration.radius(theta);
-                double coastTargetVel = Math.sqrt(2 * Math.abs(maximumDecel) * progress.remainingDistance);
-                double targetVel = Math.min(coastTargetVel, constraintedVelocity);
-                error = Math.max(0, targetVel - tangentialVel));
-                return progress.closestTangentVector.times(coastController.calculate(targetVel, error));
-            } else return progress.closestTangentVector;
+            double targetCoastDecel = coastingDecelerationConstraint.radius(theta);
+            double coastTargetVel =
+                Math.sqrt(velocityToCoastToBeforeBraking * velocityToCoastToBeforeBraking + 2 * Math.abs(targetCoastDecel) * progress.remainingDistance);
+            double targetVel = Math.min(coastTargetVel, constrainedVelocity);
+            double error = Math.max(0, targetVel - tangentialVel);
+            return progress.closestTangentVector.times(coastController.calculate(targetVel, error));
         }
         
-        double targetVel = Math.min(targetVel, constraintedVelocity);
+        double targetVel = Math.min(targetVelocityToBrakeInTime, constrainedVelocity);
         double error = targetVel - tangentialVel;
 
         //TODO: do we need a Kalman Filter?

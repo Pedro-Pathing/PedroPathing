@@ -11,12 +11,18 @@ public final class FollowState {
     private Twist twist = Twist.zero();
     private Path path;
     private double tangentialSpeed = 0; //Signed
+    private double previousTime = System.nanoTime();
+    private double deltaTime;
 
     public FollowState(Path path) {
         this.path = path;
     }
 
     public void update(Pose pose, Velocity velocity, Twist twist) {
+        long nanoTime = System.nanoTime();
+        double delta = nanoTime - previousTime;
+        previousTime = nanoTime;
+        
         this.pose = pose;
         this.velocity = velocity;
         this.twist = twist;
@@ -41,6 +47,10 @@ public final class FollowState {
 
     public double getTangentialSpeed() {
         return tangentialSpeed;
+    }
+    
+    public double getDeltaTime() {
+        return deltaTime;
     }
 }
 
