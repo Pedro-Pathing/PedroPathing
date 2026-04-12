@@ -15,28 +15,32 @@ import com.pedropathing.paths.Curve;
 import com.pedropathing.paths.PathProgress;
 import com.pedropathing.utils.Pair;
 
-public class BedroAlgorithm implements Algorithm {
+public class IMCVCAlgorithm implements Algorithm {
     private final Controller headingController;
     private final Controller translationalController;
-    private final Controller driveController;
+    private final Controller brakeController;
+    private final Controller coastController;
     private final Matrix quadraticBrake;
     private final Matrix linearBrake;
     private final Ellipse2D maxAchievableVelocity;
+    private final Ellipse2D maxAchievableAcceleration;
     private final double centripetalScaling;
     private final double alpha; //default=1.0
     private final double maxVelocityConstraint;
 
-    public BedroAlgorithm(Controller headingController, Controller translationalController, double centripetalScaling,
-                          Vector2D quadraticBrakeVals, Vector2D linearBrakeVals, double alpha, Controller driveController,
-                          Ellipse2D maxAchievableVelocity, double maxVelocityConstraint) {
+    public IMCVCAlgorithm(Controller headingController, Controller translationalController, Controller coastController, double centripetalScaling,
+                          Vector2D quadraticBrakeVals, Vector2D linearBrakeVals, double alpha, Controller brakeController, double forwardMaxVel,
+                          double lateralMaxVel, double maxVelocityConstraint, double forwardZPA, double lateralZPA) {
         this.headingController = headingController;
         this.translationalController = translationalController;
-        this.driveController = driveController;
+        this.coastController = coastController;
+        this.brakeController = brakeController;
         this.centripetalScaling = centripetalScaling;
         quadraticBrake = Matrix.diag(quadraticBrakeVals.x, quadraticBrakeVals.y);
         linearBrake = Matrix.diag(linearBrakeVals.x, linearBrakeVals.y);
         this.alpha = alpha;
-        this.maxAchievableVelocity = maxAchievableVelocity;
+        maxAchievableVelocity = Ellipse2D.fromAxes(forwardMaxVel, lateralMaxVel);
+        maxAchievableAcceleration = Ellipse2D.fromAxes(forwardZPA, lateralZPA);
         this.maxVelocityConstraint = maxVelocityConstraint;
     }
 
@@ -72,6 +76,15 @@ public class BedroAlgorithm implements Algorithm {
 
     public Vector2D drive(double tangentialVel, PathProgress progress, double heading) {
         double theta = progress.closestTangentVector.angleTo(Vector2D.unit(heading));
+        double maximumDecel = maxAchievableAcceleration.radius(theta);
+        double coastTargetVel = Math.sqrt(2 * Math.abs(maximumDecel) * progress.remainingDistance);
+        double error = coastTargetVel - tangentialVel;
+
+        if (error > 0) {
+            //use coast
+            return progress.closestTangentVector.times(coastController.calculate(coastTargetVel, error));
+        }
+
         double cos = Math.cos(theta);
         double sin = Math.sin(theta);
         double k1 = quadraticBrake.get(0, 0) * cos * cos * cos + quadraticBrake.get(1, 1) * sin * sin * sin;
@@ -81,9 +94,10 @@ public class BedroAlgorithm implements Algorithm {
         targetVel = Math.min(targetVel, maxVelocityConstraint);
         Vector2D forwardHeadingVector = Vector2D.unit(heading);
         targetVel = Math.min(targetVel, maxAchievableVelocity.radius(forwardHeadingVector.angleTo(progress.closestTangentVector)));
-        double error = targetVel - tangentialVel;
+        error = targetVel - tangentialVel;
+
         //TODO: do we need a Kalman Filter?
-        return progress.closestTangentVector.times(driveController.calculate(targetVel, error));
+        return progress.closestTangentVector.times(brakeController.calculate(targetVel, error));
     }
 
     private Twist getBrakeDisplacement(double v, double theta) {

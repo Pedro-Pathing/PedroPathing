@@ -35,6 +35,13 @@ public class Ellipse2D {
         characteristic = rotation.times(Matrix.diag(eigenvalues).times(rotation.transpose()));
     }
 
+    public Ellipse2D(double theta, double majorAxis, double minorAxis) {
+        this.eigenvalues = new double[] {1 / majorAxis / majorAxis, 1 / minorAxis / minorAxis};
+        this.theta = theta;
+        Matrix rotation = Matrix.rotation(theta);
+        characteristic = rotation.times(Matrix.diag(eigenvalues).times(rotation.transpose()));
+    }
+
     public Ellipse2D(double majorAxis, double minorAxis) {
         eigenvalues = new double[] {1 / majorAxis / majorAxis, 1 / minorAxis / minorAxis};
         characteristic = Matrix.diag(eigenvalues);
@@ -87,5 +94,10 @@ public class Ellipse2D {
         double xTerm = Math.cos(phi) / getMajorAxis();
         double yTerm = Math.sin(phi) / getMinorAxis();
         return 1 / Math.hypot(xTerm, yTerm);
+    }
+
+    public static Ellipse2D fromAxes(double forwardAxis, double lateralAxis) {
+        if (forwardAxis >= lateralAxis) return new Ellipse2D(forwardAxis, lateralAxis);
+        else return new Ellipse2D(Math.PI / 2, lateralAxis, forwardAxis);
     }
 }
