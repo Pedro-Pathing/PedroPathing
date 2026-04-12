@@ -92,6 +92,9 @@ public class IMCVCAlgorithm implements Algorithm {
     }
 
     public Vector2D drive(double tangentialVel, PathProgress progress, double heading) {
+        Vector2D forwardHeadingVector = Vector2D.unit(heading);
+        double constraintedVelocity = Math.min(maxAchievableVelocity.radius(forwardHeadingVector.angleTo(progress.closestTangentVector)), maxVelocityConstraint);
+        
         double theta = progress.closestTangentVector.angleTo(Vector2D.unit(heading));
 
         double cos = Math.cos(theta);
@@ -99,21 +102,21 @@ public class IMCVCAlgorithm implements Algorithm {
         double k1 = quadraticBrake.get(0, 0) * cos * cos * cos + quadraticBrake.get(1, 1) * sin * sin * sin;
         double k2 = linearBrake.get(0, 0) * cos * cos + linearBrake.get(1, 1) * sin * sin;
         Pair<Double, Double> velocityInversion = MathFunctions.solveQuadratic(k1, k2, -progress.remainingDistance/alpha);
-        double targetVel = Math.max(velocityInversion.first(), velocityInversion.second());
-        targetVel = Math.min(targetVel, maxVelocityConstraint);
-        Vector2D forwardHeadingVector = Vector2D.unit(heading);
-        targetVel = Math.min(targetVel, maxAchievableVelocity.radius(forwardHeadingVector.angleTo(progress.closestTangentVector)));
-        double error = targetVel - tangentialVel;
-
-        if (error > 0) {
-            //use coast
+        double targetVelocityToBrakeInTime = Math.max(velocityInversion.first(), velocityInversion.second());
+        
+        boolean isBraking = tangentialVel >= targetVelocityToBrakeInTime;
+        if (!isBraking) {
             if (useCoast) {
                 double maximumDecel = maxAchievableAcceleration.radius(theta);
                 double coastTargetVel = Math.sqrt(2 * Math.abs(maximumDecel) * progress.remainingDistance);
-                error = coastTargetVel - tangentialVel;
-                return progress.closestTangentVector.times(coastController.calculate(coastTargetVel, error));
+                double targetVel = Math.min(coastTargetVel, constraintedVelocity);
+                error = Math.max(0, targetVel - tangentialVel));
+                return progress.closestTangentVector.times(coastController.calculate(targetVel, error));
             } else return progress.closestTangentVector;
         }
+        
+        double targetVel = Math.min(targetVel, constraintedVelocity);
+        double error = targetVel - tangentialVel;
 
         //TODO: do we need a Kalman Filter?
         return progress.closestTangentVector.times(brakeController.calculate(targetVel, error));
