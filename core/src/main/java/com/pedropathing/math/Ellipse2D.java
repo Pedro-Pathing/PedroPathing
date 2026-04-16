@@ -64,11 +64,11 @@ public class Ellipse2D {
     }
 
 
-    public boolean interiorPoint(Vector point) {
+    public boolean interiorPoint(Vector2D point) {
         return point.quadraticForm(characteristic) < 1;
     }
 
-    public boolean onBoundary(Vector point) {
+    public boolean onBoundary(Vector2D point) {
         return Math.abs(point.quadraticForm(characteristic) - 1) < 1e-6;
     }
 

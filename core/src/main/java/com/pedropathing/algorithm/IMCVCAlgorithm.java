@@ -94,7 +94,7 @@ public class IMCVCAlgorithm implements Algorithm {
     private Vector2D computeTranslationalCorrection(Vector2D displacementVector, Velocity velocity, double currentHeading) {
         Vector2D linearVel = velocity.toLinear().projectOnto(displacementVector);
         double theta = linearVel.angleTo(Vector2D.unit(currentHeading));
-        Vector2D adjustedError = displacementVector.minus(getBrakeDisplacement(linearVel.magnitude(), theta)
+        Vector2D adjustedError = displacementVector.minus(getBrakeDisplacement(linearVel.magnitude(), theta, Math.signum(linearVel.dot(displacementVector)))
                 .toVelocity(currentHeading).toLinear());
         double distance = adjustedError.magnitude();
         if (distance < 1e-3) return Vector2D.zero(); //TODO: Scale 1e-3 according to translational constraint?
@@ -143,10 +143,10 @@ public class IMCVCAlgorithm implements Algorithm {
         return progress.closestTangentVector.times(brakeController.calculate(targetVel, error));
     }
 
-    private Twist getBrakeDisplacement(double v, double theta) {
+    private Twist getBrakeDisplacement(double v, double theta, double sign) {
         Vector2D unit = Vector2D.unit(theta);
         Vector2D quadraticTerm = unit.hadamardProduct(unit).transform(quadraticBrake).times(v * v);
-        Vector2D linearTerm = unit.transform(linearBrake).times(v);
-        return Twist.fromVector(quadraticTerm.plus(linearTerm));
+        Vector2D linearTerm = unit.transform(linearBrake).times(Math.abs(v));
+        return Twist.fromVector(quadraticTerm.plus(linearTerm).times(sign));
     }
 }

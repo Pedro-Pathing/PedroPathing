@@ -36,6 +36,10 @@ public class Twist {
         return new Twist(vx + other.vx, vy + other.vy, omega + other.omega);
     }
 
+    public Twist times(double scalar) {
+        return new Twist(vx * scalar, vy * scalar, omega * scalar);
+    }
+
     public static Twist zero() {
         return ZERO;
     }
