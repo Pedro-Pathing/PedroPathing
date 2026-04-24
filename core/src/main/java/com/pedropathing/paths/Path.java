@@ -603,7 +603,7 @@ public class Path {
      * @param maxVelocity the maximum velocity to set.
      */
     public void setMaxVelocity(double maxVelocity) {
-        constraints.setVelocityConstraint(maxVelocity);
+        constraints.setMaxVelocity(maxVelocity);
         if (curve != null) curve.setPathConstraints(constraints);
     }
 

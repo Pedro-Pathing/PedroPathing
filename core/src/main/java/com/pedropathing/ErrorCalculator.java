@@ -148,7 +148,7 @@ public class ErrorCalculator {
                     forwardDistanceToGoal,
                     forwardAcceleration
                             * (currentPath.getBrakingStrength() * 4)
-            ), forwardVelocityGoal);
+            ), Math.abs(forwardVelocityGoal));
         }
         double forwardVelocityZeroPowerDecay = forwardVelocity -
                 Kinematics.getFinalVelocityAtDistance(
@@ -176,7 +176,7 @@ public class ErrorCalculator {
                     lateralDistanceToGoal,
                     lateralAcceleration
                             * (currentPath.getBrakingStrength() * 4)
-            ), lateralVelocityGoal);
+            ), Math.abs(forwardVelocityGoal));
         }
         double lateralVelocityZeroPowerDecay = lateralVelocity -
                 Kinematics.getFinalVelocityAtDistance(
