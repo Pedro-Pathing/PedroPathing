@@ -295,12 +295,14 @@ public class VectorCalculator {
 
         if (usePredictiveBraking) {
             if (currentPath.isAtParametricEnd()) {
-                return new Vector(
+                Vector result = new Vector();
+                result.setOrthogonalComponents(
                     predictiveBrakingController.computeOutput(translationalError.getXComponent(),
                                                               velocity.getXComponent()),
                     predictiveBrakingController.computeOutput(translationalError.getYComponent(),
                                                               velocity.getYComponent())
                 );
+                return result;
             }
 
             Vector normal = currentPath.getClosestLeftGradientVector();
