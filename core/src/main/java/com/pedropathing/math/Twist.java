@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.math;
 
 import lombok.Value;
@@ -8,6 +12,7 @@ public class Twist {
     double vx;
     double vy;
     double omega;
+
     public static Twist zero() {
         return ZERO;
     }
@@ -20,8 +25,7 @@ public class Twist {
         return new Velocity(
                 vx * Math.cos(heading) + vy * -Math.sin(heading),
                 vx * Math.sin(heading) + vy * Math.cos(heading),
-                omega
-        );
+                omega);
     }
 
     public Vector toVector() {
@@ -29,10 +33,10 @@ public class Twist {
     }
 
     public Matrix toMatrix() {
-        return new Matrix(new double[][]{
-                {0.0, -omega, vx},
-                {omega, 0.0, vy},
-                {0.0, 0.0, 0.0}
+        return new Matrix(new double[][] {
+            {0.0, -omega, vx},
+            {omega, 0.0, vy},
+            {0.0, 0.0, 0.0}
         });
     }
 

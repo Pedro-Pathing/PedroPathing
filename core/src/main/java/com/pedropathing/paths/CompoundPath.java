@@ -1,9 +1,11 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.paths;
 
-import com.pedropathing.math.Vector2D;
 import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.paths.interpolator.Interpolator;
-
 import java.util.*;
 
 public class CompoundPath extends Path {

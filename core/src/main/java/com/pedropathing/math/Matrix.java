@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.math;
 
 import com.pedropathing.utils.Pair;
@@ -23,24 +27,22 @@ public class Matrix {
         this.cols = data[0].length;
         this.data = new double[rows * cols];
         for (int i = 0; i < rows; i++) {
-            if (data[i].length != cols) throw new IllegalArgumentException(
-                    String.format("Matrix row 0 had length %d but matrix row %d had length %d", cols, i, data[i].length)
-            );
+            if (data[i].length != cols)
+                throw new IllegalArgumentException(String.format(
+                        "Matrix row 0 had length %d but matrix row %d had length %d", cols, i, data[i].length));
             System.arraycopy(data[i], 0, this.data, i * cols, cols);
         }
     }
 
     public static Matrix diag(double... eigenvalues) {
         double[][] data = new double[eigenvalues.length][eigenvalues.length];
-        for (int i = 0; i < eigenvalues.length; i++)
-            data[i][i] = eigenvalues[i];
+        for (int i = 0; i < eigenvalues.length; i++) data[i][i] = eigenvalues[i];
         return new Matrix(data);
     }
 
     public static Matrix identity(int n) {
         double[][] data = new double[n][n];
-        for (int i = 0; i < n; i++)
-            data[i][i] = 1;
+        for (int i = 0; i < n; i++) data[i][i] = 1;
         return new Matrix(data);
     }
 
@@ -52,9 +54,9 @@ public class Matrix {
     public static Matrix rotation(double theta) {
         double sin = Math.sin(theta);
         double cos = Math.cos(theta);
-        return new Matrix(new double[][]{
-                {cos, -sin},
-                {sin, cos}
+        return new Matrix(new double[][] {
+            {cos, -sin},
+            {sin, cos}
         });
     }
 
@@ -127,8 +129,7 @@ public class Matrix {
      * Multiplies this matrix by any n-dimensional Vector.
      */
     public Vector times(Vector v) {
-        if (this.cols != v.size())
-            throw new IllegalArgumentException("Dimension mismatch");
+        if (this.cols != v.size()) throw new IllegalArgumentException("Dimension mismatch");
 
         double[] result = new double[this.rows];
         for (int i = 0; i < this.rows; i++) {

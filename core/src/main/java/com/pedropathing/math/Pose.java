@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.math;
 
 import lombok.Value;
@@ -22,10 +26,10 @@ public class Pose {
     public Matrix toMatrix() {
         double sin = Math.sin(heading);
         double cos = Math.cos(heading);
-        return new Matrix(new double[][]{
-                {cos, -sin, x},
-                {sin, cos, y},
-                {0.0, 0.0, 1.0}
+        return new Matrix(new double[][] {
+            {cos, -sin, x},
+            {sin, cos, y},
+            {0.0, 0.0, 1.0}
         });
     }
 
@@ -38,9 +42,10 @@ public class Pose {
         double theta = twist.omega() * time;
         double sin = Math.sin(theta);
         double cos = Math.cos(theta);
-        Vector2D localDeltas = Vector2D.cartesian((sin * twist.vx() - (1 - cos) * twist.vy()) / twist.omega(),
+        Vector2D localDeltas = Vector2D.cartesian(
+                (sin * twist.vx() - (1 - cos) * twist.vy()) / twist.omega(),
                 ((1 - cos) * twist.vx() + sin * twist.vy()) / twist.omega());
-        Vector2D globalDeltas = localDeltas.transform(Matrix.rotation(heading)); //TODO: Implement Matrix2D or smth
+        Vector2D globalDeltas = localDeltas.transform(Matrix.rotation(heading)); // TODO: Implement Matrix2D or smth
         return new Pose(x + globalDeltas.x(), y + globalDeltas.y(), heading + theta);
     }
 
@@ -64,6 +69,7 @@ public class Pose {
     public Pose div(double scalar) {
         return new Pose(x / scalar, y / scalar, heading / scalar);
     }
+
     public double distance(Pose other) {
         return Math.hypot(x - other.x, y - other.y);
     }

@@ -1,13 +1,13 @@
-//package com.pedropathing.follower;
+// package com.pedropathing.follower;
 //
-//import com.pedropathing.algorithm.Algorithm;
-//import com.pedropathing.drivetrain.Drivetrain;
-//import com.pedropathing.drivetrain.DrivePowers;
-//import com.pedropathing.math.Pose;
-//import com.pedropathing.localization.Localizer;
-//import com.pedropathing.paths.Path;
+// import com.pedropathing.algorithm.Algorithm;
+// import com.pedropathing.drivetrain.Drivetrain;
+// import com.pedropathing.drivetrain.DrivePowers;
+// import com.pedropathing.math.Pose;
+// import com.pedropathing.localization.Localizer;
+// import com.pedropathing.paths.Path;
 //
-//public class Follower {
+// public class Follower {
 //    public final Localizer localizer;
 //    public final Drivetrain drivetrain;
 //    private Algorithm algorithm;
@@ -42,6 +42,6 @@
 //    public void setAlgorithm(Algorithm algorithm) {
 //        this.algorithm = algorithm;
 //    }
-//}
+// }
 //
 //// Follower follower = new Follower(localizer, drivetrain, new FieldCentricTeleOp(constants));

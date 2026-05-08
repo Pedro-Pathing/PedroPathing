@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.math;
 
 public class Angles {
@@ -10,9 +14,9 @@ public class Angles {
      * @return returns the normalized angle.
      */
     public static double normalize(double angleRadians) {
-        double angle = angleRadians % (2*Math.PI);
+        double angle = angleRadians % (2 * Math.PI);
         if (angle < 0) {
-            return angle + 2*Math.PI;
+            return angle + 2 * Math.PI;
         }
         return angle;
     }
@@ -27,7 +31,7 @@ public class Angles {
     public static double normalizeSigned(double angleRadians) {
         double angle = normalize(angleRadians);
         if (angle >= Math.PI) {
-            return angle - 2*Math.PI;
+            return angle - 2 * Math.PI;
         }
         return angle;
     }

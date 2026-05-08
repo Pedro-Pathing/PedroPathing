@@ -1,23 +1,23 @@
-//package com.pedropathing.algorithm;
+// package com.pedropathing.algorithm;
 //
-//import com.pedropathing.controllers.Controller;
-//import com.pedropathing.drivetrain.DrivePowers;
-//import com.pedropathing.follower.FollowState;
-//import com.pedropathing.math.Angles;
-//import com.pedropathing.math.Ellipse2D;
-//import com.pedropathing.math.MathFunctions;
-//import com.pedropathing.math.Matrix;
-//import com.pedropathing.math.Pose;
-//import com.pedropathing.math.Twist;
-//import com.pedropathing.math.Vector2D;
-//import com.pedropathing.math.Velocity;
-//import com.pedropathing.paths.curves.Curve;
-//import com.pedropathing.paths.PathProgress;
-//import com.pedropathing.utils.Pair;
+// import com.pedropathing.controllers.Controller;
+// import com.pedropathing.drivetrain.DrivePowers;
+// import com.pedropathing.follower.FollowState;
+// import com.pedropathing.math.Angles;
+// import com.pedropathing.math.Ellipse2D;
+// import com.pedropathing.math.MathFunctions;
+// import com.pedropathing.math.Matrix;
+// import com.pedropathing.math.Pose;
+// import com.pedropathing.math.Twist;
+// import com.pedropathing.math.Vector2D;
+// import com.pedropathing.math.Velocity;
+// import com.pedropathing.paths.curves.Curve;
+// import com.pedropathing.paths.PathProgress;
+// import com.pedropathing.utils.Pair;
 //
-//import java.util.Optional;
+// import java.util.Optional;
 //
-//public class IMCVCAlgorithm implements Algorithm {
+// public class IMCVCAlgorithm implements Algorithm {
 //    private final Controller headingController;
 //    private final Controller translationalController;
 //    private final Controller brakeController;
@@ -34,8 +34,10 @@
 //    private final double centripetalScaling;
 //    private final double alpha; //default=1.0
 //
-//    public IMCVCAlgorithm(Controller headingController, Controller translationalController, Controller coastController, double centripetalScaling,
-//                          Vector2D quadraticBrakeVals, Vector2D linearBrakeVals, double alpha, Controller brakeController, double forwardMaxVel,
+//    public IMCVCAlgorithm(Controller headingController, Controller translationalController, Controller
+// coastController, double centripetalScaling,
+//                          Vector2D quadraticBrakeVals, Vector2D linearBrakeVals, double alpha, Controller
+// brakeController, double forwardMaxVel,
 //                          double lateralMaxVel, Optional<Double> maxVelocityConstraint,
 //                          double forwardZPA, double lateralZPA,
 //                          Optional<Double> coastStrength,
@@ -64,15 +66,19 @@
 //
 //    @Override
 //    public DrivePowers calculate(FollowState state) {
-//        Vector2D translational = translational(state.getPose(), state.getVelocity(), state.getPath().pathProgress, state.getPath().currentCurve());
-//        Vector2D centripetal = centripetal(state.getTangentialSpeed(), state.getPath().pathProgress, state.getPath().currentCurve());
+//        Vector2D translational = translational(state.getPose(), state.getVelocity(), state.getPath().pathProgress,
+// state.getPath().currentCurve());
+//        Vector2D centripetal = centripetal(state.getTangentialSpeed(), state.getPath().pathProgress,
+// state.getPath().currentCurve());
 //        Vector2D drive = drive(state.getTangentialSpeed(), state.getPath().pathProgress
 //            , state.getPose().heading, state.getDeltaTime());
-//        return new DrivePowers(0, 0, heading(state.getPose().heading, state.getPath().pathProgress.closestPose.heading));
+//        return new DrivePowers(0, 0, heading(state.getPose().heading,
+// state.getPath().pathProgress.closestPose.heading));
 //    }
 //
 //    public double heading(double current, double target) {
-//        return headingController.calculate(target, Angles.smallestDifference(current, target) * Angles.turnDirection(current, target));
+//        return headingController.calculate(target, Angles.smallestDifference(current, target) *
+// Angles.turnDirection(current, target));
 //    }
 //
 //    public Vector2D translational(Pose currentPose, Velocity velocity, PathProgress progress, Curve curve) {
@@ -91,10 +97,12 @@
 //        return computeTranslationalCorrection(gradientError, velocity, currentPose.heading);
 //    }
 //
-//    private Vector2D computeTranslationalCorrection(Vector2D displacementVector, Velocity velocity, double currentHeading) {
+//    private Vector2D computeTranslationalCorrection(Vector2D displacementVector, Velocity velocity, double
+// currentHeading) {
 //        Vector2D linearVel = velocity.toLinear().projectOnto(displacementVector);
 //        double theta = linearVel.angleTo(Vector2D.unit(currentHeading));
-//        Vector2D adjustedError = displacementVector.minus(getBrakeDisplacement(linearVel.magnitude(), theta, Math.signum(linearVel.dot(displacementVector)))
+//        Vector2D adjustedError = displacementVector.minus(getBrakeDisplacement(linearVel.magnitude(), theta,
+// Math.signum(linearVel.dot(displacementVector)))
 //                .toVelocity(currentHeading).toLinear());
 //        double distance = adjustedError.magnitude();
 //        if (distance < 1e-3) return Vector2D.zero(); //TODO: Scale 1e-3 according to translational constraint?
@@ -123,14 +131,16 @@
 //        double sin = Math.sin(theta);
 //        double k1 = quadraticBrake.get(0, 0) * cos * cos * cos + quadraticBrake.get(1, 1) * sin * sin * sin;
 //        double k2 = linearBrake.get(0, 0) * cos * cos + linearBrake.get(1, 1) * sin * sin;
-//        Pair<Double, Double> velocityInversion = MathFunctions.solveQuadratic(k1, k2, -progress.remainingDistance/alpha);
+//        Pair<Double, Double> velocityInversion = MathFunctions.solveQuadratic(k1, k2,
+// -progress.remainingDistance/alpha);
 //        double targetVelocityToBrakeInTime = Math.max(velocityInversion.first(), velocityInversion.second());
 //
 //        boolean isBraking = tangentialVel >= targetVelocityToBrakeInTime;
 //        if (!isBraking) {
 //            double targetCoastDecel = coastingDecelerationConstraint.radius(theta);
 //            double coastTargetVel =
-//                Math.sqrt(velocityToCoastToBeforeBraking * velocityToCoastToBeforeBraking + 2 * Math.abs(targetCoastDecel) * progress.remainingDistance);
+//                Math.sqrt(velocityToCoastToBeforeBraking * velocityToCoastToBeforeBraking + 2 *
+// Math.abs(targetCoastDecel) * progress.remainingDistance);
 //            double targetVel = Math.min(coastTargetVel, constrainedVelocity);
 //            double error = Math.max(0, targetVel - tangentialVel);
 //            return progress.closestTangentVector.times(coastController.calculate(targetVel, error));
@@ -149,4 +159,4 @@
 //        Vector2D linearTerm = unit.transform(linearBrake).times(Math.abs(v));
 //        return Twist.fromVector(quadraticTerm.plus(linearTerm).times(sign));
 //    }
-//}
+// }

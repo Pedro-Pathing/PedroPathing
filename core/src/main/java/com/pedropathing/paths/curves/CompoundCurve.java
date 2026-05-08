@@ -1,7 +1,10 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.paths.curves;
 
 import com.pedropathing.math.Vector2D;
-
 import java.util.Arrays;
 
 public class CompoundCurve implements Curve {

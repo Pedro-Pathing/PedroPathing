@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.math;
 
 import com.pedropathing.utils.Pair;
@@ -14,5 +18,4 @@ public class MathFunctions {
     public double clamp(double num, double lower, double upper) {
         return Math.max(lower, Math.min(num, upper));
     }
-
 }

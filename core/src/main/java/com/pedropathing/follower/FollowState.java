@@ -1,11 +1,11 @@
-//package com.pedropathing.follower;
+// package com.pedropathing.follower;
 //
-//import com.pedropathing.math.Pose;
-//import com.pedropathing.math.Twist;
-//import com.pedropathing.math.Velocity;
-//import com.pedropathing.paths.Path;
+// import com.pedropathing.math.Pose;
+// import com.pedropathing.math.Twist;
+// import com.pedropathing.math.Velocity;
+// import com.pedropathing.paths.Path;
 //
-//public final class FollowState {
+// public final class FollowState {
 //    private Pose pose = Pose.zero();
 //    private Velocity velocity = Velocity.zero();
 //    private Twist twist = Twist.zero();
@@ -52,9 +52,9 @@
 //    public double getDeltaTime() {
 //        return deltaTime;
 //    }
-//}
+// }
 //
-///*
+/// *
 // * Curve is BezierPoint, BezierLine, BezierCurve
 // * Path(curve, curve, curve)
 // * Path(path, path)

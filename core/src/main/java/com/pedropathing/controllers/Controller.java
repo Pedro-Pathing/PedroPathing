@@ -1,12 +1,18 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.controllers;
 
 @FunctionalInterface
 public interface Controller {
     double calculate(double target, double error);
-    default void reset() {};
+
+    default void reset() {}
+    ;
 
     static Controller staticFeedforward(double kStatic) {
-        return (t,e) -> kStatic * Math.signum(e);
+        return (t, e) -> kStatic * Math.signum(e);
     }
 
     static Controller dynamicFeedforward(double kF) {

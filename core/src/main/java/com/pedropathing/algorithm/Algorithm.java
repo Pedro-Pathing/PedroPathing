@@ -1,8 +1,8 @@
-//package com.pedropathing.algorithm;
+// package com.pedropathing.algorithm;
 //
-//import com.pedropathing.drivetrain.DrivePowers;
-//import com.pedropathing.follower.FollowState;
+// import com.pedropathing.drivetrain.DrivePowers;
+// import com.pedropathing.follower.FollowState;
 //
-//public interface Algorithm {
+// public interface Algorithm {
 //    DrivePowers calculate(FollowState state);
-//}
+// }
