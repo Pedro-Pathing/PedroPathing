@@ -117,7 +117,7 @@ public class Vector {
 
     public Vector2D toVector2D() {
         if (elements.length != 2) throw new IllegalArgumentException("Vector must have exactly 2 elements.");
-        return new Vector2D(elements[0], elements[1]);
+        return Vector2D.cartesian(elements[0], elements[1]);
     }
 
     /**

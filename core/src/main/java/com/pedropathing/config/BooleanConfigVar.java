@@ -22,6 +22,7 @@ public class BooleanConfigVar {
     }
 
     public boolean get() {
+        require();
         return value;
     }
 
@@ -45,7 +46,7 @@ public class BooleanConfigVar {
             }
 
             @Override
-            public void remove() {
+            public void revert() {
                 value = originalValue;
             }
         };

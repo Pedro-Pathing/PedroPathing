@@ -1,9 +1,16 @@
 package com.pedropathing.paths;
 
-public class Path {
-    public PathProgress pathProgress;
+import com.pedropathing.paths.curves.Curve;
+import com.pedropathing.paths.tvalue.TValue;
+import lombok.experimental.Delegate;
 
-    public Curve currentCurve() {
-        return null;
+public abstract class Path {
+    @Delegate
+    public final Curve curve;
+
+    Path(Curve curve) {
+        this.curve = curve;
     }
+
+    abstract double getHeading(@TValue double t);
 }

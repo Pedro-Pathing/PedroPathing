@@ -1,15 +1,19 @@
 package com.pedropathing.math;
 
-public class Twist {
-    public final double vx;
-    public final double vy;
-    public final double omega;
-    private static final Twist ZERO = new Twist(0, 0, 0);
+import lombok.Value;
 
-    public Twist(double vx, double vy, double omega) {
-        this.vx = vx;
-        this.vy = vy;
-        this.omega = omega;
+@Value
+public class Twist {
+    private static final Twist ZERO = new Twist(0, 0, 0);
+    double vx;
+    double vy;
+    double omega;
+    public static Twist zero() {
+        return ZERO;
+    }
+
+    public static Twist fromVector(Vector2D vector) {
+        return new Twist(vector.x(), vector.y(), 0);
     }
 
     public Velocity toVelocity(double heading) {
@@ -27,8 +31,8 @@ public class Twist {
     public Matrix toMatrix() {
         return new Matrix(new double[][]{
                 {0.0, -omega, vx},
-                {omega,  0.0, vy},
-                {0.0,    0.0, 0.0}
+                {omega, 0.0, vy},
+                {0.0, 0.0, 0.0}
         });
     }
 
@@ -38,13 +42,5 @@ public class Twist {
 
     public Twist times(double scalar) {
         return new Twist(vx * scalar, vy * scalar, omega * scalar);
-    }
-
-    public static Twist zero() {
-        return ZERO;
-    }
-
-    public static Twist fromVector(Vector2D vector) {
-        return new Twist(vector.x, vector.y, 0);
     }
 }

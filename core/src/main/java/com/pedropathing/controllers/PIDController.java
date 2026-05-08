@@ -1,4 +1,4 @@
-package com.pedropathing.control.controllers;
+package com.pedropathing.controllers;
 
 public class PIDController implements Controller {
     public final PIDCoefficients coefficients;

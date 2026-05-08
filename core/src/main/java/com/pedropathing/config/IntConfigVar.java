@@ -22,6 +22,7 @@ public class IntConfigVar {
     }
 
     public int get() {
+        require();
         return value;
     }
 
@@ -45,7 +46,7 @@ public class IntConfigVar {
             }
 
             @Override
-            public void remove() {
+            public void revert() {
                 value = originalValue;
             }
         };

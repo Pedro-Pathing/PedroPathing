@@ -22,6 +22,7 @@ public class DoubleConfigVar {
     }
 
     public double get() {
+        require();
         return value;
     }
 
@@ -45,7 +46,7 @@ public class DoubleConfigVar {
             }
 
             @Override
-            public void remove() {
+            public void revert() {
                 value = originalValue;
             }
         };

@@ -46,7 +46,7 @@ public class ConfigVar<T> {
             }
 
             @Override
-            public void remove() {
+            public void revert() {
                 value = originalValue;
             }
         };

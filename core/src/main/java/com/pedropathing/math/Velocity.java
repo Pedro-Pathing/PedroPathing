@@ -41,7 +41,7 @@ public class Velocity {
     }
 
     public Vector2D toLinear() {
-        return new Vector2D(vx, vy);
+        return Vector2D.cartesian(vx, vy);
     }
 
     public static Velocity zero() {
@@ -49,6 +49,6 @@ public class Velocity {
     }
 
     public static Velocity fromVector(Vector2D vector) {
-        return new Velocity(vector.x, vector.y, 0);
+        return new Velocity(vector.x(), vector.y(), 0);
     }
 }

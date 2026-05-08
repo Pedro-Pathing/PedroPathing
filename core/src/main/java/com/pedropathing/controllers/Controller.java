@@ -1,4 +1,4 @@
-package com.pedropathing.control.controllers;
+package com.pedropathing.controllers;
 
 @FunctionalInterface
 public interface Controller {

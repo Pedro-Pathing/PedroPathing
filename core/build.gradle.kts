@@ -2,10 +2,15 @@ plugins {
     id("java-library")
     id("io.deepmedia.tools.deployer")
     id("org.jetbrains.dokka")
+    id("io.freefair.lombok")
+    id("io.freefair.aspectj.post-compile-weaving")
+    id("com.diffplug.spotless")
 }
 
 dependencies {
     dokkaPlugin(libs.dokka.java.plugin)
+    implementation(libs.aspectj.rt)
+    aspect(libs.aspectj.tools)
 }
 
 java {
@@ -14,6 +19,7 @@ java {
 }
 
 val dokkaJar = tasks.register<Jar>("dokkaJar") {
+    description = "Generates a Dokka Jar"
     dependsOn(tasks.named("dokkaGenerate"))
     from(dokka.basePublicationsDirectory.dir("html"))
     archiveClassifier = "html-docs"
@@ -66,4 +72,29 @@ deployer {
     }
 
     localSpec()
+}
+
+spotless {
+    java {
+        target("src/**/*.java")
+
+        palantirJavaFormat()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+
+        licenseHeaderFile(rootProject.file("notice.txt"))
+    }
+
+    kotlinGradle {
+        ktlint("1.2.1")
+        target("*.gradle.kts")
+    }
+
+    format("misc") {
+        target("*.md", "*.yaml", "*.yml", "*.json", ".gitignore")
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+
 }
