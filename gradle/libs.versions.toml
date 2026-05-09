@@ -1,21 +1,22 @@
 [versions]
 ftc = "11.1.0"
 dokka = "2.2.0"
-#noinspection AndroidGradlePluginVersion
 agp = "8.7.3"
 kotlin = "2.3.21"
 deployer = "0.18.0"
 freefair = "9.5.0"
 aspectj = "1.9.25.1"
 spotless = "8.4.0"
+errorprone-gradle = "5.1.0"
+errorprone = "2.49.0"
 
 [libraries]
-#noinspection Aligned16KB
 ftc-robot-core = { group = "org.firstinspires.ftc", name = "RobotCore", version.ref = "ftc" }
 ftc-hardware = { group = "org.firstinspires.ftc", name = "Hardware", version.ref = "ftc" }
 dokka-java-plugin = { group = "org.jetbrains.dokka", name = "kotlin-as-java-plugin", version.ref = "dokka" }
 aspectj-rt = { group = "org.aspectj", name = "aspectjrt", version.ref = "aspectj" }
 aspectj-tools = { group = "org.aspectj", name = "aspectjtools", version.ref = "aspectj" }
+error-prone-core = { group = "com.google.errorprone", name = "error_prone_core", version.ref = "errorprone" }
 
 [bundles]
 ftc = ["ftc-robot-core", "ftc-hardware"]
@@ -28,3 +29,4 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 lombok = { id = "io.freefair.lombok", version.ref = "freefair" }
 aspectj = { id = "io.freefair.aspectj.post-compile-weaving", version.ref = "freefair" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+errorprone = { id = "net.ltgt.errorprone", version.ref = "errorprone-gradle" }

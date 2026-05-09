@@ -5,12 +5,14 @@ plugins {
     id("io.freefair.lombok")
     id("io.freefair.aspectj.post-compile-weaving")
     id("com.diffplug.spotless")
+    id("net.ltgt.errorprone")
 }
 
 dependencies {
     dokkaPlugin(libs.dokka.java.plugin)
     implementation(libs.aspectj.rt)
     aspect(libs.aspectj.tools)
+    errorprone(libs.error.prone.core)
 }
 
 java {
