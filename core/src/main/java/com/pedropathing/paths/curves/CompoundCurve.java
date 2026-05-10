@@ -5,38 +5,20 @@
 package com.pedropathing.paths.curves;
 
 import com.pedropathing.math.Vector2D;
+import com.pedropathing.paths.api.Piecewise;
 import com.pedropathing.paths.tvalue.TValue;
 
-import java.util.*;
-
 public class CompoundCurve implements Curve {
-    private final List<Curve> curves;
-    private final double totalLength;
-    private final NavigableMap<Double, Curve> curveMap = new TreeMap<>();
+    private final Piecewise<Curve> curves;
 
     public CompoundCurve(Curve... curves) {
         if (curves.length == 0) throw new IllegalArgumentException("Compound curve must have at least one curve.");
-        this.curves = Arrays.asList(curves);
-        totalLength = this.curves.stream().mapToDouble(Curve::length).sum();
-
-        double currentT = 0.0;
-        for (Curve curve : curves) {
-            curveMap.put(currentT, curve);
-            currentT += curve.length() / totalLength;
-        }
-    }
-
-    private Curve getCurve(@TValue double t) {
-        return curveMap.floorEntry(t).getValue();
-    }
-
-    private double getLocalT(@TValue double t) {
-        return (t - curveMap.floorKey(t)) / curveMap.floorEntry(t).getValue().length() * totalLength;
+        this.curves = new Piecewise<>(Curve::length, curves);
     }
 
     @Override
     public Vector2D get(@TValue double t) {
-        return getCurve(t).get(getLocalT(t));
+        return curves.get(t).get(curves.localT(t));
     }
 
     @Override
@@ -44,10 +26,8 @@ public class CompoundCurve implements Curve {
         double bestT = 0.0;
         double bestDistance = Double.POSITIVE_INFINITY;
 
-        for (Map.Entry<Double, Curve> entry : curveMap.entrySet()) {
-            double startT = entry.getKey();
-            Curve curve = entry.getValue();
-
+        for (Piecewise.Segment<Curve> segment : curves.segments()) {
+            Curve curve = segment.value();
             double localT = curve.closestT(position);
 
             Vector2D point = curve.get(localT);
@@ -55,7 +35,7 @@ public class CompoundCurve implements Curve {
 
             if (distance < bestDistance) {
                 bestDistance = distance;
-                bestT = startT + localT * curve.length() / totalLength;
+                bestT = curves.globalT(segment, localT);
             }
         }
 
@@ -64,16 +44,16 @@ public class CompoundCurve implements Curve {
 
     @Override
     public double length() {
-        return totalLength;
+        return curves.length();
     }
 
     @Override
     public Vector2D tangent(double t) {
-        return getCurve(t).tangent(getLocalT(t));
+        return curves.get(t).tangent(curves.localT(t));
     }
 
     @Override
     public double curvature(double t) {
-        return getCurve(t).curvature(getLocalT(t));
+        return curves.get(t).curvature(curves.localT(t));
     }
 }

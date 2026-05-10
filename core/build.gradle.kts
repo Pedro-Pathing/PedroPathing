@@ -20,12 +20,13 @@ java {
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
-val dokkaJar = tasks.register<Jar>("dokkaJar") {
-    description = "Generates a Dokka Jar"
-    dependsOn(tasks.named("dokkaGenerate"))
-    from(dokka.basePublicationsDirectory.dir("html"))
-    archiveClassifier = "html-docs"
-}
+val dokkaJar =
+    tasks.register<Jar>("dokkaJar") {
+        description = "Generates a Dokka Jar"
+        dependsOn(tasks.named("dokkaGenerate"))
+        from(dokka.basePublicationsDirectory.dir("html"))
+        archiveClassifier = "html-docs"
+    }
 
 deployer {
     projectInfo {
@@ -98,5 +99,4 @@ spotless {
         trimTrailingWhitespace()
         endWithNewline()
     }
-
 }
