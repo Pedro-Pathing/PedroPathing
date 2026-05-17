@@ -20,7 +20,7 @@ public final class FollowState {
 
     public void update(Pose pose, Velocity velocity, Twist twist) {
         long nanoTime = System.nanoTime();
-        double delta = nanoTime - previousTime;
+        deltaTime = nanoTime - previousTime;
         previousTime = nanoTime;
         
         this.pose = pose;
