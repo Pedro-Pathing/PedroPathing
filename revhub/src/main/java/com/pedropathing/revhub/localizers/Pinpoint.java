@@ -42,7 +42,7 @@ public class Pinpoint implements Localizer {
     }
 
     public void setPose(Pose pose) {
-        odometry.setPosition( // TODO: need to impl conversion from sdk to pedro
+        odometry.setPosition(
                 new Pose2D(
                         globalDistanceUnit,
                         pose.x(),
@@ -60,13 +60,13 @@ public class Pinpoint implements Localizer {
         odometry.update();
 
         pose = new Pose(
-                odometry.getPosX(globalDistanceUnit), // TODO: need to impl conversion from sdk to pedro
+                odometry.getPosX(globalDistanceUnit),
                 odometry.getPosY(globalDistanceUnit),
                 odometry.getHeading(AngleUnit.RADIANS)
         );
 
         velocity = new Velocity(
-                odometry.getVelX(globalDistanceUnit), // TODO: need to impl conversion from sdk to pedro
+                odometry.getVelX(globalDistanceUnit),
                 odometry.getVelY(globalDistanceUnit),
                 odometry.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS)
         );
