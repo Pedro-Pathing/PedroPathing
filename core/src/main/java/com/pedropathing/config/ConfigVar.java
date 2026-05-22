@@ -4,9 +4,13 @@
  */
 package com.pedropathing.config;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ConfigVar<T> {
     private T value;
     private boolean hasValue;
+    private final List<Validator<T>> validators = new ArrayList<>();
 
     private ConfigVar(T value) {
         this.value = value;
@@ -17,12 +21,16 @@ public class ConfigVar<T> {
         this.hasValue = false;
     }
 
+    public static <T> ConfigVar<T> required() {
+        return new ConfigVar<>();
+    }
+
     public static <T> ConfigVar<T> of(T value) {
         return new ConfigVar<>(value);
     }
 
-    public static <T> ConfigVar<T> empty() {
-        return new ConfigVar<>();
+    public static <T> ConfigVar<T> of(T value, Validator<T> validator) {
+        return new ConfigVar<>(value).validate(validator);
     }
 
     public T get() {
@@ -32,11 +40,8 @@ public class ConfigVar<T> {
 
     public void set(T value) {
         this.value = value;
+        validate();
         this.hasValue = true;
-    }
-
-    public void require() {
-        if (!hasValue) throw new IllegalStateException("Config variable has not been set");
     }
 
     public Modifier modify(T tempValue) {
@@ -54,5 +59,25 @@ public class ConfigVar<T> {
                 value = originalValue;
             }
         };
+    }
+
+    public ConfigVar<T> validate(Validator<T> validator) {
+        this.validators.add(validator);
+        return this;
+    }
+
+    private void validate() {
+        if (value == null) {
+            throw new IllegalArgumentException("Config variable cannot be null");
+        }
+        for (Validator<T> validator : validators) {
+            if (!validator.validate(value)) {
+                throw new IllegalArgumentException("Invalid value for config variable of " + value);
+            }
+        }
+    }
+
+    private void require() {
+        if (!hasValue) throw new IllegalStateException("Config variable has not been set");
     }
 }

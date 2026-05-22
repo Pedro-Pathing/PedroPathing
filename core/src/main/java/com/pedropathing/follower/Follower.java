@@ -1,44 +1,50 @@
-/*
- * Copyright (c) 2026 Pedro Pathing
- * SPDX-License-Identifier: BSD-3-Clause
- */
 package com.pedropathing.follower;
 
 import com.pedropathing.algorithm.Algorithm;
-import com.pedropathing.algorithm.FollowState;
-import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.drivetrain.Drivetrain;
+import com.pedropathing.drivetrain.DrivePowers;
+import com.pedropathing.math.Pose;
 import com.pedropathing.localization.Localizer;
 import com.pedropathing.paths.Path;
-import com.pedropathing.paths.compiled.PathProgress;
-import lombok.experimental.Accessors;
-import lombok.experimental.Delegate;
+import lombok.Getter;
+import lombok.Setter;
 
 public class Follower {
-    @Delegate
     public final Localizer localizer;
-
     public final Drivetrain drivetrain;
-    private @Accessors(fluent = false) Algorithm algorithm;
-    private PathProgress pathProgress;
+
+    @Getter@Setter
+    private Algorithm algorithm;
+    private FollowState state;
 
     public Follower(Localizer localizer, Drivetrain drivetrain, Algorithm algorithm) {
         this.localizer = localizer;
-        this.drivetrain = drivetrain;
         this.algorithm = algorithm;
+        this.drivetrain = drivetrain;
+        this.state = new FollowState(null);
     }
 
     public void update() {
         localizer.update();
-        if (pathProgress != null) pathProgress.update(localizer.getPose());
+        state.update(localizer.getPose(), localizer.getVelocity(), localizer.getTwist());
 
-        FollowState state =
-                new FollowState(localizer.getPose(), localizer.getVelocity(), localizer.getTwist(), pathProgress);
+        if (!isFollowing()) {
+            return;
+        }
+
         DrivePowers powers = algorithm.calculate(state);
         drivetrain.drive(powers, algorithm);
     }
 
     public void follow(Path path) {
-        pathProgress = new PathProgress(path);
+        state = new FollowState(path);
+    }
+
+    public Pose getPose() {
+        return localizer.getPose();
+    }
+
+    public boolean isFollowing() {
+        return state.isFollowing();
     }
 }

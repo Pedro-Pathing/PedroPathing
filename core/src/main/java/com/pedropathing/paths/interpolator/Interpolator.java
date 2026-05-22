@@ -4,27 +4,28 @@
  */
 package com.pedropathing.paths.interpolator;
 
-import com.pedropathing.math.Angles;
 import com.pedropathing.math.Pose;
 import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.paths.tvalue.TValue;
+import com.pedropathing.utils.Utils.Angle;
+
 
 @FunctionalInterface
 public interface Interpolator {
     Interpolator tangent = (Curve curve, @TValue double t) -> curve.tangent(t).theta();
 
     static Interpolator constant(double heading) {
-        double finalHeading = Angles.normalize(heading);
+        double finalHeading = Angle.normalize(heading);
         return (Curve curve, @TValue double t) -> finalHeading;
     }
 
     static Interpolator linear(double start, double end) {
-        double finalStart = Angles.normalize(start);
-        double finalEnd = Angles.normalize(end);
+        double finalStart = Angle.normalize(start);
+        double finalEnd = Angle.normalize(end);
         return (Curve curve, @TValue double t) -> {
             double deltaHeading =
-                    Angles.turnDirection(finalStart, finalEnd) * Angles.smallestDifference(finalStart, finalEnd);
-            return Angles.normalize(finalStart + deltaHeading * t);
+                    Angle.turnDirection(finalStart, finalEnd) * Angle.smallestDifference(finalStart, finalEnd);
+            return Angle.normalize(finalStart + deltaHeading * t);
         };
     }
 

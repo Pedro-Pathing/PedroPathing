@@ -4,9 +4,9 @@
  */
 package com.pedropathing.paths.curves;
 
-import com.pedropathing.math.MathFunctions;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.paths.tvalue.TValue;
+import com.pedropathing.utils.Utils;
 
 public class Line implements Curve {
     private final Vector2D start;
@@ -51,7 +51,7 @@ public class Line implements Curve {
         Vector2D BA = end.minus(start);
         Vector2D PA = position.minus(start);
 
-        return MathFunctions.clamp(BA.dot(PA) / Math.pow(BA.magnitude(), 2), 0, 1);
+        return Utils.clamp(BA.dot(PA) / Math.pow(BA.magnitude(), 2), 0, 1);
     }
 
     @Override
