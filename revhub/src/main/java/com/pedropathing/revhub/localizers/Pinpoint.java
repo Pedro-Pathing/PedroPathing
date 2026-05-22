@@ -13,8 +13,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
 
 public class Pinpoint implements Localizer {
-    private final GoBildaPinpointDriver
-            odometry;
+    private final GoBildaPinpointDriver odometry;
     private final DistanceUnit distanceUnit;
 
     private Pose pose;
@@ -28,6 +27,11 @@ public class Pinpoint implements Localizer {
 
         odometry.setOffsets(config.xPodOffset.get(), config.yPodOffset.get(), config.offsetUnits.get());
         odometry.setEncoderResolution(config.podType.get());
+
+        if (config.ticksPerUnit.get().isPresent()) {
+            odometry.setEncoderResolution(config.ticksPerUnit.get().get(), config.encoderResolutionUnit.get());
+        }
+
         odometry.setEncoderDirections(
                 config.xPodDirection.get(),
                 config.yPodDirection.get()
@@ -50,9 +54,11 @@ public class Pinpoint implements Localizer {
     public void update() {
         odometry.update();
 
-        pose = new Pose(odometry.getPosX(distanceUnit), // TODO: conversion
+        pose = new Pose(
+                odometry.getPosX(distanceUnit), // TODO: conversion
                 odometry.getPosY(distanceUnit),
-                odometry.getHeading(AngleUnit.RADIANS));
+                odometry.getHeading(AngleUnit.RADIANS)
+        );
 
         velocity = new Velocity(
                 odometry.getVelX(distanceUnit),

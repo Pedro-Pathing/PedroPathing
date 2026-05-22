@@ -5,6 +5,8 @@ import com.pedropathing.config.Configuration;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
+import java.util.Optional;
+
 public class PinpointConfig {
     public final ConfigVar<String> name = ConfigVar.required();
     public final ConfigVar<GoBildaPinpointDriver.EncoderDirection> xPodDirection = ConfigVar.of(GoBildaPinpointDriver.EncoderDirection.FORWARD);
@@ -13,8 +15,11 @@ public class PinpointConfig {
     public final ConfigVar<Double> yPodOffset = ConfigVar.required();
     public final ConfigVar<DistanceUnit> offsetUnits = ConfigVar.of(DistanceUnit.INCH);
     public final ConfigVar<DistanceUnit> distanceUnit = ConfigVar.of(DistanceUnit.INCH);
-    ;
-    public final ConfigVar<GoBildaPinpointDriver.GoBildaOdometryPods> podType = ConfigVar.of(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD); // TODO: it cannot just be pod type because custom resolutions also exist!!
+    public final ConfigVar<DistanceUnit> encoderResolutionUnit = ConfigVar.of(DistanceUnit.MM);
+
+    public final ConfigVar<GoBildaPinpointDriver.GoBildaOdometryPods> podType = ConfigVar.of(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+
+    public final ConfigVar<Optional<Double>> ticksPerUnit = ConfigVar.of(Optional.empty());
 
     public PinpointConfig(Configuration<PinpointConfig> config) {
         config.configure(this);
