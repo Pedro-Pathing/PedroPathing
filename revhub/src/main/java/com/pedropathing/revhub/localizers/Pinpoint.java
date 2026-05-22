@@ -14,15 +14,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
 
 public class Pinpoint implements Localizer {
     private final GoBildaPinpointDriver odometry;
-    private final DistanceUnit distanceUnit;
+
+    private static final DistanceUnit DISTANCE_UNIT = DistanceUnit.INCH;
 
     private Pose pose;
     private Velocity velocity;
     private Twist twist;
 
     public Pinpoint(HardwareMap hardwareMap, PinpointConfig config) {
-        this.distanceUnit = config.distanceUnit.get();
-
         odometry = hardwareMap.get(GoBildaPinpointDriver.class, config.name.get());
 
         odometry.setOffsets(config.xPodOffset.get(), config.yPodOffset.get(), config.offsetUnits.get());
@@ -40,14 +39,16 @@ public class Pinpoint implements Localizer {
         update();
     }
 
-    public void setPose(Pose pose) { // TODO: there is no conversion happening here
+    public void setPose(Pose pose) {
         odometry.setPosition(new Pose2D(
-                distanceUnit,
+                DISTANCE_UNIT,
                 pose.x(),
                 pose.y(),
                 AngleUnit.RADIANS,
                 pose.heading()
         ));
+
+        this.pose = pose;
     }
 
     @Override
@@ -55,14 +56,14 @@ public class Pinpoint implements Localizer {
         odometry.update();
 
         pose = new Pose(
-                odometry.getPosX(distanceUnit), // TODO: conversion
-                odometry.getPosY(distanceUnit),
+                odometry.getPosX(DISTANCE_UNIT),
+                odometry.getPosY(DISTANCE_UNIT),
                 odometry.getHeading(AngleUnit.RADIANS)
         );
 
         velocity = new Velocity(
-                odometry.getVelX(distanceUnit),
-                odometry.getVelY(distanceUnit),
+                odometry.getVelX(DISTANCE_UNIT),
+                odometry.getVelY(DISTANCE_UNIT),
                 odometry.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS)
         );
 

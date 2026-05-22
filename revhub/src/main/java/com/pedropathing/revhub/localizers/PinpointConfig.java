@@ -14,7 +14,6 @@ public class PinpointConfig {
     public final ConfigVar<Double> xPodOffset = ConfigVar.required();
     public final ConfigVar<Double> yPodOffset = ConfigVar.required();
     public final ConfigVar<DistanceUnit> offsetUnits = ConfigVar.of(DistanceUnit.INCH);
-    public final ConfigVar<DistanceUnit> distanceUnit = ConfigVar.of(DistanceUnit.INCH);
     public final ConfigVar<DistanceUnit> encoderResolutionUnit = ConfigVar.of(DistanceUnit.MM);
 
     public final ConfigVar<GoBildaPinpointDriver.GoBildaOdometryPods> podType = ConfigVar.of(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
