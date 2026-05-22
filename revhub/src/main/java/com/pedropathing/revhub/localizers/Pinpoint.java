@@ -14,14 +14,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
 
 public class Pinpoint implements Localizer {
     private final GoBildaPinpointDriver odometry;
-    private final DistanceUnit distanceUnit;
+    private final DistanceUnit globalDistanceUnit;
 
     private Pose pose;
     private Velocity velocity;
     private Twist twist;
 
     public Pinpoint(HardwareMap hardwareMap, PinpointConfig config) {
-        this.distanceUnit = config.distanceUnit.get();
+        this.globalDistanceUnit = config.globalDistanceUnit.get();
 
         odometry = hardwareMap.get(GoBildaPinpointDriver.class, config.name.get());
 
@@ -40,14 +40,16 @@ public class Pinpoint implements Localizer {
         update();
     }
 
-    public void setPose(Pose pose) { // TODO: there is no conversion happening here
+    public void setPose(Pose pose) {
         odometry.setPosition(new Pose2D(
-                distanceUnit,
+                globalDistanceUnit,
                 pose.x(),
                 pose.y(),
                 AngleUnit.RADIANS,
                 pose.heading()
         ));
+
+        this.pose = pose;
     }
 
     @Override
@@ -55,14 +57,14 @@ public class Pinpoint implements Localizer {
         odometry.update();
 
         pose = new Pose(
-                odometry.getPosX(distanceUnit), // TODO: conversion
-                odometry.getPosY(distanceUnit),
+                odometry.getPosX(globalDistanceUnit),
+                odometry.getPosY(globalDistanceUnit),
                 odometry.getHeading(AngleUnit.RADIANS)
         );
 
         velocity = new Velocity(
-                odometry.getVelX(distanceUnit),
-                odometry.getVelY(distanceUnit),
+                odometry.getVelX(globalDistanceUnit),
+                odometry.getVelY(globalDistanceUnit),
                 odometry.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS)
         );
 
