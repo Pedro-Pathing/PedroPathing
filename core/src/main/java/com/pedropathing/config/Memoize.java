@@ -7,6 +7,8 @@ package com.pedropathing.config;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import com.pedropathing.math.Vector2D;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(staticName = "memo")

@@ -9,27 +9,36 @@ import com.pedropathing.algorithm.FollowState;
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.drivetrain.Drivetrain;
 import com.pedropathing.localization.Localizer;
-import com.pedropathing.paths.api.Path;
-import lombok.AllArgsConstructor;
+import com.pedropathing.paths.Path;
+import com.pedropathing.paths.compiled.PathProgress;
 import lombok.experimental.Accessors;
 import lombok.experimental.Delegate;
 
-@AllArgsConstructor
 public class Follower {
     @Delegate
     public final Localizer localizer;
 
     public final Drivetrain drivetrain;
     private @Accessors(fluent = false) Algorithm algorithm;
+    private PathProgress pathProgress;
+
+    public Follower(Localizer localizer, Drivetrain drivetrain, Algorithm algorithm) {
+        this.localizer = localizer;
+        this.drivetrain = drivetrain;
+        this.algorithm = algorithm;
+    }
 
     public void update() {
         localizer.update();
-        FollowState state = new FollowState(localizer.getPose(), localizer.getVelocity(), localizer.getTwist());
+        if (pathProgress != null) pathProgress.update(localizer.getPose());
+
+        FollowState state =
+                new FollowState(localizer.getPose(), localizer.getVelocity(), localizer.getTwist(), pathProgress);
         DrivePowers powers = algorithm.calculate(state);
         drivetrain.drive(powers, algorithm);
     }
 
     public void follow(Path path) {
-        state = new FollowState(path);
+        pathProgress = new PathProgress(path);
     }
 }

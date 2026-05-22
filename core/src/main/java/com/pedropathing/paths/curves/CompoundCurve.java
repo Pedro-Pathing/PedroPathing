@@ -5,7 +5,7 @@
 package com.pedropathing.paths.curves;
 
 import com.pedropathing.math.Vector2D;
-import com.pedropathing.paths.api.Piecewise;
+import com.pedropathing.paths.Piecewise;
 import com.pedropathing.paths.tvalue.TValue;
 
 public class CompoundCurve implements Curve {

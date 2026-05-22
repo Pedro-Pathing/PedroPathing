@@ -2,7 +2,7 @@
  * Copyright (c) 2026 Pedro Pathing
  * SPDX-License-Identifier: BSD-3-Clause
  */
-package com.pedropathing.paths.api;
+package com.pedropathing.paths;
 
 import com.pedropathing.config.Modifier;
 import com.pedropathing.paths.curves.Curve;
@@ -18,7 +18,8 @@ public abstract class Path {
     Path(Curve curve, Modifier[] modifiers) {
         this.curve = curve;
         this.modifiers = modifiers;
-    }
 
-    abstract double getHeading(@TValue double t);
+        Path path;
+    }
+    public abstract double heading(@TValue double t);
 }
