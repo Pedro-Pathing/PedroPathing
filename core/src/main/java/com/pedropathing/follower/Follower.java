@@ -13,7 +13,7 @@ public class Follower {
     public final Localizer localizer;
     public final Drivetrain drivetrain;
 
-    @Getter@Setter
+    @Getter @Setter
     private Algorithm algorithm;
     private FollowState state;
 
@@ -33,7 +33,7 @@ public class Follower {
         }
 
         DrivePowers powers = algorithm.calculate(state);
-        drivetrain.drive(powers, algorithm);
+        drivetrain.drive(powers);
     }
 
     public void follow(Path path) {

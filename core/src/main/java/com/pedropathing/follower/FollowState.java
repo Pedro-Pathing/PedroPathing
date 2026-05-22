@@ -34,7 +34,7 @@ public final class FollowState {
 
     public void update(Pose pose, Velocity velocity, Twist twist) {
         long nanoTime = System.nanoTime();
-        deltaTime = nanoTime - previousTime;
+        deltaTime = (nanoTime - previousTime) * 1e-9;
         previousTime = nanoTime;
 
         this.pose = pose;
@@ -43,7 +43,7 @@ public final class FollowState {
 
         pathProgress = getCurve().progressAt(pose.toVector2D());
         tangentialSpeed = velocity.toLinear().dot(pathProgress.tangent);
-        targetHeading = path.interpolator.interpolate(getCurve(), pathProgress.pathCompletion); // TODO: cannot get inteperpolation from here
+        targetHeading = path.interpolator.interpolate(getCurve(), pathProgress.pathCompletion); // TODO: cannot get interpolation from here
 
         // should be distance based because then shorter paths will work
         isBeforeParametricStart = getCurve().displacementToStart(pose.toVector2D()) <= -path.beforeStartDistance;

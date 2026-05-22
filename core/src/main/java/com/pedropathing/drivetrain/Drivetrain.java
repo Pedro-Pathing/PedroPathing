@@ -4,10 +4,8 @@
  */
 package com.pedropathing.drivetrain;
 
-import com.pedropathing.algorithm.Algorithm;
-
 public interface Drivetrain {
-    void drive(DrivePowers powers, Algorithm algorithm);
-    // if (algorithm instanceof TeleOpAlgorithm && constants.usebrake)
+    void drive(DrivePowers powers);
+    void manual(DrivePowers powers);
     void stop();
 }
