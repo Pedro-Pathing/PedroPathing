@@ -2,11 +2,13 @@ package com.pedropathing.algorithm;
 
 import com.pedropathing.config.ConfigVar;
 import com.pedropathing.config.Configuration;
+import com.pedropathing.config.Memoize;
 import com.pedropathing.config.Validator;
 import com.pedropathing.controllers.Controller;
 import com.pedropathing.controllers.PIDCoefficients;
 import com.pedropathing.math.Ellipse2D;
 import com.pedropathing.math.Matrix;
+import com.pedropathing.utils.Pair;
 
 public final class ForesightConfig {
     public final ConfigVar<Controller> headingController = ConfigVar.of(Controller.pid(new PIDCoefficients(1.5, 0, 0.1))); // divide K by distance + epsilon?
@@ -72,15 +74,13 @@ public final class ForesightConfig {
      */
     public final ConfigVar<Double> minCorrectionDistance = ConfigVar.of(1e-3);
 
-    public Ellipse2D getCoastingDecelerationConstraint() {
-        double multiplier = coastingConstraintScale.get();
-        Ellipse2D accel = naturalDeceleration.get();
-
-        return Ellipse2D.fromAxes(
-                -Math.abs(accel.getMajorAxis()) * multiplier,
-                -Math.abs(accel.getMinorAxis()) * multiplier
-        );
-    }
+    public final Memoize<Pair<Ellipse2D, Double>, Ellipse2D> coastingDecelerationConstraint = Memoize.memo(
+            () -> Pair.of(naturalDeceleration.get(), coastingConstraintScale.get()),
+            p -> Ellipse2D.fromAxes(
+                    -Math.abs(p.first().getMajorAxis()) * p.second(),
+                    -Math.abs(p.first().getMinorAxis()) * p.second()
+            )
+    );
 
     public ForesightConfig(Configuration<ForesightConfig> config) {
         config.configure(this);

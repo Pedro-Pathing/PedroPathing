@@ -167,7 +167,7 @@ public class Foresight implements Algorithm {
     }
 
     public double coast(double tangentialVel, double theta, PathProgress pathProgress, double constrainedVelocity) {
-        double targetCoastDecel = config.getCoastingDecelerationConstraint().radius(theta);
+        double targetCoastDecel = config.coastingDecelerationConstraint.get().radius(theta);
         double coastVelNeededToStopInTime =
                 Math.sqrt(config.coastDownToVelocity.get() * config.coastDownToVelocity.get() +
                         2 * Math.abs(targetCoastDecel) * pathProgress.distanceRemaining);
