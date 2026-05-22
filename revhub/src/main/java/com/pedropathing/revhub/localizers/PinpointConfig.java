@@ -9,15 +9,15 @@ import java.util.Optional;
 
 public class PinpointConfig {
     public final ConfigVar<String> name = ConfigVar.required();
-    public final ConfigVar<GoBildaPinpointDriver.EncoderDirection> xPodDirection = ConfigVar.of(GoBildaPinpointDriver.EncoderDirection.FORWARD);
-    public final ConfigVar<GoBildaPinpointDriver.EncoderDirection> yPodDirection = ConfigVar.of(GoBildaPinpointDriver.EncoderDirection.FORWARD);
+    public final ConfigVar<GoBildaPinpointDriver.EncoderDirection> xPodDirection = ConfigVar.required();
+    public final ConfigVar<GoBildaPinpointDriver.EncoderDirection> yPodDirection = ConfigVar.required();
     public final ConfigVar<Double> xPodOffset = ConfigVar.required();
     public final ConfigVar<Double> yPodOffset = ConfigVar.required();
     public final ConfigVar<DistanceUnit> offsetUnits = ConfigVar.of(DistanceUnit.INCH);
 
-    /** Global distance unit for all of poses and positions */
+    /** Global distance unit for all poses and positions */
     public final ConfigVar<DistanceUnit> globalDistanceUnit = ConfigVar.of(DistanceUnit.INCH);
-    public final ConfigVar<DistanceUnit> encoderResolutionUnit = ConfigVar.of(DistanceUnit.MM);
+    public final ConfigVar<DistanceUnit> encoderResolutionUnit = ConfigVar.of(DistanceUnit.INCH);
 
     public final ConfigVar<GoBildaPinpointDriver.GoBildaOdometryPods> podType = ConfigVar.of(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
 
