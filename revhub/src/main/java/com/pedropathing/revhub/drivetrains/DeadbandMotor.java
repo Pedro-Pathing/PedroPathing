@@ -1,0 +1,44 @@
+package com.pedropathing.revhub.drivetrains;
+
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+
+public class DeadbandMotor {
+    private final DcMotorEx motor;
+
+    private double power = 0;
+    private final double powerDeadband;
+    private DcMotor.ZeroPowerBehavior zeroPowerBehavior;
+    private DcMotorSimple.Direction direction;
+
+    public DeadbandMotor(DcMotorEx motor, double powerDeadband) {
+        this.motor = motor;
+        this.powerDeadband = powerDeadband;
+    }
+
+    public void setPower(double power) {
+        if (Math.abs(this.power - power) >= powerDeadband) {
+            this.power = power;
+            motor.setPower(power);
+        }
+    }
+
+    public void setZeroPowerBehavior(DcMotor.ZeroPowerBehavior behavior) {
+        if (zeroPowerBehavior != behavior) {
+            zeroPowerBehavior = behavior;
+            motor.setZeroPowerBehavior(behavior);
+        }
+    }
+
+    public void setDirection(DcMotorSimple.Direction direction) {
+        if (this.direction != direction) {
+            this.direction = direction;
+            motor.setDirection(direction);
+        }
+    }
+
+    public DcMotorEx raw() {
+        return motor;
+    }
+}

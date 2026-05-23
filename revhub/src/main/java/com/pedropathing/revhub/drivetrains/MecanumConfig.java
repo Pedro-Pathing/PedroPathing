@@ -19,6 +19,8 @@ public class MecanumConfig {
     public final ConfigVar<Double> maxStrafeVelocity = ConfigVar.<Double>required().validate(Validator.positive());
     public final ConfigVar<Boolean> manualBrakeMode = ConfigVar.of(false);
 
+    public final ConfigVar<Double> powerDeadband = ConfigVar.of(0.01);
+
     public MecanumConfig(Configuration<MecanumConfig> config) {
         config.configure(this);
     }
