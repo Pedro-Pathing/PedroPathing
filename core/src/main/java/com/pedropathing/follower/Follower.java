@@ -26,7 +26,7 @@ public class Follower {
 
     public void update() {
         localizer.update();
-        state.update(localizer.getPose(), localizer.getVelocity(), localizer.getTwist());
+        state = new FollowState(localizer.motionState());
 
         if (!isFollowing()) {
             return;
@@ -41,7 +41,7 @@ public class Follower {
     }
 
     public Pose getPose() {
-        return localizer.getPose();
+        return localizer.pose();
     }
 
     public boolean isFollowing() {

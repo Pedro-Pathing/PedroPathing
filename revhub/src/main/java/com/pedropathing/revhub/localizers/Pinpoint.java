@@ -1,6 +1,7 @@
 package com.pedropathing.revhub.localizers;
 
 import com.pedropathing.localization.Localizer;
+import com.pedropathing.localization.MotionState;
 import com.pedropathing.math.Pose;
 import com.pedropathing.math.Twist;
 import com.pedropathing.math.Velocity;
@@ -19,6 +20,7 @@ public class Pinpoint implements Localizer {
     private Pose pose;
     private Velocity velocity;
     private Twist twist;
+    private MotionState motionState;
 
     public Pinpoint(HardwareMap hardwareMap, PinpointConfig config) {
         this.globalDistanceUnit = config.globalDistanceUnit.get();
@@ -72,21 +74,13 @@ public class Pinpoint implements Localizer {
         );
 
         twist = velocity.toTwist(pose.heading());
+
+        motionState = new MotionState(pose, velocity, twist);
     }
 
     @Override
-    public Twist getTwist() {
-        return twist;
-    }
-
-    @Override
-    public Velocity getVelocity() {
-        return velocity;
-    }
-
-    @Override
-    public Pose getPose() {
-        return pose;
+    public MotionState motionState() {
+        return motionState;
     }
 
     public void reset() {

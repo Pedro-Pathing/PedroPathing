@@ -20,7 +20,7 @@ public class Foresight implements Algorithm {
 
     @Override
     public DrivePowers calculate(FollowState state) {
-        double headingError = headingError(state.getPose().heading(),
+        double headingError = headingError(state.motionState().motionState().pose().heading(),
                 state.getTargetHeading());
         double headingPower = config.headingController.get().calculate(state.getTargetHeading(), headingError);
 
@@ -33,7 +33,7 @@ public class Foresight implements Algorithm {
 
         double velocityToBrakeInTime =
                 getVelocityToBrakeInTime(state.getPathProgress().distanceRemaining,
-                        state.getPose().heading());
+                        state.motionState().pose().heading());
         boolean isBraking = state.getTangentialSpeed() >= velocityToBrakeInTime;
         // may want hard switch? or maybe add some hysteresis?
         // or hard switch until velocity is going to change directions if it continues to brake?
@@ -47,14 +47,14 @@ public class Foresight implements Algorithm {
         }
 
         double tangentPower = tangent(state.getTangentialSpeed(), state.getPathProgress(),
-                state.getPose().heading(), state.getDeltaTime(), velocityToBrakeInTime, isBraking);
+                state.motionState().pose().heading(), state.getDeltaTime(), velocityToBrakeInTime, isBraking);
 
-        double normalError = normalError(state.getPose(), state.getPathProgress());
+        double normalError = normalError(state.motionState().pose(), state.getPathProgress());
         double normalPower =
                 computeTranslationalCorrection(
                         state.getPathProgress().normal.times(normalError),
-                        state.getVelocity(),
-                        state.getPose().heading()).dot(state.getPathProgress().normal);
+                        state.motionState().velocity(),
+                        state.motionState().pose().heading()).dot(state.getPathProgress().normal);
         double centripetal = centripetal(state.getTangentialSpeed(),
                 state.getPathProgress());
         normalPower = normalPower + centripetal;
@@ -66,9 +66,9 @@ public class Foresight implements Algorithm {
 
     public DrivePowers holdPoint(Vector2D target, FollowState state, double headingPower) {
         Vector2D translationalError =
-                target.minus(state.getPose().toVector2D());
+                target.minus(state.motionState().pose().toVector2D());
         Vector2D translational = computeTranslationalCorrection(translationalError,
-                state.getVelocity(), state.getPose().heading());
+                state.motionState().velocity(), state.motionState().pose().heading());
         return getDrivePowers(translational, state, headingPower);
     }
 
@@ -101,9 +101,9 @@ public class Foresight implements Algorithm {
 
     public DrivePowers getDrivePowers(Vector2D fieldRelativeDrivePower, FollowState state, double headingPower) {
         Vector2D robotFrameDrivePower =
-                fieldRelativeDrivePower.rotate(-state.getPose().heading());
-        double forward = Control.clampBrakingPower(robotFrameDrivePower.x(), state.getTwist().vx(), config.maxBrakingPower.get());
-        double strafe = Control.clampBrakingPower(robotFrameDrivePower.y(), state.getTwist().vy(), config.maxBrakingPower.get());
+                fieldRelativeDrivePower.rotate(-state.motionState().pose().heading());
+        double forward = Control.clampBrakingPower(robotFrameDrivePower.x(), state.motionState().twist().vx(), config.maxBrakingPower.get());
+        double strafe = Control.clampBrakingPower(robotFrameDrivePower.y(), state.motionState().twist().vy(), config.maxBrakingPower.get());
 
         return new DrivePowers(forward, strafe, headingPower);
     }

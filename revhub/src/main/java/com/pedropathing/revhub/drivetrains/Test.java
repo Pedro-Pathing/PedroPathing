@@ -36,6 +36,5 @@ public class Test {
                     c.podType.set(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
                 }
         );
-
     }
 }

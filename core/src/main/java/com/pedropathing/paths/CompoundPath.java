@@ -11,12 +11,13 @@ import com.pedropathing.paths.interpolator.Interpolator;
 import com.pedropathing.paths.tvalue.TValue;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CompoundPath extends Path {
     private final Interpolator interpolator;
     private final Piecewise<Path> paths;
 
-    CompoundPath(Interpolator interpolator, Modifier[] modifiers, Path[] paths) {
+    public CompoundPath(Interpolator interpolator, Modifier[] modifiers, Path[] paths) {
         super(new CompoundCurve(Arrays.stream(paths).map(path -> path.curve).toArray(Curve[]::new)), modifiers);
         this.interpolator = interpolator;
         this.paths = new Piecewise<>(Path::length, paths);
@@ -30,5 +31,13 @@ public class CompoundPath extends Path {
 
     public List<Piecewise.Segment<Path>> segments() {
         return paths.segments();
+    }
+
+    @Override
+    public List<AtomicPath> getPaths() {
+        return paths.segments().stream()
+            .map(Piecewise.Segment::value)
+            .flatMap(path -> path.getPaths().stream())
+            .collect(Collectors.toList());
     }
 }

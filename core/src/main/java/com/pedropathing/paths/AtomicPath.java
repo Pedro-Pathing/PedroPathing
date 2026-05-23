@@ -9,10 +9,14 @@ import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.paths.interpolator.Interpolator;
 import com.pedropathing.paths.tvalue.TValue;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 public abstract class AtomicPath extends Path {
     private final Interpolator interpolator;
 
-    AtomicPath(Curve curve, Interpolator interpolator, Modifier[] modifiers) {
+    public AtomicPath(Curve curve, Interpolator interpolator, Modifier[] modifiers) {
         super(curve, modifiers);
         this.interpolator = interpolator;
     }
@@ -20,5 +24,10 @@ public abstract class AtomicPath extends Path {
     @Override
     public double heading(@TValue double t) {
         return interpolator.interpolate(curve, t);
+    }
+
+    @Override
+    public List<AtomicPath> getPaths() {
+        return Collections.singletonList(this);
     }
 }

@@ -9,25 +9,33 @@ import com.pedropathing.math.Twist;
 import com.pedropathing.math.Velocity;
 
 public interface Localizer {
-    Pose getPose();
-
     void setPose(Pose pose);
 
     default void setX(double x) {
-        setPose(getPose().withX(x));
+        setPose(pose().withX(x));
     }
 
     default void setY(double y) {
-        setPose(getPose().withY(y));
+        setPose(pose().withY(y));
     }
 
     default void setHeading(double heading) {
-        setPose(getPose().withHeading(heading));
+        setPose(pose().withHeading(heading));
     }
 
-    Twist getTwist();
+    default Pose pose() {
+        return motionState().pose();
+    }
 
-    Velocity getVelocity();
+    default Twist twist() {
+        return motionState().twist();
+    }
+
+    default Velocity velocity() {
+        return motionState().velocity();
+    }
+
+    MotionState motionState();
 
     void update();
 }

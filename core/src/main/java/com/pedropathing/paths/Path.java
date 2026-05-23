@@ -9,17 +9,19 @@ import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.paths.tvalue.TValue;
 import lombok.experimental.Delegate;
 
+import java.util.List;
+
 public abstract class Path {
     @Delegate
     public final Curve curve;
 
     public final Modifier[] modifiers;
 
-    Path(Curve curve, Modifier[] modifiers) {
+    public Path(Curve curve, Modifier[] modifiers) {
         this.curve = curve;
         this.modifiers = modifiers;
-
-        Path path;
     }
     public abstract double heading(@TValue double t);
+
+    public abstract List<AtomicPath> getPaths();
 }
