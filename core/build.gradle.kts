@@ -2,10 +2,17 @@ plugins {
     id("java-library")
     id("io.deepmedia.tools.deployer")
     id("org.jetbrains.dokka")
+    id("io.freefair.lombok")
+    id("io.freefair.aspectj.post-compile-weaving")
+    id("com.diffplug.spotless")
+    id("net.ltgt.errorprone")
 }
 
 dependencies {
     dokkaPlugin(libs.dokka.java.plugin)
+    implementation(libs.aspectj.rt)
+    aspect(libs.aspectj.tools)
+    errorprone(libs.error.prone.core)
 }
 
 java {
@@ -13,11 +20,13 @@ java {
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
-val dokkaJar = tasks.register<Jar>("dokkaJar") {
-    dependsOn(tasks.named("dokkaGenerate"))
-    from(dokka.basePublicationsDirectory.dir("html"))
-    archiveClassifier = "html-docs"
-}
+val dokkaJar =
+    tasks.register<Jar>("dokkaJar") {
+        description = "Generates a Dokka Jar"
+        dependsOn(tasks.named("dokkaGenerate"))
+        from(dokka.basePublicationsDirectory.dir("html"))
+        archiveClassifier = "html-docs"
+    }
 
 deployer {
     projectInfo {
@@ -66,4 +75,28 @@ deployer {
     }
 
     localSpec()
+}
+
+spotless {
+    java {
+        target("src/**/*.java")
+
+        palantirJavaFormat()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+
+        licenseHeaderFile(rootProject.file("notice.txt"))
+    }
+
+    kotlinGradle {
+        ktlint("1.2.1")
+        target("*.gradle.kts")
+    }
+
+    format("misc") {
+        target("*.md", "*.yaml", "*.yml", "*.json", ".gitignore")
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
 }

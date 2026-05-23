@@ -1,4 +1,8 @@
-package com.pedropathing.control.controllers;
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+package com.pedropathing.controllers;
 
 import java.util.NavigableMap;
 import java.util.TreeMap;

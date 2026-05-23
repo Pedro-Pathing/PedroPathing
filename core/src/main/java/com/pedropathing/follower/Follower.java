@@ -6,10 +6,14 @@ import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.math.Pose;
 import com.pedropathing.localization.Localizer;
 import com.pedropathing.paths.Path;
+import lombok.Getter;
+import lombok.Setter;
 
 public class Follower {
     public final Localizer localizer;
     public final Drivetrain drivetrain;
+
+    @Getter @Setter
     private Algorithm algorithm;
     private FollowState state;
 
@@ -22,9 +26,14 @@ public class Follower {
 
     public void update() {
         localizer.update();
-        state.update(localizer.getPose(), localizer.getVelocity(), localizer.getTwist());
+        state = new FollowState(localizer.motionState());
+
+        if (!isFollowing()) {
+            return;
+        }
+
         DrivePowers powers = algorithm.calculate(state);
-        drivetrain.drive(powers, algorithm);
+        drivetrain.drive(powers);
     }
 
     public void follow(Path path) {
@@ -32,16 +41,10 @@ public class Follower {
     }
 
     public Pose getPose() {
-        return localizer.getPose();
+        return localizer.pose();
     }
 
-    public Algorithm getAlgorithm() {
-        return algorithm;
-    }
-
-    public void setAlgorithm(Algorithm algorithm) {
-        this.algorithm = algorithm;
+    public boolean isFollowing() {
+        return state.isFollowing();
     }
 }
-
-// Follower follower = new Follower(localizer, drivetrain, new FieldCentricTeleOp(constants));

@@ -1,9 +1,11 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.drivetrain;
 
-import com.pedropathing.algorithm.Algorithm;
-
 public interface Drivetrain {
-    void drive(DrivePowers powers, Algorithm algorithm); // TODO: algorithm is so that in the specific dts we can change behavior of the drivetrain, e.g. for mecanum we can have a field-centric algorithm and a robot-centric algorithm or brakeModeInTeleop
-    // if (algorithm instanceof TeleOpAlgorithm && constants.usebrake)
+    void drive(DrivePowers powers);
+    void manual(DrivePowers powers);
     void stop();
 }

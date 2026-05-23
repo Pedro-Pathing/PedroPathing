@@ -1,12 +1,37 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.math;
 
-public class Vector2D {
-    public final double x;
-    public final double y;
+import lombok.Value;
 
-    public Vector2D(double x, double y) {
-        this.x = x;
-        this.y = y;
+@Value(staticConstructor = "cartesian")
+public class Vector2D {
+    private static final Vector2D ZERO = new Vector2D(0, 0);
+    private static final Vector2D I_HAT = new Vector2D(1, 0);
+    private static final Vector2D J_HAT = new Vector2D(0, 1);
+    double x;
+    double y;
+
+    public static Vector2D polar(double radius, double angle) {
+        return new Vector2D(radius * Math.cos(angle), radius * Math.sin(angle));
+    }
+
+    public static Vector2D unit(double angle) {
+        return polar(1, angle);
+    }
+
+    public static Vector2D zero() {
+        return ZERO;
+    }
+
+    public static Vector2D iHat() {
+        return I_HAT;
+    }
+
+    public static Vector2D jHat() {
+        return J_HAT;
     }
 
     public double magnitude() {
@@ -15,8 +40,8 @@ public class Vector2D {
 
     public Vector2D normalized() {
         double magnitude = magnitude();
-        if (magnitude == 0) throw new IllegalArgumentException("Cannot normalize 0 vector");
-        return new Vector2D(x / magnitude, y / magnitude);
+        if (Math.abs(magnitude) < 1e-6) throw new IllegalArgumentException("Cannot normalize 0 vector");
+        return this.div(magnitude);
     }
 
     public Vector2D plus(Vector2D other) {
@@ -59,38 +84,6 @@ public class Vector2D {
         return Math.atan2(y, x);
     }
 
-    public String toString() {
-        return "(" + x + ", " + y + ")";
-    }
-
-    public static Vector2D polar(double radius, double angle) {
-        return new Vector2D(radius * Math.cos(angle), radius * Math.sin(angle));
-    }
-
-    public static Vector2D unit(double angle) {
-        return polar(1, angle);
-    }
-
-    public static Vector2D cartesian(double x, double y) {
-        return new Vector2D(x, y);
-    }
-
-    private static final Vector2D ZERO = new Vector2D(0, 0);
-    private static final Vector2D I_HAT = new Vector2D(1, 0);
-    private static final Vector2D J_HAT = new Vector2D(0, 1);
-
-    public static Vector2D zero() {
-        return ZERO;
-    }
-
-    public static Vector2D iHat() {
-        return I_HAT;
-    }
-
-    public static Vector2D jHat() {
-        return J_HAT;
-    }
-
     public Vector toVector() {
         return new Vector(x, y);
     }
@@ -117,5 +110,9 @@ public class Vector2D {
 
     public Vector2D hadamardProduct(Vector2D other) {
         return new Vector2D(this.x * other.x, this.y * other.y);
+    }
+
+    public Vector2D perpendicularLeft() {
+        return new Vector2D(-y, x);
     }
 }

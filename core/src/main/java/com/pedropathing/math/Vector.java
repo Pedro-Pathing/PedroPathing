@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.math;
 
 import java.util.Arrays;
@@ -117,7 +121,7 @@ public class Vector {
 
     public Vector2D toVector2D() {
         if (elements.length != 2) throw new IllegalArgumentException("Vector must have exactly 2 elements.");
-        return new Vector2D(elements[0], elements[1]);
+        return Vector2D.cartesian(elements[0], elements[1]);
     }
 
     /**

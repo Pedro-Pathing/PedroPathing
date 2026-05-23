@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.math;
 
 public class Velocity {
@@ -16,8 +20,7 @@ public class Velocity {
         return new Twist(
                 vx * Math.cos(heading) + vy * Math.sin(heading),
                 vx * -Math.sin(heading) + vy * Math.cos(heading),
-                omega
-        );
+                omega);
     }
 
     public Vector toVector() {
@@ -25,10 +28,10 @@ public class Velocity {
     }
 
     public Matrix toMatrix() {
-        return new Matrix(new double[][]{
-                {0.0, -omega, vx},
-                {omega,  0.0, vy},
-                {0.0,    0.0, 0.0}
+        return new Matrix(new double[][] {
+            {0.0, -omega, vx},
+            {omega, 0.0, vy},
+            {0.0, 0.0, 0.0}
         });
     }
 
@@ -41,7 +44,7 @@ public class Velocity {
     }
 
     public Vector2D toLinear() {
-        return new Vector2D(vx, vy);
+        return Vector2D.cartesian(vx, vy);
     }
 
     public static Velocity zero() {
@@ -49,6 +52,6 @@ public class Velocity {
     }
 
     public static Velocity fromVector(Vector2D vector) {
-        return new Velocity(vector.x, vector.y, 0);
+        return new Velocity(vector.x(), vector.y(), 0);
     }
 }

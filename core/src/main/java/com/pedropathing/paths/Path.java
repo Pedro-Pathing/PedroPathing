@@ -1,9 +1,27 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.paths;
 
-public class Path {
-    public PathProgress pathProgress;
+import com.pedropathing.config.Modifier;
+import com.pedropathing.paths.curves.Curve;
+import com.pedropathing.paths.tvalue.TValue;
+import lombok.experimental.Delegate;
 
-    public Curve currentCurve() {
-        return null;
+import java.util.List;
+
+public abstract class Path {
+    @Delegate
+    public final Curve curve;
+
+    public final Modifier[] modifiers;
+
+    public Path(Curve curve, Modifier[] modifiers) {
+        this.curve = curve;
+        this.modifiers = modifiers;
     }
+    public abstract double heading(@TValue double t);
+
+    public abstract List<AtomicPath> getPaths();
 }

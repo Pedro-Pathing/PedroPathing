@@ -1,4 +1,8 @@
-package com.pedropathing.control.controllers;
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+package com.pedropathing.controllers;
 
 public class PIDController implements Controller {
     public final PIDCoefficients coefficients;
@@ -15,7 +19,9 @@ public class PIDController implements Controller {
         previousTime = nanoTime;
 
         integral += error * (delta / Math.pow(10.0, 9));
-        return (error * coefficients.kP) + (integral * coefficients.kI) + (((error - previousError) / (delta / Math.pow(10.0, 9))) * coefficients.kD);
+        return (error * coefficients.kP)
+                + (integral * coefficients.kI)
+                + (((error - previousError) / (delta / Math.pow(10.0, 9))) * coefficients.kD);
     }
 
     public void reset() {
