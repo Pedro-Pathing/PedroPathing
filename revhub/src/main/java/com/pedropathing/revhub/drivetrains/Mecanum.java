@@ -34,7 +34,7 @@ public class Mecanum implements Drivetrain {
         motors[FR].setDirection(config.rightFrontDirection.get());
         motors[BR].setDirection(config.rightRearDirection.get());
 
-        setMotorsZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         manualBrakeMode = config.manualBrakeMode.get();
 
@@ -62,7 +62,7 @@ public class Mecanum implements Drivetrain {
     public void drive(DrivePowers powers) {
         if (manual) {
             if (manualBrakeMode)
-                setMotorsZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
             manual = false;
         }
         applyDrive(powers);
@@ -72,7 +72,7 @@ public class Mecanum implements Drivetrain {
     public void manual(DrivePowers powers) {
         if (!manual) {
             if (manualBrakeMode)
-                setMotorsZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             manual = true;
         }
         applyDrive(powers);
@@ -85,7 +85,7 @@ public class Mecanum implements Drivetrain {
         }
     }
 
-    public void setMotorsZeroPowerBehavior(DcMotor.ZeroPowerBehavior behavior) {
+    public void setZeroPowerBehavior(DcMotor.ZeroPowerBehavior behavior) {
         for (DeadbandMotor motor : motors) {
             motor.setZeroPowerBehavior(behavior);
         }

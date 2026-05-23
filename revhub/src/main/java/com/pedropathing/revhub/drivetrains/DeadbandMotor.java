@@ -10,6 +10,7 @@ public class DeadbandMotor {
     private double power = 0;
     private final double powerDeadband;
     private DcMotor.ZeroPowerBehavior zeroPowerBehavior;
+    private DcMotorSimple.Direction direction;
 
     public DeadbandMotor(DcMotorEx motor, double powerDeadband) {
         this.motor = motor;
@@ -31,7 +32,10 @@ public class DeadbandMotor {
     }
 
     public void setDirection(DcMotorSimple.Direction direction) {
-        motor.setDirection(direction);
+        if (this.direction != direction) {
+            this.direction = direction;
+            motor.setDirection(direction);
+        }
     }
 
     public DcMotorEx raw() {
