@@ -6,7 +6,7 @@ import lombok.experimental.UtilityClass;
 public class Utils {
     public static class Control {
         /**
-         * Calculates the remaining magnitude on a unit circle after subtracting A component.
+         * Calculates the remaining magnitude on a unit circle after subtracting a component.
          */
         public static double getRemainingMagnitude(double totalMagnitude, double usedMagnitude) {
             return Math.sqrt(

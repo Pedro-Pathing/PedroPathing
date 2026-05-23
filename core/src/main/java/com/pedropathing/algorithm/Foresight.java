@@ -20,7 +20,7 @@ public class Foresight implements Algorithm {
 
     @Override
     public DrivePowers calculate(FollowState state) {
-        double headingError = headingError(state.motionState().motionState().pose().heading(),
+        double headingError = headingError(state.motionState().pose().heading(),
                 state.getTargetHeading());
         double headingPower = config.headingController.get().calculate(state.getTargetHeading(), headingError);
 
