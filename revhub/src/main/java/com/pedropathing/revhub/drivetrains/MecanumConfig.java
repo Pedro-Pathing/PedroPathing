@@ -15,7 +15,10 @@ public class MecanumConfig {
     public final ConfigVar<DcMotorSimple.Direction> rightFrontDirection = ConfigVar.required();
     public final ConfigVar<DcMotorSimple.Direction> rightRearDirection = ConfigVar.required();
 
+    /** Maximum Speed that the robot can move forward/backward at, in inches per second. */
     public final ConfigVar<Double> maxForwardVelocity = ConfigVar.<Double>required().validate(Validator.positive());
+
+    /** Maximum Speed that the robot can move laterally, in inches per second. */
     public final ConfigVar<Double> maxStrafeVelocity = ConfigVar.<Double>required().validate(Validator.positive());
     public final ConfigVar<Boolean> manualBrakeMode = ConfigVar.of(false);
 

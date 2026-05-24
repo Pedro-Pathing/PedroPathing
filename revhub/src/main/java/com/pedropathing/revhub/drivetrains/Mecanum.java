@@ -11,7 +11,7 @@ public class Mecanum implements Drivetrain {
     public final double strafingEffortMultiplier;
     private final boolean manualBrakeMode;
 
-    private final DeadbandMotor[] motors;
+    private final CachedMotor[] motors;
     private final double[] wheelPowers = new double[4];
 
     private static final int FL = 0;
@@ -22,11 +22,11 @@ public class Mecanum implements Drivetrain {
 
     public Mecanum(HardwareMap map, MecanumConfig config) {
         double powerDeadband = config.powerDeadband.get();
-        motors = new DeadbandMotor[]{
-                new DeadbandMotor(map.get(DcMotorEx.class, config.leftFrontName.get()), powerDeadband),
-                new DeadbandMotor(map.get(DcMotorEx.class, config.leftRearName.get()), powerDeadband),
-                new DeadbandMotor(map.get(DcMotorEx.class, config.rightFrontName.get()), powerDeadband),
-                new DeadbandMotor(map.get(DcMotorEx.class, config.rightRearName.get()), powerDeadband)
+        motors = new CachedMotor[]{
+                new CachedMotor(map.get(DcMotorEx.class, config.leftFrontName.get()), powerDeadband),
+                new CachedMotor(map.get(DcMotorEx.class, config.leftRearName.get()), powerDeadband),
+                new CachedMotor(map.get(DcMotorEx.class, config.rightFrontName.get()), powerDeadband),
+                new CachedMotor(map.get(DcMotorEx.class, config.rightRearName.get()), powerDeadband)
         };
 
         motors[FL].setDirection(config.leftFrontDirection.get());
@@ -80,13 +80,13 @@ public class Mecanum implements Drivetrain {
 
     @Override
     public void stop() {
-        for (DeadbandMotor motor : motors) {
+        for (CachedMotor motor : motors) {
             motor.setPower(0);
         }
     }
 
     public void setZeroPowerBehavior(DcMotor.ZeroPowerBehavior behavior) {
-        for (DeadbandMotor motor : motors) {
+        for (CachedMotor motor : motors) {
             motor.setZeroPowerBehavior(behavior);
         }
     }

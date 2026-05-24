@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-public class DeadbandMotor {
+public class CachedMotor {
     private final DcMotorEx motor;
 
     private double power = 0;
@@ -12,7 +12,7 @@ public class DeadbandMotor {
     private DcMotor.ZeroPowerBehavior zeroPowerBehavior;
     private DcMotorSimple.Direction direction;
 
-    public DeadbandMotor(DcMotorEx motor, double powerDeadband) {
+    public CachedMotor(DcMotorEx motor, double powerDeadband) {
         this.motor = motor;
         this.powerDeadband = powerDeadband;
     }
