@@ -11,7 +11,8 @@ import com.pedropathing.math.Matrix;
 import com.pedropathing.utils.Pair;
 
 public final class ForesightConfig {
-    public final ConfigVar<Controller> headingController = ConfigVar.of(Controller.pid(new PIDCoefficients(1.5, 0, 0.1))); // divide K by distance + epsilon?
+    public final ConfigVar<Controller> headingController = ConfigVar.of(Controller.pid(new PIDCoefficients(1.5, 0, 0.1)));
+    // TODO test iZone, decay, and maxI to prevent integral wind-up and have zero-steady state error
 
     public final ConfigVar<Controller> translationalController = ConfigVar.of(Controller.pid(new PIDCoefficients(0.3, 0, 0)));
 
@@ -24,14 +25,18 @@ public final class ForesightConfig {
                     .plus(Controller.dynamicFeedforward(0.015))
                     .plus(Controller.staticFeedforward(0.05)));
 
-    public final ConfigVar<Double> centripetalScaling = ConfigVar.of(1.0, Validator.nonnegative());
+    /** Centripetal force to power scaling. */
+    public final ConfigVar<Double> centripetalScaling = ConfigVar.of(0.005, Validator.nonnegative());
 
     /**
      * The maximum amount of power the robot can apply in the opposite direction of momentum. Default is 0.2. Too high of a value might burn out the control hub and too low of a value might not be able to stop quickly after back-emf is overcome.
      */
     public final ConfigVar<Double> maxBrakingPower = ConfigVar.of(0.2, Validator.positive());
 
+    /** The max acceleration the robot can travel along paths. */
     public final ConfigVar<Double> maxAcceleration = ConfigVar.of(Double.POSITIVE_INFINITY, Validator.positive());
+
+    /** The max speed the robot can travel along paths. */
     public final ConfigVar<Double> maxVelocity = ConfigVar.of(Double.POSITIVE_INFINITY, Validator.positive());
 
     /**
@@ -54,14 +59,30 @@ public final class ForesightConfig {
      * The velocity the robot coasts down to before it starts braking. Does nothing if the coastingConstraintScale is infinity.
      */
     public final ConfigVar<Double> coastDownToVelocity = ConfigVar.of(0.0, Validator.nonnegative());
-    public final ConfigVar<Double> headingDeviationTolerance = ConfigVar.of(Math.toRadians(45), Validator.positive());
-    public final ConfigVar<Double> lateralDeviationTolerance = ConfigVar.of(2.5, Validator.positive());
+
+    /**
+     * Heading error where forward acceleration reaches zero.
+     * Higher values prioritize path speed over heading accuracy.
+     */
+    public final ConfigVar<Double> headingDeviationTolerance =
+            ConfigVar.of(Math.toRadians(45), Validator.positive());
+
+    /**
+     * Lateral deviation where forward acceleration reaches zero.
+     * Higher values prioritize path speed over path accuracy.
+     */
+    public final ConfigVar<Double> lateralDeviationTolerance =
+            ConfigVar.of(2.5, Validator.positive());
+
+    /** Whether the robot brakes at the end of the path or not. */
     public final ConfigVar<Boolean> shouldBrakeAtEnd = ConfigVar.of(true);
 
     public final ConfigVar<Matrix> linearBrakeCoefficients = ConfigVar.required();
     public final ConfigVar<Matrix> quadraticBrakeCoefficients = ConfigVar.required();
 
-    // Only for graph visualization purposes
+    /**
+     * Clamps the maximum velocity of the dynamic motion profile. Purely to avoid unnecessarily large numbers for debugging and graph visualization purposes.
+     */
     public final ConfigVar<Ellipse2D> maxAchievableVelocity = ConfigVar.of(Ellipse2D.fromAxes(80.0, 65.0));
 
     /**
