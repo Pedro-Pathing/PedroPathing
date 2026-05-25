@@ -21,7 +21,8 @@ public class Mecanum implements Drivetrain {
     private boolean manual;
 
     public Mecanum(HardwareMap map, MecanumConfig config) {
-        double powerDeadband = config.powerDeadband.get();
+        double powerDeadband = config.powerThreshold.get();
+        
         motors = new CachedMotor[]{
                 new CachedMotor(map.get(DcMotorEx.class, config.leftFrontName.get()), powerDeadband),
                 new CachedMotor(map.get(DcMotorEx.class, config.leftRearName.get()), powerDeadband),
@@ -37,13 +38,11 @@ public class Mecanum implements Drivetrain {
         setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         manualBrakeMode = config.manualBrakeMode.get();
-
-        strafingEffortMultiplier = config.maxForwardVelocity.get() / config.maxStrafeVelocity.get();
     }
 
     public void applyDrive(DrivePowers powers) {
-        double upRight = -powers.strafe() * strafingEffortMultiplier + powers.forward();
-        double downLeft = -powers.strafe() * strafingEffortMultiplier - powers.forward();
+        double upRight = -powers.strafe() + powers.forward();
+        double downLeft = -powers.strafe() - powers.forward();
 
         wheelPowers[FL] = upRight - powers.turn();
         wheelPowers[BL] = downLeft + powers.turn();

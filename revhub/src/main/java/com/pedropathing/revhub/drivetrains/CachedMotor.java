@@ -8,17 +8,17 @@ public class CachedMotor {
     private final DcMotorEx motor;
 
     private double power = 0;
-    private final double powerDeadband;
+    private final double powerThreshold;
     private DcMotor.ZeroPowerBehavior zeroPowerBehavior;
     private DcMotorSimple.Direction direction;
 
-    public CachedMotor(DcMotorEx motor, double powerDeadband) {
+    public CachedMotor(DcMotorEx motor, double powerThreshold) {
         this.motor = motor;
-        this.powerDeadband = powerDeadband;
+        this.powerThreshold = powerThreshold;
     }
 
     public void setPower(double power) {
-        if (Math.abs(this.power - power) >= powerDeadband) {
+        if (Math.abs(this.power - power) >= powerThreshold) {
             this.power = power;
             motor.setPower(power);
         }

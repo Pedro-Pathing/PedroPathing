@@ -18,9 +18,6 @@ public class Test {
                     c.rightFrontDirection.set(DcMotorSimple.Direction.REVERSE);
                     c.rightRearDirection.set(DcMotorSimple.Direction.REVERSE);
 
-                    c.maxForwardVelocity.set(1.0);
-                    c.maxStrafeVelocity.set(1.0);
-
                     c.manualBrakeMode.set(true);
                 }
         );

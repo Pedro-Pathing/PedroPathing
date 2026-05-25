@@ -31,8 +31,8 @@ public final class ForesightConfig {
      */
     public final ConfigVar<Double> maxBrakingPower = ConfigVar.of(0.2, Validator.positive());
 
-    public final ConfigVar<Double> maxAcceleration = ConfigVar.of(Double.POSITIVE_INFINITY, Validator.positive());
-    public final ConfigVar<Double> maxVelocity = ConfigVar.of(Double.POSITIVE_INFINITY, Validator.positive());
+    public final ConfigVar<Double> maxAccelerationConstraint = ConfigVar.of(Double.POSITIVE_INFINITY, Validator.positive());
+    public final ConfigVar<Double> maxVelocityConstraint = ConfigVar.of(Double.POSITIVE_INFINITY, Validator.positive());
 
     /**
      * Scale factor for the natural coasting deceleration constraint.
@@ -54,20 +54,31 @@ public final class ForesightConfig {
      * The velocity the robot coasts down to before it starts braking. Does nothing if the coastingConstraintScale is infinity.
      */
     public final ConfigVar<Double> coastDownToVelocity = ConfigVar.of(0.0, Validator.nonnegative());
-    public final ConfigVar<Double> headingDeviationTolerance = ConfigVar.of(Math.toRadians(45), Validator.positive());
-    public final ConfigVar<Double> lateralDeviationTolerance = ConfigVar.of(2.5, Validator.positive());
-    public final ConfigVar<Boolean> shouldBrakeAtEnd = ConfigVar.of(true);
+
+    public final ConfigVar<Double> headingDeviationTolerance = ConfigVar.of(Math.toRadians(11.25), Validator.positive());
+    public final ConfigVar<Double> translationalDeviationTolerance = ConfigVar.of(2.5, Validator.positive());
+    public final ConfigVar<Boolean> brakeAtEnd = ConfigVar.of(true);
 
     public final ConfigVar<Matrix> linearBrakeCoefficients = ConfigVar.required();
     public final ConfigVar<Matrix> quadraticBrakeCoefficients = ConfigVar.required();
 
-    // Only for graph visualization purposes
-    public final ConfigVar<Ellipse2D> maxAchievableVelocity = ConfigVar.of(Ellipse2D.fromAxes(80.0, 65.0));
+    /** Maximum achievable speed that the robot can move forward/backward at, in units per second. */
+    public final ConfigVar<Double> maxAchievableForwardVelocity = ConfigVar.<Double>required().validate(Validator.positive());
 
-    /**
-     * The natural deceleration of the robot when no power is applied.
-     */
-    public final ConfigVar<Ellipse2D> naturalDeceleration = ConfigVar.of(Ellipse2D.fromAxes(30.0, 30.0));
+    /** Maximum achievable speed that the robot can move laterally, in units per second. */
+    public final ConfigVar<Double> maxAchievableStrafeVelocity = ConfigVar.<Double>required().validate(Validator.positive());
+
+    /** The maximum achievable velocity of the robot in any direction, in units per second. This is derived from the forward and strafe velocity limits. */
+    public final ConfigVar<Ellipse2D> maxAchievableVelocity = ConfigVar.of(Ellipse2D.fromAxes(maxAchievableForwardVelocity.get(), maxAchievableStrafeVelocity.get()));
+
+    /** Maximum achievable magnitude that the robot can decelerate forward/backward at, in units per second^2. */
+    public final ConfigVar<Double> maxAchievableForwardDeceleration = ConfigVar.<Double>required().validate(Validator.positive());
+
+    /** Maximum achievable magnitude that the robot can decelerate laterally, in units per second^2. */
+    public final ConfigVar<Double> maxAchievableStrafeDeceleration = ConfigVar.<Double>required().validate(Validator.positive());
+
+    /** The natural deceleration of the robot when no power is applied. This is derived from the forward and strafe achievable decelerations. */
+    public final ConfigVar<Ellipse2D> naturalDeceleration = ConfigVar.of(Ellipse2D.fromAxes(maxAchievableForwardDeceleration.get(), maxAchievableStrafeDeceleration.get()));
 
     /**
      * The distance the controller will stop commanding power to correct for path deviations.

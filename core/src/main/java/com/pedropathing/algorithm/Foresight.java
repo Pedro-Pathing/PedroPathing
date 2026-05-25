@@ -5,7 +5,6 @@ import com.pedropathing.follower.FollowState;
 import com.pedropathing.math.Pose;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.math.Velocity;
-import com.pedropathing.paths.PathProgress;
 import com.pedropathing.utils.Utils.Control;
 import com.pedropathing.utils.Utils.Angle;
 import com.pedropathing.utils.Utils;
@@ -20,91 +19,77 @@ public class Foresight implements Algorithm {
 
     @Override
     public DrivePowers calculate(FollowState state) {
-        double headingError = headingError(state.motionState().pose().heading(),
-                state.getTargetHeading());
+        double headingError = headingError(state.motionState().pose().heading(), state.getTargetHeading());
         double headingPower = config.headingController.get().calculate(state.getTargetHeading(), headingError);
 
-        if (state.isAtParametricEnd()) {
+        if (state.isAtParametricEnd())
             return holdPoint(state.getCurve().endPoint(), state, headingPower);
-        }
-        if (state.isBeforeParametricStart()) {
-            return holdPoint(state.getCurve().startPoint(), state, headingPower);
-        }
 
-        double velocityToBrakeInTime =
-                getVelocityToBrakeInTime(state.getPathProgress().distanceRemaining,
-                        state.motionState().pose().heading());
+        if (state.isBeforeParametricStart())
+            return holdPoint(state.getCurve().startPoint(), state, headingPower);
+
+
+        double velocityToBrakeInTime = getVelocityToBrakeInTime(state.getPathProgress().distanceRemaining, state.motionState().pose().heading());
         boolean isBraking = state.getTangentialSpeed() >= velocityToBrakeInTime;
         // may want hard switch? or maybe add some hysteresis?
         // or hard switch until velocity is going to change directions if it continues to brake?
 
-        boolean pathSkip =
-                isBraking && (!state.isLastPath() || !config.shouldBrakeAtEnd.get());
+        boolean pathSkip = isBraking && (!state.isLastPath() || !config.brakeAtEnd.get());
 
         if (pathSkip) {
             state.advanceToNextPath();
             return calculate(state);
         }
 
-        double tangentPower = tangent(state.getTangentialSpeed(), state.getPathProgress(),
-                state.motionState().pose().heading(), state.getDeltaTime(), velocityToBrakeInTime, isBraking);
+        double drivePower = drive(state.getTangentialSpeed(), state.getPathProgress(), state.motionState().pose().heading(), state.getDeltaTime(), velocityToBrakeInTime, isBraking);
 
-        double normalError = normalError(state.motionState().pose(), state.getPathProgress());
-        double normalPower =
-                computeTranslationalCorrection(
-                        state.getPathProgress().normal.times(normalError),
-                        state.motionState().velocity(),
-                        state.motionState().pose().heading()).dot(state.getPathProgress().normal);
-        double centripetal = centripetal(state.getTangentialSpeed(),
-                state.getPathProgress());
-        normalPower = normalPower + centripetal;
+        double translationalError = translationalError(state.motionState().pose(), state.getPathProgress());
+        double translationalPower = computeTranslationalCorrection(state.getPathProgress().normal.times(translationalError), state.motionState().velocity(), state.motionState().pose().heading()).dot(state.getPathProgress().normal);
+        double centripetal = centripetal(state.getTangentialSpeed(), state.getPathProgress());
+        translationalPower = translationalPower + centripetal;
 
-        tangentPower *= getTangentScalar(normalError, headingError);
+        if ((headingError > 2*config.headingDeviationTolerance.get()) || (translationalError > 2*config.translationalDeviationTolerance.get()))
+            drivePower *= getDriveScalar(translationalError, headingError);
 
-        return allocatePowers(state, normalPower, tangentPower, headingPower);
+        return allocatePowers(state, translationalPower, drivePower, headingPower);
     }
 
     public DrivePowers holdPoint(Vector2D target, FollowState state, double headingPower) {
-        Vector2D translationalError =
-                target.minus(state.motionState().pose().toVector2D());
-        Vector2D translational = computeTranslationalCorrection(translationalError,
-                state.motionState().velocity(), state.motionState().pose().heading());
+        Vector2D translationalError = target.minus(state.motionState().pose().toVector2D());
+        Vector2D translational = computeTranslationalCorrection(translationalError, state.motionState().velocity(), state.motionState().pose().heading());
         return getDrivePowers(translational, state, headingPower);
     }
 
     /**
-     * Gives a tangent scalar to scale down the tangent power based on the normal and
-     * heading errors. This is to prevent aggressive tangent correction when the robot
+     * Gives a drive scalar to scale down the drive power based on the translational and
+     * heading errors. This is to prevent aggressive drive correction when the robot
      * is deviating a lot from the path or facing the wrong direction.
      */
-    public double getTangentScalar(double normalError, double headingError) {
+    public double getDriveScalar(double normalError, double headingError) {
         double trackDeviationScale = Control.cosineScale(normalError, config.headingDeviationTolerance.get());
-        double headingScale = Control.cosineScale(headingError, config.lateralDeviationTolerance.get());
+        double headingScale = Control.cosineScale(headingError, config.translationalDeviationTolerance.get());
         return trackDeviationScale * headingScale;
     }
 
-    public DrivePowers allocatePowers(FollowState state, double normalPower, double tangentPower, double headingPower) {
+    public DrivePowers allocatePowers(FollowState state, double translationalPower, double drivePower, double headingPower) {
         double magnitudeRemaining = 1;
-        double normalUsed = Control.allocatePower(normalPower, magnitudeRemaining);
-        double remaining = Control.getRemainingMagnitude(magnitudeRemaining, normalUsed);
+        double translationalUsed = Control.allocatePower(translationalPower, magnitudeRemaining);
+        double remaining = Control.getRemainingMagnitude(magnitudeRemaining, translationalUsed);
         double headingUsed = Control.allocatePower(headingPower, remaining);
         remaining = Control.getRemainingMagnitude(remaining, headingUsed);
-        double tangentUsed =
-                Control.allocatePower(tangentPower, Math.min(1, remaining));
+        double driveUsed = Control.allocatePower(drivePower, Math.min(1, remaining));
 
-        Vector2D drivePower =
-                state.getPathProgress().normal.times(normalUsed)
-                        .plus(state.getPathProgress().tangent.times(tangentUsed));
+        Vector2D fieldRelativeDrivePower = state.getPathProgress().normal
+                .times(translationalUsed)
+                .plus(state.getPathProgress().tangent.times(driveUsed));
 
-        return getDrivePowers(drivePower, state, headingUsed);
+        return getDrivePowers(fieldRelativeDrivePower, state, headingUsed);
     }
 
     public DrivePowers getDrivePowers(Vector2D fieldRelativeDrivePower, FollowState state, double headingPower) {
-        Vector2D robotFrameDrivePower =
-                fieldRelativeDrivePower.rotate(-state.motionState().pose().heading());
+        Vector2D robotFrameDrivePower = fieldRelativeDrivePower.rotate(-state.motionState().pose().heading());
         double forward = Control.clampBrakingPower(robotFrameDrivePower.x(), state.motionState().twist().vx(), config.maxBrakingPower.get());
         double strafe = Control.clampBrakingPower(robotFrameDrivePower.y(), state.motionState().twist().vy(), config.maxBrakingPower.get());
-
         return new DrivePowers(forward, strafe, headingPower);
     }
 
@@ -112,7 +97,7 @@ public class Foresight implements Algorithm {
         return Angle.smallestDifference(current, target) * Angle.turnDirection(current, target);
     }
 
-    public double normalError(Pose currentPose, PathProgress pathProgress) {
+    public double translationalError(Pose currentPose, PathProgress pathProgress) {
         return currentPose.toVector2D().minus(pathProgress.point).dot(pathProgress.normal);
     }
 
@@ -141,23 +126,22 @@ public class Foresight implements Algorithm {
         double k1 = config.quadraticBrakeCoefficients.get().get(0, 0) * cos3 + config.quadraticBrakeCoefficients.get().get(1, 1) * sin3;
         double k2 = config.linearBrakeCoefficients.get().get(0, 0) * cos2 + config.linearBrakeCoefficients.get().get(1, 1) * sin2;
         double velocityToBrakeToInDistance = getBrakeDisplacement(config.velocityToBrakeTo.get(), theta).dot(Vector2D.unit(theta));
-        Pair<Double, Double> velocityInversion = Utils.solveQuadratic(k1, k2, -distanceRemaining /
-                config.brakingOvershootBias.get() + velocityToBrakeToInDistance);
+        Pair<Double, Double> velocityInversion = Utils.solveQuadratic(k1, k2, -distanceRemaining / (config.brakingOvershootBias.get() + velocityToBrakeToInDistance));
         return Math.max(velocityInversion.first(), velocityInversion.second());
     }
 
-    public double tangent(double tangentialVel, PathProgress pathProgress, double heading, double deltaTime, double targetVelocityToBrakeInTime, boolean isBraking) {
-        double maxVelocityToFitAccel =
-                tangentialVel + config.maxAcceleration.get() * deltaTime;
-        double constrainedVelocity = Math.min(config.maxVelocity.get(), maxVelocityToFitAccel);
+    public double drive(double tangentialVel, PathProgress pathProgress, double heading, double deltaTime, double targetVelocityToBrakeInTime, boolean isBraking) {
+        double maxVelocityToFitAccel = tangentialVel + config.maxAccelerationConstraint.get() * deltaTime;
+        double constrainedVelocity = Math.min(config.maxVelocityConstraint.get(), maxVelocityToFitAccel);
         double theta = pathProgress.tangent.angleTo(Vector2D.unit(heading));
 
         double currentMaxAchievableVelocity = config.maxAchievableVelocity.get().radius(theta);
-        constrainedVelocity = Math.min(constrainedVelocity, currentMaxAchievableVelocity);
 
-        if (!isBraking) {
-            return coast(tangentialVel, theta, pathProgress, constrainedVelocity);
-        }
+        if (!isBraking)
+            if (constrainedVelocity >= currentMaxAchievableVelocity)
+                return 1.0;
+            else
+                return coast(tangentialVel, theta, pathProgress, constrainedVelocity);
 
         double targetVel = Math.min(targetVelocityToBrakeInTime, constrainedVelocity);
         double error = targetVel - tangentialVel;
@@ -168,18 +152,13 @@ public class Foresight implements Algorithm {
 
     public double coast(double tangentialVel, double theta, PathProgress pathProgress, double constrainedVelocity) {
         double targetCoastDecel = config.coastingDecelerationConstraint.get().radius(theta);
-        double coastVelNeededToStopInTime =
-                Math.sqrt(config.coastDownToVelocity.get() * config.coastDownToVelocity.get() +
-                        2 * Math.abs(targetCoastDecel) * pathProgress.distanceRemaining);
+        double coastVelNeededToStopInTime = Math.sqrt(config.coastDownToVelocity.get() * config.coastDownToVelocity.get() + 2 * Math.abs(targetCoastDecel) * pathProgress.distanceRemaining);
 
-        double zeroPowerCoastFinalVelSquared =
-                tangentialVel * tangentialVel + 2 * config.naturalDeceleration.get().radius(theta) * pathProgress.distanceRemaining;
-        double zeroPowerCoastFinalVel =
-                Math.signum(zeroPowerCoastFinalVelSquared) * Math.sqrt(Math.abs(zeroPowerCoastFinalVelSquared));
+        double zeroPowerCoastFinalVelSquared = tangentialVel * tangentialVel + 2 * config.naturalDeceleration.get().radius(theta) * pathProgress.distanceRemaining;
+        double zeroPowerCoastFinalVel = Math.signum(zeroPowerCoastFinalVelSquared) * Math.sqrt(Math.abs(zeroPowerCoastFinalVelSquared));
         double targetVel = Math.min(coastVelNeededToStopInTime, constrainedVelocity);
 
-        double velocityMomentumCannotProvide = Math.max(0,
-                config.coastDownToVelocity.get() - zeroPowerCoastFinalVel);
+        double velocityMomentumCannotProvide = Math.max(0, (config.coastDownToVelocity.get() - zeroPowerCoastFinalVel));
         double feedforwardVelocity = Math.min(constrainedVelocity, velocityMomentumCannotProvide);
 
         double error = Math.max(0, targetVel - tangentialVel);
@@ -188,8 +167,7 @@ public class Foresight implements Algorithm {
 
     private Vector2D getBrakeDisplacement(double v, double theta) {
         Vector2D unit = Vector2D.unit(theta);
-        Vector2D quadraticTerm =
-                unit.hadamardProduct(unit).transform(config.quadraticBrakeCoefficients.get()).times(v * Math.abs(v));
+        Vector2D quadraticTerm = unit.hadamardProduct(unit).transform(config.quadraticBrakeCoefficients.get()).times(v * Math.abs(v));
         Vector2D linearTerm = unit.transform(config.linearBrakeCoefficients.get()).times(v);
         return quadraticTerm.plus(linearTerm);
     }
