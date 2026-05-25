@@ -69,26 +69,21 @@ public final class ForesightConfig {
 
     /** Maximum achievable speed that the robot can move laterally, in units per second. */
     public final ConfigVar<Double> maxAchievableStrafeVelocity = ConfigVar.<Double>required().validate(Validator.positive());
-
-    /** The maximum achievable velocity of the robot in any direction, in units per second. This is derived from the forward and strafe velocity limits. */
-    public final ConfigVar<Ellipse2D> maxAchievableVelocity = ConfigVar.of(Ellipse2D.fromAxes(maxAchievableForwardVelocity.get(), maxAchievableStrafeVelocity.get()));
+    
 
     /** Maximum achievable magnitude that the robot can decelerate forward/backward at, in units per second^2. */
     public final ConfigVar<Double> maxAchievableForwardDeceleration = ConfigVar.<Double>required().validate(Validator.positive());
 
     /** Maximum achievable magnitude that the robot can decelerate laterally, in units per second^2. */
     public final ConfigVar<Double> maxAchievableStrafeDeceleration = ConfigVar.<Double>required().validate(Validator.positive());
-
-    /** The natural deceleration of the robot when no power is applied. This is derived from the forward and strafe achievable decelerations. */
-    public final ConfigVar<Ellipse2D> naturalDeceleration = ConfigVar.of(Ellipse2D.fromAxes(maxAchievableForwardDeceleration.get(), maxAchievableStrafeDeceleration.get()));
-
+    
     /**
      * The distance the controller will stop commanding power to correct for path deviations.
      */
     public final ConfigVar<Double> minCorrectionDistance = ConfigVar.of(1e-3);
 
     public final Memoize<Pair<Ellipse2D, Double>, Ellipse2D> coastingDecelerationConstraint = Memoize.memo(
-            () -> Pair.of(naturalDeceleration.get(), coastingConstraintScale.get()),
+            () -> Pair.of(maxAchievableDeceleration.get(), coastingConstraintScale.get()),
             p -> Ellipse2D.fromAxes(
                     -Math.abs(p.first().getMajorAxis()) * p.second(),
                     -Math.abs(p.first().getMinorAxis()) * p.second()

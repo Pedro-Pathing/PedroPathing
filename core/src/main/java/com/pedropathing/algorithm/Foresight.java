@@ -2,6 +2,7 @@ package com.pedropathing.algorithm;
 
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.follower.FollowState;
+import com.pedropathing.math.Ellipse2D;
 import com.pedropathing.math.Pose;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.math.Velocity;
@@ -12,9 +13,13 @@ import com.pedropathing.utils.Pair;
 
 public class Foresight implements Algorithm {
     private final ForesightConfig config;
+    private final Ellipse2D maxAchievableVelocity, maxAchievableDeceleration;
 
     public Foresight(ForesightConfig config) {
         this.config = config;
+
+        maxAchievableVelocity = Ellipse2D.fromAxes(config.maxAchievableForwardVelocity.get(), config.maxAchievableStrafeVelocity.get());
+        maxAchievableDeceleration = Ellipse2D.fromAxes(config.maxAchievableForwardDeceleration.get(), config.maxAchievableStrafeDeceleration.get());
     }
 
     @Override
@@ -135,7 +140,7 @@ public class Foresight implements Algorithm {
         double constrainedVelocity = Math.min(config.maxVelocityConstraint.get(), maxVelocityToFitAccel);
         double theta = pathProgress.tangent.angleTo(Vector2D.unit(heading));
 
-        double currentMaxAchievableVelocity = config.maxAchievableVelocity.get().radius(theta);
+        double currentMaxAchievableVelocity = maxAchievableVelocity.radius(theta);
 
         if (!isBraking)
             if (constrainedVelocity >= currentMaxAchievableVelocity)
@@ -154,7 +159,7 @@ public class Foresight implements Algorithm {
         double targetCoastDecel = config.coastingDecelerationConstraint.get().radius(theta);
         double coastVelNeededToStopInTime = Math.sqrt(config.coastDownToVelocity.get() * config.coastDownToVelocity.get() + 2 * Math.abs(targetCoastDecel) * pathProgress.distanceRemaining);
 
-        double zeroPowerCoastFinalVelSquared = tangentialVel * tangentialVel + 2 * config.naturalDeceleration.get().radius(theta) * pathProgress.distanceRemaining;
+        double zeroPowerCoastFinalVelSquared = tangentialVel * tangentialVel + 2 * maxAchievableDeceleration.radius(theta) * pathProgress.distanceRemaining;
         double zeroPowerCoastFinalVel = Math.signum(zeroPowerCoastFinalVelSquared) * Math.sqrt(Math.abs(zeroPowerCoastFinalVelSquared));
         double targetVel = Math.min(coastVelNeededToStopInTime, constrainedVelocity);
 
