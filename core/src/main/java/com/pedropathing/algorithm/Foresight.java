@@ -11,6 +11,9 @@ import com.pedropathing.utils.Utils.Angle;
 import com.pedropathing.utils.Utils;
 import com.pedropathing.utils.Pair;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class Foresight implements Algorithm {
     private final ForesightConfig config;
     private final Ellipse2D maxAchievableVelocity, maxAchievableDeceleration;
@@ -76,19 +79,49 @@ public class Foresight implements Algorithm {
         return trackDeviationScale * headingScale;
     }
 
-    public DrivePowers allocatePowers(FollowState state, double translationalPower, double drivePower, double headingPower) {
-        double magnitudeRemaining = 1;
-        double translationalUsed = Control.allocatePower(translationalPower, magnitudeRemaining);
-        double remaining = Control.getRemainingMagnitude(magnitudeRemaining, translationalUsed);
-        double headingUsed = Control.allocatePower(headingPower, remaining);
-        remaining = Control.getRemainingMagnitude(remaining, headingUsed);
-        double driveUsed = Control.allocatePower(drivePower, Math.min(1, remaining));
+    private static final int TRANSLATIONAL = 0;
+    private static final int HEADING = 1;
+    private static final int DRIVE = 2;
+
+    public DrivePowers allocatePowers(FollowState state, double translationalPower, double drivePower, double headingPower,
+                                      double translationalError, double headingError) {
+        boolean translationalPriority = translationalError > config.translationalDeviationTolerance.get();
+        boolean headingPriority = headingError > config.headingDeviationTolerance.get();
+
+        int[] prioritization;
+        double[] powers;
+
+        if (translationalPriority && headingPriority) {
+            prioritization = new int[] {0, 1, 2};
+            powers = new double[] {translationalPower, headingPower, drivePower};
+        } else if (translationalPriority) {
+            prioritization = new int[] {0, 2, 1};
+            powers = new double[] {translationalPower, drivePower, headingPower};
+        } else {
+            prioritization = new int[] {1, 2, 0};
+            powers = new double[] {drivePower, translationalPower, headingPower};
+        }
+
+        powers = clampPowers(powers);
 
         Vector2D fieldRelativeDrivePower = state.getPathProgress().normal
-                .times(translationalUsed)
-                .plus(state.getPathProgress().tangent.times(driveUsed));
+                .times(powers[prioritization[TRANSLATIONAL]])
+                .plus(state.getPathProgress().tangent.times(powers[prioritization[DRIVE]]));
 
-        return getDrivePowers(fieldRelativeDrivePower, state, headingUsed);
+        return getDrivePowers(fieldRelativeDrivePower, state, powers[prioritization[HEADING]]);
+    }
+
+    private double[] clampPowers(double[] powers) {
+        double magnitudeRemaining = 1.0;
+        double[] usedPowers = new double[3];
+
+        for (int i = 0; i < usedPowers.length; i++) {
+            double used = Control.allocatePower(powers[0], magnitudeRemaining);
+            magnitudeRemaining = Control.getRemainingMagnitude(magnitudeRemaining, used);
+            usedPowers[i] = used;
+        }
+
+        return usedPowers;
     }
 
     public DrivePowers getDrivePowers(Vector2D fieldRelativeDrivePower, FollowState state, double headingPower) {

@@ -132,6 +132,6 @@ public class Utils {
     }
 
     public double clamp(double num, double lower, double upper) {
-        return java.lang.Math.max(lower, java.lang.Math.min(num, upper));
+        return Math.max(lower, Math.min(num, upper));
     }
 }
