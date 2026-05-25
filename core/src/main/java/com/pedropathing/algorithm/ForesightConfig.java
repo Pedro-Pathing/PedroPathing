@@ -11,7 +11,8 @@ import com.pedropathing.math.Matrix;
 import com.pedropathing.utils.Pair;
 
 public final class ForesightConfig {
-    public final ConfigVar<Controller> headingController = ConfigVar.of(Controller.pid(new PIDCoefficients(1.5, 0, 0.1))); // divide K by distance + epsilon?
+    public final ConfigVar<Controller> headingController = ConfigVar.of(Controller.pid(new PIDCoefficients(1.5, 0, 0.1)));
+    // TODO test iZone, decay, and maxI to prevent integral wind-up and have zero-steady state error
 
     public final ConfigVar<Controller> translationalController = ConfigVar.of(Controller.pid(new PIDCoefficients(0.3, 0, 0)));
 
@@ -24,7 +25,8 @@ public final class ForesightConfig {
                     .plus(Controller.dynamicFeedforward(0.015))
                     .plus(Controller.staticFeedforward(0.05)));
 
-    public final ConfigVar<Double> centripetalScaling = ConfigVar.of(1.0, Validator.nonnegative());
+    /** Centripetal force to power scaling. */
+    public final ConfigVar<Double> centripetalScaling = ConfigVar.of(0.005, Validator.nonnegative());
 
     /**
      * The maximum amount of power the robot can apply in the opposite direction of momentum. Default is 0.2. Too high of a value might burn out the control hub and too low of a value might not be able to stop quickly after back-emf is overcome.
