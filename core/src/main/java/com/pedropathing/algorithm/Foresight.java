@@ -27,8 +27,9 @@ public class Foresight implements Algorithm {
     public DrivePowers calculate(FollowState state) {
         double t = state.pathTracker().current().closestT(state.motionState().pose().toVector2D());
         double targetHeading = state.pathTracker().current().heading(t);
+        double drivePower, translationalError, translationalPower;
 
-        if (t >= (1-config.parametricTConstraint.get())) { // End Constraint
+        if (t >= (1 - config.parametricTConstraint.get())) { // End Constraint
             if (state.pathTracker().size() > 1) { // advance if constraints met
                 state.pathTracker().advance();
                 return calculate(state);
@@ -37,9 +38,6 @@ public class Foresight implements Algorithm {
             state.pathTracker().isBusy(false);
             return hold(state.pathTracker().current().endPoint().toPose(targetHeading), state);
         }
-
-        if (t <= config.parametricTConstraint.get()) // Start Constraint
-            return hold(state.pathTracker().current().startPoint().toPose(targetHeading), state);
 
         double headingError = headingError(state.motionState().pose().heading(), targetHeading);
         double headingPower = headingPower(state, targetHeading);
@@ -60,12 +58,26 @@ public class Foresight implements Algorithm {
             return calculate(state);
         }
 
-        double drivePower = drive(tangentialSpeed, closestTangentVector, state.motionState().pose().heading(), state.deltaTime(), velocityToBrakeInTime, isBraking, remainingDistance);
+        drivePower = drive(tangentialSpeed, closestTangentVector, state.motionState().pose().heading(), state.deltaTime(), velocityToBrakeInTime, isBraking, remainingDistance);
 
-        double translationalError = translationalError(state.motionState().pose(), state.pathTracker().current().get(t), closestNormalVector);
-        double translationalPower = computeTranslationalCorrection(closestNormalVector.times(translationalError), state.motionState().velocity(), state.motionState().pose().heading()).dot(closestNormalVector);
+        if (t <= config.parametricTConstraint.get()) { // Start Constraint
+            Vector2D start = state.pathTracker().current().startPoint();
+            Vector2D disp = start.minus(state.motionState().pose().toVector2D());
+            double dot = disp.dot(state.pathTracker().current().tangent(t)); // originally was 0.0 for t
+
+            if (dot < 0) {
+                translationalError = disp.magnitude();
+                translationalPower = computeTranslationalCorrection(disp, state.motionState().velocity(), state.motionState().pose().heading()).magnitude();
+                drivePower *= Math.abs(disp.dot(closestTangentVector));
+                return allocatePowers(state, translationalPower, drivePower, headingPower, closestTangentVector, closestNormalVector, translationalError, headingError);
+            }
+        }
+
+        translationalError = translationalError(state.motionState().pose(), state.pathTracker().current().get(t), closestNormalVector);
+        translationalPower = computeTranslationalCorrection(closestNormalVector.times(translationalError), state.motionState().velocity(), state.motionState().pose().heading()).dot(closestNormalVector);
         double centripetal = centripetal(tangentialSpeed, state.pathTracker().current().curvature(t));
         translationalPower = translationalPower + centripetal;
+
 
         if ((headingError > 2 * config.headingDeviationTolerance.get()) || (translationalError > 2 * config.translationalDeviationTolerance.get()))
             drivePower *= getDriveScalar(translationalError, headingError);
@@ -106,8 +118,8 @@ public class Foresight implements Algorithm {
     private static final int DRIVE = 2;
 
     public DrivePowers allocatePowers(FollowState state, double translationalPower, double drivePower, double headingPower, Vector2D closestTangentVector, Vector2D closestNormalVector, double translationalError, double headingError) {
-        boolean translationalPriority = translationalError > config.translationalDeviationTolerance.get();
-        boolean headingPriority = headingError > config.headingDeviationTolerance.get();
+        boolean translationalPriority = Math.abs(translationalError) > config.translationalDeviationTolerance.get();
+        boolean headingPriority = Math.abs(headingError) > config.headingDeviationTolerance.get();
 
         int[] prioritization;
         double[] powers;
