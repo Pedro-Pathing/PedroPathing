@@ -13,7 +13,12 @@ public interface Curve {
     double closestT(Vector2D position);
 
     double length();
+    double remainingDistance(@TValue double t);
+    default double remainingDistanceNormalized(@TValue double t) {
+        return remainingDistance(t) / length();
+    }
 
+    /** Normalized */
     Vector2D tangent(@TValue double t);
 
     double curvature(@TValue double t);

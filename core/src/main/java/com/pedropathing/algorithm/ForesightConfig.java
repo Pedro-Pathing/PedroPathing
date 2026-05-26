@@ -57,18 +57,21 @@ public final class ForesightConfig {
 
     /** Maximum achievable speed that the robot can move laterally, in units per second. */
     public final ConfigVar<Double> maxAchievableStrafeVelocity = ConfigVar.<Double>required().validate(Validator.positive());
-    
+
 
     /** Maximum achievable magnitude that the robot can decelerate forward/backward at, in units per second^2. */
     public final ConfigVar<Double> maxAchievableForwardDeceleration = ConfigVar.<Double>required().validate(Validator.positive());
 
     /** Maximum achievable magnitude that the robot can decelerate laterally, in units per second^2. */
     public final ConfigVar<Double> maxAchievableStrafeDeceleration = ConfigVar.<Double>required().validate(Validator.positive());
-    
+
     /**
      * The distance the controller will stop commanding power to correct for path deviations.
      */
     public final ConfigVar<Double> minCorrectionDistance = ConfigVar.of(1e-3);
+
+    public final ConfigVar<Double> parametricTConstraint = ConfigVar.of(0.025, Validator.positive());
+    // TODO: add rest of parametric constraints
 
     public ForesightConfig(Configuration<ForesightConfig> config) {
         config.configure(this);

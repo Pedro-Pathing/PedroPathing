@@ -5,9 +5,12 @@
 package com.pedropathing.follower;
 
 import com.pedropathing.localization.MotionState;
+import com.pedropathing.paths.PathTracker;
 import lombok.Value;
 
 @Value
 public class FollowState {
     MotionState motionState;
+    PathTracker pathTracker;
+    double deltaTime;
 }

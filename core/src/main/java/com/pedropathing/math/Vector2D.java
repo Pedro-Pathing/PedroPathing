@@ -115,4 +115,12 @@ public class Vector2D {
     public Vector2D perpendicularLeft() {
         return new Vector2D(-y, x);
     }
+
+    public Pose toPose(double heading) {
+        return new Pose(x, y, heading);
+    }
+
+    public Pose toPose() {
+        return new Pose(x, y, 0);
+    }
 }

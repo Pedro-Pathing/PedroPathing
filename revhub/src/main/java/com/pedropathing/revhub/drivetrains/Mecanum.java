@@ -8,7 +8,6 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Mecanum implements Drivetrain {
-    public final double strafingEffortMultiplier;
     private final boolean manualBrakeMode;
 
     private final CachedMotor[] motors;
