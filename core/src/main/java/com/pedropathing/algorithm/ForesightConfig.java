@@ -40,8 +40,6 @@ public final class ForesightConfig {
      */
     public final ConfigVar<Double> brakeAggression = ConfigVar.of(1.0, Validator.positive());
 
-    public final ConfigVar<Double> velocityToBrakeTo = ConfigVar.of(0.0, Validator.nonnegative());
-
     /**
      * The velocity the robot coasts down to before it starts braking. Does nothing if the coastingConstraintScale is infinity.
      */

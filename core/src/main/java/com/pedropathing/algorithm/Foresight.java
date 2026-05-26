@@ -53,7 +53,7 @@ public class Foresight implements Algorithm {
         double centripetal = centripetal(state.getTangentialSpeed(), state.getPathProgress());
         translationalPower = translationalPower + centripetal;
 
-        if ((headingError > 2*config.headingDeviationTolerance.get()) || (translationalError > 2*config.translationalDeviationTolerance.get()))
+        if ((headingError > 2 * config.headingDeviationTolerance.get()) || (translationalError > 2 * config.translationalDeviationTolerance.get()))
             drivePower *= getDriveScalar(translationalError, headingError);
 
         return allocatePowers(state, translationalPower, drivePower, headingPower);
