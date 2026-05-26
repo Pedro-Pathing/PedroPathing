@@ -13,8 +13,6 @@ public class KalmanFilter {
     private double state;
     private double variance;
     private double kalmanGain;
-    private double previousState;
-    private double previousVariance;
 
     /**
      * This creates a new KalmanFilter from a set of KalmanFilterParameters.
@@ -44,9 +42,7 @@ public class KalmanFilter {
 
     public void reset(double startState, double startVariance, double startGain) {
         state = startState;
-        previousState = startState;
         variance = startVariance;
-        previousVariance = startVariance;
         kalmanGain = startGain;
     }
 
@@ -55,13 +51,19 @@ public class KalmanFilter {
     }
 
     public void update(double updateData, double updateProjection) {
-        state = previousState + updateData;
-        variance = previousVariance + modelCovariance;
+        state += updateData;
+        variance += modelCovariance;
         kalmanGain = variance / (variance + dataCovariance);
         state += kalmanGain * (updateProjection - state);
         variance *= (1.0 - kalmanGain);
-        previousState = state;
-        previousVariance = variance;
+    }
+
+    /**
+     * Use this for a single-input Kalman Filter update
+     * @param measurement the new measured value
+     */
+    public void update(double measurement) {
+        update(0, measurement);
     }
 
     public double state() {
