@@ -14,12 +14,10 @@ public interface Curve {
 
     double length();
 
-    default double remainingDistance(@TValue double t) {
-        return remainingDistanceNormalized(t) * length();
-    }
+    double remainingDistance(@TValue double t);
 
     default double remainingDistanceNormalized(@TValue double t) {
-        return 1 - t;
+        return remainingDistance(t) / length();
     }
 
     /** Normalized */

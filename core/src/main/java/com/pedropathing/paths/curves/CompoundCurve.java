@@ -48,6 +48,39 @@ public class CompoundCurve implements Curve {
     }
 
     @Override
+    public double remainingDistance(double t) {
+        return curves.length() - distanceAt(t);
+    }
+
+    private double distanceAt(double t) { // TODO: verify
+        double distanceTraveled = 0.0;
+        double currentT = 0.0;
+
+        for (Piecewise.Segment<Curve> segment : curves.segments()) {
+            Curve curve = segment.value();
+            double curveLength = curve.length();
+            double nextT = currentT + curveLength;
+
+            if (t <= currentT) {
+                // t before segment
+                break;
+            } else if (t >= nextT) {
+                // t after segment
+                distanceTraveled += curveLength;
+            } else {
+                // t within segment
+                double localT = curves.localT(t);
+                distanceTraveled += curveLength - curve.remainingDistance(localT);
+                break;
+            }
+
+            currentT = nextT;
+        }
+
+        return distanceTraveled;
+    }
+
+    @Override
     public Vector2D tangent(double t) {
         return curves.get(t).tangent(curves.localT(t));
     }

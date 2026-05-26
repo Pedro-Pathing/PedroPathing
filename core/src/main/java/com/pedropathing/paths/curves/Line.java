@@ -4,6 +4,7 @@
  */
 package com.pedropathing.paths.curves;
 
+import com.pedropathing.math.Pose;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.paths.tvalue.TValue;
 import com.pedropathing.utils.Utils;
@@ -13,6 +14,10 @@ public class Line implements Curve {
     private final Vector2D end;
     private final double length;
     private final Vector2D tangent;
+
+    public Line(Pose start, Pose end) {
+        this(start.toVector2D(), end.toVector2D());
+    }
 
     public Line(Vector2D start, Vector2D end) {
         this.start = start;
@@ -57,5 +62,10 @@ public class Line implements Curve {
     @Override
     public double length() {
         return length;
+    }
+
+    @Override
+    public double remainingDistance(@TValue double t) {
+        return remainingDistanceNormalized(t) * length();
     }
 }
