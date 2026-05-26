@@ -13,9 +13,13 @@ public interface Curve {
     double closestT(Vector2D position);
 
     double length();
-    double remainingDistance(@TValue double t);
+
+    default double remainingDistance(@TValue double t) {
+        return remainingDistanceNormalized(t) * length();
+    }
+
     default double remainingDistanceNormalized(@TValue double t) {
-        return remainingDistance(t) / length();
+        return 1 - t;
     }
 
     /** Normalized */

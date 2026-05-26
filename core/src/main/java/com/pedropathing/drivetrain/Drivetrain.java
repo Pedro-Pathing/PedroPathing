@@ -6,6 +6,8 @@ package com.pedropathing.drivetrain;
 
 public interface Drivetrain {
     void drive(DrivePowers powers);
+
     void manual(DrivePowers powers);
+
     void stop();
 }

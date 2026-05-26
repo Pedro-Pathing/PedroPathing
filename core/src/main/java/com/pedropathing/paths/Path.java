@@ -7,9 +7,8 @@ package com.pedropathing.paths;
 import com.pedropathing.config.Modifier;
 import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.paths.tvalue.TValue;
-import lombok.experimental.Delegate;
-
 import java.util.List;
+import lombok.experimental.Delegate;
 
 public abstract class Path {
     @Delegate
@@ -21,6 +20,7 @@ public abstract class Path {
         this.curve = curve;
         this.modifiers = modifiers;
     }
+
     public abstract double heading(@TValue double t);
 
     public abstract List<AtomicPath> getPaths();

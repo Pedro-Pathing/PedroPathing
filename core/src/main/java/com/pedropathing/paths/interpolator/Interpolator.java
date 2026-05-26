@@ -9,7 +9,6 @@ import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.paths.tvalue.TValue;
 import com.pedropathing.utils.Utils.Angle;
 
-
 @FunctionalInterface
 public interface Interpolator {
     Interpolator tangent = (Curve curve, @TValue double t) -> curve.tangent(t).theta();

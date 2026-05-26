@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.controllers.filters;
 
 /**
@@ -34,7 +38,8 @@ public class KalmanFilter {
      * @param startVariance the starting variance.
      * @param startGain    the starting Kalman gain.
      */
-    public KalmanFilter(double modelCovariance, double dataCovariance, double startState, double startVariance, double startGain) {
+    public KalmanFilter(
+            double modelCovariance, double dataCovariance, double startState, double startVariance, double startGain) {
         this.modelCovariance = modelCovariance;
         this.dataCovariance = dataCovariance;
         reset(startState, startVariance, startGain);
@@ -75,10 +80,6 @@ public class KalmanFilter {
      * @return A string array containing the current state, variance, and Kalman gain.
      */
     public String[] output() {
-        return new String[]{
-                "State: " + state,
-                "Variance: " + variance,
-                "Kalman Gain: " + kalmanGain
-        };
+        return new String[] {"State: " + state, "Variance: " + variance, "Kalman Gain: " + kalmanGain};
     }
 }

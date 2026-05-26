@@ -1,10 +1,14 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.follower;
 
 import com.pedropathing.algorithm.Algorithm;
-import com.pedropathing.drivetrain.Drivetrain;
 import com.pedropathing.drivetrain.DrivePowers;
-import com.pedropathing.math.Pose;
+import com.pedropathing.drivetrain.Drivetrain;
 import com.pedropathing.localization.Localizer;
+import com.pedropathing.math.Pose;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathTracker;
 import lombok.Getter;
@@ -13,15 +17,20 @@ import lombok.Setter;
 public class Follower {
     @Getter
     public final Localizer localizer;
+
     @Getter
     public final Drivetrain drivetrain;
 
-    @Getter @Setter
+    @Getter
+    @Setter
     private Algorithm algorithm;
+
     @Getter
     private FollowState state = null;
+
     private PathTracker pathTracker = null;
     private double currentNanoTime;
+
     @Getter
     private boolean manual = false;
 
@@ -65,6 +74,10 @@ public class Follower {
     public void stop() {
         manual = true;
         pathTracker = null;
+    }
+
+    public void pose(Pose pose) {
+        localizer.setPose(pose);
     }
 
     public Pose pose() {

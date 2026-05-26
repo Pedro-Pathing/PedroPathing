@@ -36,8 +36,8 @@ public class CompoundPath extends Path {
     @Override
     public List<AtomicPath> getPaths() {
         return paths.segments().stream()
-            .map(Piecewise.Segment::value)
-            .flatMap(path -> path.getPaths().stream())
-            .collect(Collectors.toList());
+                .map(Piecewise.Segment::value)
+                .flatMap(path -> path.getPaths().stream())
+                .collect(Collectors.toList());
     }
 }

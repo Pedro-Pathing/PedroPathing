@@ -18,8 +18,6 @@ public class Pinpoint implements Localizer {
     private final DistanceUnit globalDistanceUnit;
 
     private Pose pose;
-    private Velocity velocity;
-    private Twist twist;
     private MotionState motionState;
 
     public Pinpoint(HardwareMap hardwareMap, PinpointConfig config) {
@@ -67,13 +65,13 @@ public class Pinpoint implements Localizer {
                 odometry.getHeading(AngleUnit.RADIANS)
         );
 
-        velocity = new Velocity(
+        Velocity velocity = new Velocity(
                 odometry.getVelX(globalDistanceUnit),
                 odometry.getVelY(globalDistanceUnit),
                 odometry.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS)
         );
 
-        twist = velocity.toTwist(pose.heading());
+        Twist twist = velocity.toTwist(pose.heading());
 
         motionState = new MotionState(pose, velocity, twist);
     }
@@ -84,6 +82,6 @@ public class Pinpoint implements Localizer {
     }
 
     public void reset() {
-        odometry.recalibrateIMU();
+        odometry.resetPosAndIMU();
     }
 }

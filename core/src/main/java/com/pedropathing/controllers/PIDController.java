@@ -21,9 +21,7 @@ public class PIDController implements Controller {
         previousTime = nanoTime;
 
         integral += error * (delta / Math.pow(10.0, 9));
-        return (error * kP)
-                + (integral * kI)
-                + (((error - previousError) / (delta / Math.pow(10.0, 9))) * kD);
+        return (error * kP) + (integral * kI) + (((error - previousError) / (delta / Math.pow(10.0, 9))) * kD);
     }
 
     public void reset() {

@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.utils;
 
 import lombok.experimental.UtilityClass;
@@ -9,22 +13,14 @@ public class Utils {
          * Calculates the remaining magnitude on a unit circle after subtracting a component.
          */
         public static double getRemainingMagnitude(double totalMagnitude, double usedMagnitude) {
-            return Math.sqrt(
-                    Math.max(
-                            0.0,
-                            totalMagnitude * totalMagnitude - usedMagnitude * usedMagnitude
-                    )
-            );
+            return Math.sqrt(Math.max(0.0, totalMagnitude * totalMagnitude - usedMagnitude * usedMagnitude));
         }
 
         /**
          * Allocates power to a control component while respecting a total power budget.
          */
         public static double allocatePower(double requested, double budget) {
-            return Math.copySign(
-                    Math.min(Math.abs(requested), budget),
-                    requested
-            );
+            return Math.copySign(Math.min(Math.abs(requested), budget), requested);
         }
 
         /**
@@ -77,9 +73,9 @@ public class Utils {
          * @return returns the normalized angle.
          */
         public static double normalize(double angleRadians) {
-            double angle = angleRadians % (2*Math.PI);
+            double angle = angleRadians % (2 * Math.PI);
             if (angle < 0) {
-                return angle + 2*Math.PI;
+                return angle + 2 * Math.PI;
             }
             return angle;
         }
@@ -95,7 +91,7 @@ public class Utils {
         public static double normalizeSigned(double angleRadians) {
             double angle = normalize(angleRadians);
             if (angle >= Math.PI) {
-                return angle - 2*Math.PI;
+                return angle - 2 * Math.PI;
             }
             return angle;
         }

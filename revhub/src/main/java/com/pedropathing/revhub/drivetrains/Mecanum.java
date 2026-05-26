@@ -6,6 +6,7 @@ import com.pedropathing.utils.Utils;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 public class Mecanum implements Drivetrain {
     private final boolean manualBrakeMode;
@@ -87,5 +88,16 @@ public class Mecanum implements Drivetrain {
         for (CachedMotor motor : motors) {
             motor.setZeroPowerBehavior(behavior);
         }
+    }
+
+    /** Returns the sum of the four motors current in Amps
+     * This is not bulk cached by the motors so each motor request is a hardware read
+     */
+    public double currentAmps() {
+        double total = 0;
+        for (CachedMotor motor : motors) {
+            total += motor.raw().getCurrent(CurrentUnit.AMPS);
+        }
+        return total;
     }
 }

@@ -38,4 +38,6 @@ public interface Localizer {
     MotionState motionState();
 
     void update();
+
+    void reset();
 }

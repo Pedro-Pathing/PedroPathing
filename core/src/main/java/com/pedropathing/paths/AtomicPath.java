@@ -8,8 +8,6 @@ import com.pedropathing.config.Modifier;
 import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.paths.interpolator.Interpolator;
 import com.pedropathing.paths.tvalue.TValue;
-
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
