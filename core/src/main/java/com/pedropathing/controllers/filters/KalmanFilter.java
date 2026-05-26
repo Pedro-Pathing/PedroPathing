@@ -15,7 +15,7 @@ public class KalmanFilter {
     private double kalmanGain;
 
     /**
-     * This creates a new KalmanFilter from a set of KalmanFilterParameters.
+     * This creates a new KalmanFilter.
      * @param modelCovariance the model's covariance, describing the randomness in the system.
      * @param dataCovariance the data's covariance, describing uncertainty in sensor outputs
      */
@@ -26,7 +26,7 @@ public class KalmanFilter {
     }
 
     /**
-     * This creates a new KalmanFilter from a set of KalmanFilterParameters, a starting state,
+     * This creates a new KalmanFilter from a starting state,
      * a starting variance, and a starting Kalman gain.
      * @param modelCovariance the model's covariance, describing the randomness in the system.
      * @param dataCovariance the data's covariance, describing uncertainty in sensor outputs
