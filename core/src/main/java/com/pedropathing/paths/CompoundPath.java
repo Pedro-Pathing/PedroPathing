@@ -23,6 +23,10 @@ public class CompoundPath extends Path {
         this.paths = new Piecewise<>(Path::length, paths);
     }
 
+    public CompoundPath(Path... paths) {
+        this(null, null, paths);
+    }
+
     @Override
     public double heading(@TValue double t) {
         if (interpolator != null) return interpolator.interpolate(curve, t);
