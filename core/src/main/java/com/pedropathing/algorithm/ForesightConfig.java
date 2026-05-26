@@ -4,7 +4,6 @@ import com.pedropathing.config.ConfigVar;
 import com.pedropathing.config.Configuration;
 import com.pedropathing.config.Validator;
 import com.pedropathing.controllers.Controller;
-import com.pedropathing.controllers.filters.KalmanFilter;
 import com.pedropathing.math.Matrix;
 
 public final class ForesightConfig {
@@ -34,18 +33,12 @@ public final class ForesightConfig {
     public final ConfigVar<Double> maxVelocityConstraint = ConfigVar.of(Double.POSITIVE_INFINITY, Validator.positive());
 
     /**
-     * Scale factor for the natural coasting deceleration constraint.
-     * 1.0 uses the natural deceleration, while infinity removes the limit.
-     */
-    public final ConfigVar<Double> coastingConstraintScale = ConfigVar.of(Double.POSITIVE_INFINITY, Validator.positive());
-
-    /**
      * How much overshooting is allowed when braking. A value of 1 means no bias, while a value greater than 1 means the controller will overshoot the target, and a value lower than 1 means the controller will undershoot the target.
      * <p>
      * Useful if you do not need to fully brake due to an obstacle that can slow you down.
      * Lower number is helpful if you need to ensure you do not overshoot the target.
      */
-    public final ConfigVar<Double> brakingOvershootBias = ConfigVar.of(1.0, Validator.positive());
+    public final ConfigVar<Double> brakeAggression = ConfigVar.of(1.0, Validator.positive());
 
     public final ConfigVar<Double> velocityToBrakeTo = ConfigVar.of(0.0, Validator.nonnegative());
 
