@@ -5,11 +5,13 @@
 package com.pedropathing.controllers;
 
 public class PIDController implements Controller {
-    public final PIDCoefficients coefficients;
+    public final double kP, kI, kD;
     private double integral = 0, previousError = 0, previousTime = System.nanoTime();
 
-    PIDController(PIDCoefficients coefficients) {
-        this.coefficients = coefficients;
+    PIDController(double kP, double kI, double kD) {
+        this.kP = kP;
+        this.kI = kI;
+        this.kD = kD;
     }
 
     @Override
@@ -19,9 +21,9 @@ public class PIDController implements Controller {
         previousTime = nanoTime;
 
         integral += error * (delta / Math.pow(10.0, 9));
-        return (error * coefficients.kP)
-                + (integral * coefficients.kI)
-                + (((error - previousError) / (delta / Math.pow(10.0, 9))) * coefficients.kD);
+        return (error * kP)
+                + (integral * kI)
+                + (((error - previousError) / (delta / Math.pow(10.0, 9))) * kD);
     }
 
     public void reset() {

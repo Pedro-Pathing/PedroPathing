@@ -9,7 +9,6 @@ public interface Controller {
     double calculate(double target, double error);
 
     default void reset() {}
-    ;
 
     static Controller staticFeedforward(double kStatic) {
         return (t, e) -> kStatic * Math.signum(e);
@@ -19,8 +18,8 @@ public interface Controller {
         return (t, e) -> t * kF;
     }
 
-    static PIDController pid(PIDCoefficients coefficients) {
-        return new PIDController(coefficients);
+    static PIDController pid(double kP, double kI, double kD) {
+        return new PIDController(kP, kI, kD);
     }
 
     static PiecewiseController piecewise(Controller baseline) {

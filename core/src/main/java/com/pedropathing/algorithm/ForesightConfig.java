@@ -2,26 +2,23 @@ package com.pedropathing.algorithm;
 
 import com.pedropathing.config.ConfigVar;
 import com.pedropathing.config.Configuration;
-import com.pedropathing.config.Memoize;
 import com.pedropathing.config.Validator;
 import com.pedropathing.controllers.Controller;
-import com.pedropathing.controllers.PIDCoefficients;
-import com.pedropathing.math.Ellipse2D;
+import com.pedropathing.controllers.filters.KalmanFilter;
 import com.pedropathing.math.Matrix;
-import com.pedropathing.utils.Pair;
 
 public final class ForesightConfig {
-    public final ConfigVar<Controller> headingController = ConfigVar.of(Controller.pid(new PIDCoefficients(1.5, 0, 0.1)));
+    public final ConfigVar<Controller> headingController = ConfigVar.of(Controller.pid(1.5, 0, 0.1));
     // TODO test iZone, decay, and maxI to prevent integral wind-up and have zero-steady state error
 
-    public final ConfigVar<Controller> translationalController = ConfigVar.of(Controller.pid(new PIDCoefficients(0.3, 0, 0)));
+    public final ConfigVar<Controller> translationalController = ConfigVar.of(Controller.pid(0.3, 0, 0));
 
     public final ConfigVar<Controller> brakeController = ConfigVar.of(
-            Controller.pid(new PIDCoefficients(0.025, 0, 0))
+            Controller.pid(0.025, 0, 0)
                     .plus(Controller.dynamicFeedforward(0.015))
                     .plus(Controller.staticFeedforward(0.05)));
     public final ConfigVar<Controller> coastController = ConfigVar.of(
-            Controller.pid(new PIDCoefficients(0.025, 0, 0))
+            Controller.pid(0.025, 0, 0)
                     .plus(Controller.dynamicFeedforward(0.015))
                     .plus(Controller.staticFeedforward(0.05)));
 
@@ -81,14 +78,6 @@ public final class ForesightConfig {
      * The distance the controller will stop commanding power to correct for path deviations.
      */
     public final ConfigVar<Double> minCorrectionDistance = ConfigVar.of(1e-3);
-
-    public final Memoize<Pair<Ellipse2D, Double>, Ellipse2D> coastingDecelerationConstraint = Memoize.memo(
-            () -> Pair.of(maxAchievableDeceleration.get(), coastingConstraintScale.get()),
-            p -> Ellipse2D.fromAxes(
-                    -Math.abs(p.first().getMajorAxis()) * p.second(),
-                    -Math.abs(p.first().getMinorAxis()) * p.second()
-            )
-    );
 
     public ForesightConfig(Configuration<ForesightConfig> config) {
         config.configure(this);

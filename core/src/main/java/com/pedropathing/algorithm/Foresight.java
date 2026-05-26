@@ -1,5 +1,6 @@
 package com.pedropathing.algorithm;
 
+import com.pedropathing.config.Memoize;
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.follower.FollowState;
 import com.pedropathing.math.Ellipse2D;
@@ -17,12 +18,20 @@ import java.util.List;
 public class Foresight implements Algorithm {
     private final ForesightConfig config;
     private final Ellipse2D maxAchievableVelocity, maxAchievableDeceleration;
+    public final Memoize<Pair<Ellipse2D, Double>, Ellipse2D> coastingDecelerationConstraint;
 
     public Foresight(ForesightConfig config) {
         this.config = config;
 
         maxAchievableVelocity = Ellipse2D.fromAxes(config.maxAchievableForwardVelocity.get(), config.maxAchievableStrafeVelocity.get());
         maxAchievableDeceleration = Ellipse2D.fromAxes(config.maxAchievableForwardDeceleration.get(), config.maxAchievableStrafeDeceleration.get());
+        coastingDecelerationConstraint = Memoize.memo(
+                () -> Pair.of(maxAchievableDeceleration.get(), coastingConstraintScale.get()),
+                p -> Ellipse2D.fromAxes(
+                        -Math.abs(p.first().getMajorAxis()) * p.second(),
+                        -Math.abs(p.first().getMinorAxis()) * p.second()
+                )
+        );
     }
 
     @Override
@@ -189,7 +198,7 @@ public class Foresight implements Algorithm {
     }
 
     public double coast(double tangentialVel, double theta, PathProgress pathProgress, double constrainedVelocity) {
-        double targetCoastDecel = config.coastingDecelerationConstraint.get().radius(theta);
+        double targetCoastDecel = coastingDecelerationConstraint.get().radius(theta);
         double coastVelNeededToStopInTime = Math.sqrt(config.coastDownToVelocity.get() * config.coastDownToVelocity.get() + 2 * Math.abs(targetCoastDecel) * pathProgress.distanceRemaining);
 
         double zeroPowerCoastFinalVelSquared = tangentialVel * tangentialVel + 2 * maxAchievableDeceleration.radius(theta) * pathProgress.distanceRemaining;
