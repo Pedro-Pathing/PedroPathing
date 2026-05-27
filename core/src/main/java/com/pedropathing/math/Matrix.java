@@ -104,7 +104,7 @@ public class Matrix {
         for (int i = 0; i < this.rows; i++) {
             for (int j = 0; j < other.cols; j++) {
                 for (int k = 0; k < this.cols; k++) {
-                    data[i][j] += get(i, k) * get(k, j);
+                    data[i][j] += get(i, k) * other.get(k, j);
                 }
             }
         }

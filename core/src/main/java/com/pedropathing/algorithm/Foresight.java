@@ -193,7 +193,7 @@ public class Foresight implements Algorithm {
         double[] usedPowers = new double[3];
 
         for (int i = 0; i < usedPowers.length; i++) {
-            double used = Control.allocatePower(powers[0], magnitudeRemaining);
+            double used = Control.allocatePower(powers[i], magnitudeRemaining);
             magnitudeRemaining = Control.getRemainingMagnitude(magnitudeRemaining, used);
             usedPowers[i] = used;
         }
@@ -217,9 +217,15 @@ public class Foresight implements Algorithm {
     }
 
     private Vector2D computeTranslationalCorrection(Vector2D displacementVector, Velocity velocity, double currentHeading) {
+        if (displacementVector == null || displacementVector.isZero()) return Vector2D.zero();
         Vector2D linearVel = velocity.toLinear().projectOnto(displacementVector);
-        double theta = linearVel.angleTo(Vector2D.unit(currentHeading));
-        Vector2D brakingDisplacement = getBrakeDisplacement(linearVel.dot(displacementVector), theta);
+        Vector2D brakingDisplacement;
+        if (linearVel.isZero()) {
+            brakingDisplacement = Vector2D.zero();
+        } else {
+            double theta = linearVel.angleTo(Vector2D.unit(currentHeading));
+            brakingDisplacement = getBrakeDisplacement(linearVel.dot(displacementVector), theta);
+        }
         Vector2D adjustedError = displacementVector.minus(brakingDisplacement);
         double distance = adjustedError.magnitude();
         if (distance < config.minCorrectionDistance.get()) return Vector2D.zero();
