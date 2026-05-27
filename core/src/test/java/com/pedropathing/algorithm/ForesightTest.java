@@ -68,5 +68,78 @@ public class ForesightTest {
         // drive should be commanding forward motion when stationary at the start of a forward path
         assertTrue(dp.forward() >= 0.0);
     }
-}
 
+    @Test
+    public void calculate_verticalPathAtT025OnLineWithCorrectHeadingProducesStrongForwardDrive() {
+        Foresight f = new Foresight(foresightConfig);
+        // Vertical path from (0,0) to (0,100)
+        Line verticalLine = new Line(Pose.zero(), new Pose(0.0, 100.0, 0.0));
+        SimplePath path = new SimplePath(verticalLine, Interpolator.tangent);
+        PathTracker tracker = new PathTracker(path);
+
+        // Robot at t=0.25 on the path is at position (0, 25), which is (0.25 * 100)
+        // Robot is facing upward (Math.PI/2), which is the tangent direction of the vertical line
+        Pose robotPose = new Pose(0.0, 25.0, Math.PI / 2);
+        MotionState ms = MotionState.ofVelocity(robotPose, Velocity.zero());
+        FollowState state = new FollowState(ms, tracker, 0.02);
+
+        DrivePowers dp = f.calculate(state);
+        assertNotNull(dp);
+        // Expect very strong forward output since robot is on-path and heading correctly
+        assertTrue(dp.forward() > 0.5, "Forward output should be strong (> 0.5) when on-path and correctly heading");
+    }
+
+    @Test
+    public void calculate_verticalPathOnLineCorrectHeadingProducesMinimalStrafe() {
+        Foresight f = new Foresight(foresightConfig);
+        Line verticalLine = new Line(Pose.zero(), new Pose(0.0, 100.0, 0.0));
+        SimplePath path = new SimplePath(verticalLine, Interpolator.tangent);
+        PathTracker tracker = new PathTracker(path);
+
+        // Robot perfectly on-line at (0, 50), heading upward
+        Pose robotPose = new Pose(0.0, 50.0, Math.PI / 2);
+        MotionState ms = MotionState.ofVelocity(robotPose, Velocity.zero());
+        FollowState state = new FollowState(ms, tracker, 0.02);
+
+        DrivePowers dp = f.calculate(state);
+        assertNotNull(dp);
+        // When perfectly on-line and heading correctly, strafe should be minimal
+        assertTrue(Math.abs(dp.strafe()) < 0.2, "Strafe should be minimal when perfectly on-line");
+    }
+
+    @Test
+    public void calculate_verticalPathOffLineLeftProducesRightStrafing() {
+        Foresight f = new Foresight(foresightConfig);
+        Line verticalLine = new Line(Pose.zero(), new Pose(0.0, 100.0, 0.0));
+        SimplePath path = new SimplePath(verticalLine, Interpolator.tangent);
+        PathTracker tracker = new PathTracker(path);
+
+        // Robot off-line to the left (negative x) at (-1.0, 50), heading upward
+        Pose robotPose = new Pose(-1.0, 50.0, Math.PI / 2);
+        MotionState ms = MotionState.ofVelocity(robotPose, Velocity.zero());
+        FollowState state = new FollowState(ms, tracker, 0.02);
+
+        DrivePowers dp = f.calculate(state);
+        assertNotNull(dp);
+        // When off-line to the left, robot should strafe right to correct
+        assertTrue(dp.strafe() > 0.0, "Should strafe right to correct being off-line to the left");
+    }
+
+    @Test
+    public void calculate_verticalPathWithWrongHeadingProducesSpinCorrection() {
+        Foresight f = new Foresight(foresightConfig);
+        Line verticalLine = new Line(Pose.zero(), new Pose(0.0, 100.0, 0.0));
+        SimplePath path = new SimplePath(verticalLine, Interpolator.tangent);
+        PathTracker tracker = new PathTracker(path);
+
+        // Robot on-line at (0, 50), but heading downward (wrong direction, -Math.PI/2)
+        Pose robotPose = new Pose(0.0, 50.0, -Math.PI / 2);
+        MotionState ms = MotionState.ofVelocity(robotPose, Velocity.zero());
+        FollowState state = new FollowState(ms, tracker, 0.02);
+
+        DrivePowers dp = f.calculate(state);
+        assertNotNull(dp);
+        // When heading wrong direction, robot should produce turn correction
+        assertTrue(Math.abs(dp.turn()) > 0.1, "Should produce turn correction when heading wrong direction");
+    }
+}
