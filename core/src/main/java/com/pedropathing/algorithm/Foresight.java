@@ -50,10 +50,12 @@ public class Foresight implements Algorithm {
         double headingPower = headingPower(state, targetHeading);
         double remainingDistance = state.pathTracker().current().remainingDistance(t);
 
-        double velocityToBrakeInTime = getVelocityToBrakeInTime(
-                remainingDistance, state.motionState().pose().heading());
+        // Compute tangent and normal first so braking can consider the angle between
+        // the path tangent and the robot heading (theta) instead of using heading alone.
         Vector2D closestTangentVector = state.pathTracker().current().tangent(t);
         Vector2D closestNormalVector = state.pathTracker().current().leftNormal(t);
+        double thetaForBraking = closestTangentVector.angleTo(Vector2D.unit(state.motionState().pose().heading()));
+        double velocityToBrakeInTime = getVelocityToBrakeInTime(remainingDistance, thetaForBraking);
         double tangentialSpeed =
                 closestTangentVector.dot(state.motionState().velocity().toLinear());
         boolean isBraking = tangentialSpeed >= velocityToBrakeInTime;
@@ -81,7 +83,9 @@ public class Foresight implements Algorithm {
             Vector2D disp = start.minus(state.motionState().pose().toVector2D());
             double dot = disp.dot(state.pathTracker().current().tangent(t)); // originally was 0.0 for t
 
-            if (dot < 0) {
+            // If the start point lies ahead of the robot along the path tangent (dot > 0)
+            // we need to apply a translational correction to drive toward the start.
+            if (dot > 0) {
                 translationalError = disp.magnitude();
                 translationalPower = computeTranslationalCorrection(
                                 disp,
@@ -152,8 +156,8 @@ public class Foresight implements Algorithm {
      * is deviating a lot from the path or facing the wrong direction.
      */
     public double getDriveScalar(double normalError, double headingError) {
-        double trackDeviationScale = Control.cosineScale(normalError, config.headingDeviationTolerance.get());
-        double headingScale = Control.cosineScale(headingError, config.translationalDeviationTolerance.get());
+        double trackDeviationScale = Control.cosineScale(normalError, config.translationalDeviationTolerance.get());
+        double headingScale = Control.cosineScale(headingError, config.headingDeviationTolerance.get());
         return trackDeviationScale * headingScale;
     }
 

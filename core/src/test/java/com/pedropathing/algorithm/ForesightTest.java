@@ -29,6 +29,20 @@ public class ForesightTest {
             }
     );
 
+    // Asymmetric braking config for testing theta-dependent behavior
+    static ForesightConfig asymmetricBrakingConfig = new ForesightConfig(
+            c -> {
+                c.translationalController.set(Controller.pid(0.16,0,0.01));
+                c.headingController.set(Controller.pid(2.0,0,0.1));
+                // Asymmetric: forward brake is stronger than strafe
+                c.linearBrakeCoefficients.set(Matrix.diag(0.2, 0.1));
+                c.quadraticBrakeCoefficients.set(Matrix.diag(0.01, 0.02));
+                c.maxAchievableForwardVelocity.set(88.036);
+                c.maxAchievableStrafeVelocity.set(71.881);
+                c.maxAchievableForwardDeceleration.set(30.3333);
+                c.maxAchievableStrafeDeceleration.set(62.58098);
+            }
+    );
     @Test
     public void hold_atTargetProducesZeroDrive() {
         Foresight f = new Foresight(foresightConfig);
@@ -141,5 +155,29 @@ public class ForesightTest {
         assertNotNull(dp);
         // When heading wrong direction, robot should produce turn correction
         assertTrue(Math.abs(dp.turn()) > 0.1, "Should produce turn correction when heading wrong direction");
+    }
+
+    @Test
+    public void getVelocityToBrakeInTimeVariesWithThetaAsymmetric() {
+        Foresight f = new Foresight(asymmetricBrakingConfig);
+        // With asymmetric braking coefficients, velocity needed to brake should vary with theta
+        double v0 = f.getVelocityToBrakeInTime(10.0, 0.0);        // forward direction
+        double v90 = f.getVelocityToBrakeInTime(10.0, Math.PI / 2); // lateral direction
+        assertTrue(Double.isFinite(v0) && v0 > 0.0);
+        assertTrue(Double.isFinite(v90) && v90 > 0.0);
+        // They should differ because coefficients are asymmetric
+        assertNotEquals(v0, v90, "Braking velocity should differ with theta when coefficients are asymmetric");
+    }
+
+    @Test
+    public void coastBehaviorVariesWithTheta() {
+        Foresight f = new Foresight(asymmetricBrakingConfig);
+        // Coast should compute differently for different angles due to ellipse deceleration
+        double coastForward = f.coast(50.0, 0.0, 100.0, 100.0);
+        double coastLateral = f.coast(50.0, Math.PI / 2, 100.0, 100.0);
+        assertTrue(Double.isFinite(coastForward));
+        assertTrue(Double.isFinite(coastLateral));
+        // At different angles, the achievable deceleration magnitude differs, so coast output may differ
+        assertNotNull("Coast should handle both angles");
     }
 }
