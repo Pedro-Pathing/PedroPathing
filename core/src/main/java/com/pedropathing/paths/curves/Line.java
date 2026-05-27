@@ -66,6 +66,6 @@ public class Line implements Curve {
 
     @Override
     public double remainingDistance(@TValue double t) {
-        return remainingDistanceNormalized(t) * length();
+        return (1 - t) * length();
     }
 }
