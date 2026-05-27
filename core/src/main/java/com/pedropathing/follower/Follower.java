@@ -5,6 +5,7 @@ import com.pedropathing.VectorCalculator;
 import com.pedropathing.control.FilteredPIDFCoefficients;
 import com.pedropathing.control.PIDFCoefficients;
 import com.pedropathing.drivetrain.Drivetrain;
+import com.pedropathing.localization.SingleDataLocalizer;
 import com.pedropathing.paths.PathConstraints;
 import com.pedropathing.paths.PathPoint;
 import com.pedropathing.util.PoseHistory;
@@ -1201,5 +1202,20 @@ public class Follower {
         }
         
         return currentPathChain.getDistanceRemaining(chainIndex);
+    }
+
+    /**
+     * Replaces the localizer of this follower to return the given position and velocity
+     * @param position the position to return from the localizer until reset by this function
+     * @param velocity the velocity to return from the localizer until reset by this function
+     */
+    public void overrideLocalization(Pose position, Pose velocity) {
+        if (poseTracker.getLocalizer() instanceof SingleDataLocalizer) {
+            SingleDataLocalizer sdl = (SingleDataLocalizer)poseTracker.getLocalizer();
+            sdl.lastPose = position;
+            sdl.lastVelocity = velocity;
+        } else {
+            poseTracker = new PoseTracker(new SingleDataLocalizer(position, velocity));
+        }
     }
 }
