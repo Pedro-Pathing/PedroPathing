@@ -30,6 +30,13 @@ public final class PathTracker {
         }
     }
 
+    /** Creates a PathTracker with no paths for holding a position instead */
+    public PathTracker(Pose pose) {
+        end = pose;
+        isFollowing = false;
+        atomicPaths = new ArrayDeque<>();
+    }
+
     public void advance() {
         atomicPaths.remove();
     }

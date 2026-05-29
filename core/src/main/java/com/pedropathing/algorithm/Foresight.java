@@ -140,8 +140,15 @@ public class Foresight implements Algorithm {
                 state.motionState().velocity(),
                 state.motionState().pose().heading());
         double headingPower = headingPower(state, target.heading());
-        translational = translational.times(config.holdPointTranslationalScaling.get());
-        headingPower *= config.holdPointHeadingScaling.get();
+        // Apply hold-point scalers. Clamp the scaler values to [0, 1] at runtime to
+        // avoid accidental amplification if the configuration is set incorrectly.
+        double translationalScale = config.holdPointTranslationalScaling.get();
+        double headingScale = config.holdPointHeadingScaling.get();
+        translationalScale = Math.max(0.0, Math.min(1.0, translationalScale));
+        headingScale = Math.max(0.0, Math.min(1.0, headingScale));
+
+        translational = translational.times(translationalScale);
+        headingPower *= headingScale;
         return getDrivePowers(translational, state, headingPower);
     }
 

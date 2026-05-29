@@ -64,13 +64,18 @@ public class Follower {
         pathTracker = new PathTracker(path);
     }
 
+    public void hold(Pose pose) {
+        manual = false;
+        pathTracker = new PathTracker(pose);
+    }
+
     public void manual(double forward, double lateral, double heading) {
         stop();
+        manual = true;
         drivetrain.manual(new DrivePowers(forward, lateral, heading));
     }
 
     public void stop() {
-        manual = true;
         pathTracker = null;
     }
 
