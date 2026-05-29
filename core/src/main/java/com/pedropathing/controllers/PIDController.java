@@ -17,11 +17,13 @@ public class PIDController implements Controller {
     @Override
     public double calculate(double target, double error) {
         long nanoTime = System.nanoTime();
-        double delta = nanoTime - previousTime;
+        double delta = (nanoTime - previousTime) * 1e-9;
         previousTime = nanoTime;
 
-        integral += error * (delta / Math.pow(10.0, 9));
-        return (error * kP) + (integral * kI) + (((error - previousError) / (delta / Math.pow(10.0, 9))) * kD);
+        integral += error * delta;
+        double derivative = (error - previousError) / delta * kD;
+        previousError = error;
+        return (error * kP) + (integral * kI) + derivative;
     }
 
     public void reset() {
