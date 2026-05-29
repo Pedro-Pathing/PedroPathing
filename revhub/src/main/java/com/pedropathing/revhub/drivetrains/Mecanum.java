@@ -1,12 +1,13 @@
 package com.pedropathing.revhub.drivetrains;
 
+import android.annotation.SuppressLint;
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.drivetrain.Drivetrain;
-import com.pedropathing.utils.Utils;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import com.qualcomm.robotcore.util.RobotLog;
 
 public class Mecanum implements Drivetrain {
     private final boolean manualBrakeMode;
@@ -40,20 +41,36 @@ public class Mecanum implements Drivetrain {
         manualBrakeMode = config.manualBrakeMode.get();
     }
 
+    @SuppressLint("DefaultLocale")
     public void applyDrive(DrivePowers powers) {
-        double upRight = -powers.strafe() + powers.forward();
-        double downLeft = -powers.strafe() - powers.forward();
+        double forward = powers.forward();
+        double strafe = powers.strafe();
+        double turn = powers.turn();
 
-        wheelPowers[FL] = upRight - powers.turn();
-        wheelPowers[BL] = downLeft + powers.turn();
-        wheelPowers[FR] = downLeft - powers.turn();
-        wheelPowers[BR] = upRight + powers.turn();
+        double fl = forward + strafe + turn;
+        double bl = forward - strafe + turn;
+        double fr = forward - strafe - turn;
+        double br = forward + strafe - turn;
+        
+        // Normalize by the largest absolute value (or 1) so we preserve ratios but
+        // guarantee outputs stay in [-1, 1]. This is preferable to summing abs inputs.
+        double max = Math.max(1.0, Math.max(Math.abs(fl), Math.max(Math.abs(bl), Math.max(Math.abs(fr), Math.abs(br)))));
 
-        Utils.Control.desaturate(wheelPowers);
+        wheelPowers[FL] = fl / max;
+        wheelPowers[BL] = bl / max;
+        wheelPowers[FR] = fr / max;
+        wheelPowers[BR] = br / max;
 
         for (int i = 0; i < wheelPowers.length; i++) {
             motors[i].setPower(wheelPowers[i]);
         }
+
+        boolean normalized = max > 1.0;
+        RobotLog.i("Mecanum", String.format(
+                "Mecanum drive raw: fl=%.3f bl=%.3f fr=%.3f br=%.3f | normMax=%.3f | normalized=%b | out: fl=%.3f bl=%.3f fr=%.3f br=%.3f",
+                fl, bl, fr, br, max, normalized,
+                wheelPowers[FL], wheelPowers[BL], wheelPowers[FR], wheelPowers[BR]
+        ));
     }
 
 

@@ -43,16 +43,16 @@ public class Follower {
     public void update() {
         localizer.update();
 
-        if (manual) return;
+        if (manual || pathTracker == null) return;
 
         double previousNanoTime = currentNanoTime;
         currentNanoTime = System.nanoTime();
         state = new FollowState(localizer.motionState(), pathTracker, currentNanoTime - previousNanoTime);
 
-        if (pathTracker == null || pathTracker.empty()) {
-            pathTracker = null;
-            DrivePowers powers = algorithm.hold(state.motionState().pose(), state);
+        if (pathTracker != null && pathTracker.empty()) {
+            DrivePowers powers = algorithm.hold(pathTracker.end(), state);
             drivetrain.drive(powers);
+            return;
         }
 
         DrivePowers powers = algorithm.calculate(state);
@@ -63,8 +63,6 @@ public class Follower {
         manual = false;
         pathTracker = new PathTracker(path);
     }
-
-    // TODO: hold(pose)
 
     public void manual(double forward, double lateral, double heading) {
         stop();
@@ -86,6 +84,6 @@ public class Follower {
 
     public boolean isBusy() {
         if (manual || pathTracker == null) return false;
-        return pathTracker.isBusy();
+        return pathTracker.isFollowing();
     }
 }

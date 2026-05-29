@@ -18,9 +18,13 @@ public class CachedMotor {
     }
 
     public void setPower(double power) {
-        if (Math.abs(this.power - power) >= powerThreshold) {
-            this.power = power;
-            motor.setPower(power);
+        if (Double.isNaN(power) || Double.isInfinite(power)) return;
+
+        double desired = Math.max(-1.0, Math.min(1.0, power));
+
+        if (Math.abs(this.power - desired) >= powerThreshold) {
+            this.power = desired;
+            motor.setPower(desired);
         }
     }
 

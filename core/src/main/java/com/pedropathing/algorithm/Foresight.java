@@ -42,8 +42,10 @@ public class Foresight implements Algorithm {
                 return calculate(state);
             }
 
-            state.pathTracker().isBusy(false);
-            return hold(state.pathTracker().current().endPoint().toPose(targetHeading), state);
+            state.pathTracker().advance();
+            state.pathTracker().isFollowing(false);
+            return DrivePowers.zero();
+            // return hold(state.pathTracker().current().endPoint().toPose(targetHeading), state);
         }
 
         double headingError = headingError(state.motionState().pose().heading(), targetHeading);
@@ -138,6 +140,8 @@ public class Foresight implements Algorithm {
                 state.motionState().velocity(),
                 state.motionState().pose().heading());
         double headingPower = headingPower(state, target.heading());
+        translational = translational.times(config.holdPointTranslationalScaling.get());
+        headingPower *= config.holdPointHeadingScaling.get();
         return getDrivePowers(translational, state, headingPower);
     }
 

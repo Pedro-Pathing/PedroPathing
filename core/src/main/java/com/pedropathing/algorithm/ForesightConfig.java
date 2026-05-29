@@ -23,6 +23,16 @@ public final class ForesightConfig {
             .plus(Controller.dynamicFeedforward(0.015))
             .plus(Controller.staticFeedforward(0.05)));
 
+    /**
+     * This scales the translational error correction power when holding.
+     */
+    public final ConfigVar<Double> holdPointTranslationalScaling = ConfigVar.of(0.45, Validator.nonnegative());
+
+    /**
+     * This scales the heading error correction power when holding.
+     */
+    public final ConfigVar<Double> holdPointHeadingScaling = ConfigVar.of(0.35, Validator.nonnegative());
+
     /** Centripetal force to power scaling. */
     public final ConfigVar<Double> centripetalScaling = ConfigVar.of(0.005, Validator.nonnegative());
 
