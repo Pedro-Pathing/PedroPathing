@@ -7,6 +7,7 @@ package com.pedropathing.algorithm;
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.follower.FollowState;
 import com.pedropathing.math.Ellipse2D;
+import com.pedropathing.math.Matrix;
 import com.pedropathing.math.Pose;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.math.Velocity;
@@ -231,15 +232,18 @@ public class Foresight implements Algorithm {
         return currentPose.toVector2D().minus(closestPointVector).dot(closestNormalVector);
     }
 
-    private Vector2D computeTranslationalCorrection(Vector2D displacementVector, Velocity velocity, double currentHeading) {
+    public Vector2D computeTranslationalCorrection(Vector2D displacementVector, Velocity velocity, double currentHeading) {
         if (displacementVector == null || displacementVector.isZero()) return Vector2D.zero();
-        Vector2D linearVel = velocity.toLinear().projectOnto(displacementVector);
+        Vector2D linearVel = velocity.toLinear();
         Vector2D brakingDisplacement;
         if (linearVel.isZero()) {
             brakingDisplacement = Vector2D.zero();
         } else {
-            double theta = linearVel.angleTo(Vector2D.unit(currentHeading));
-            brakingDisplacement = getBrakeDisplacement(linearVel.dot(displacementVector), theta);
+            double theta = displacementVector.angleTo(Vector2D.unit(currentHeading));
+            brakingDisplacement = Vector2D.cartesian(
+                    getBrakeDisplacement(linearVel.x(), theta),
+                    getBrakeDisplacement(linearVel.y(), theta + Math.PI/2)
+            );
         }
         Vector2D adjustedError = displacementVector.minus(brakingDisplacement);
         double distance = adjustedError.magnitude();
@@ -307,13 +311,20 @@ public class Foresight implements Algorithm {
         return config.coastController.get().calculate(feedforwardVelocity, error);
     }
 
-    private Vector2D getBrakeDisplacement(double v, double theta) {
-        Vector2D unit = Vector2D.unit(theta);
-        Vector2D quadraticTerm = unit.hadamardProduct(unit)
-                .transform(config.quadraticBrakeCoefficients.get())
-                .times(v * Math.abs(v));
-        Vector2D linearTerm =
-                unit.transform(config.linearBrakeCoefficients.get()).times(v);
-        return quadraticTerm.plus(linearTerm);
+    public double getBrakeDisplacement(double v, double theta) {
+        double cosT = Math.cos(theta);
+        double sinT = Math.sin(theta);
+
+        Matrix quad = config.quadraticBrakeCoefficients.get();
+        double qx = cosT * Math.abs(cosT) * quad.get(0,0);
+        double qy = sinT * Math.abs(sinT) * quad.get(1,1);
+        double quadratic = (qx * cosT + qy * sinT) * v * Math.abs(v);
+
+        Matrix lin = config.linearBrakeCoefficients.get();
+        double lx = cosT * lin.get(0,0);
+        double ly = sinT * lin.get(1,1);
+        double linear = (lx * cosT + ly * sinT) * v;
+
+        return quadratic + linear;
     }
 }

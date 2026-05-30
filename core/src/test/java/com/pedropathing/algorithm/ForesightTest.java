@@ -6,6 +6,7 @@ import com.pedropathing.follower.FollowState;
 import com.pedropathing.localization.MotionState;
 import com.pedropathing.math.Matrix;
 import com.pedropathing.math.Pose;
+import com.pedropathing.math.Vector2D;
 import com.pedropathing.math.Velocity;
 import com.pedropathing.paths.PathTracker;
 import com.pedropathing.paths.SimplePath;
@@ -43,6 +44,20 @@ public class ForesightTest {
                 c.maxAchievableStrafeDeceleration.set(62.58098);
             }
     );
+
+    static ForesightConfig symmetricConfig = new ForesightConfig(
+            c -> {
+                c.translationalController.set(Controller.pid(0.16,0,0));
+                c.headingController.set(Controller.pid(2.0,0,0.1));
+                c.linearBrakeCoefficients.set(Matrix.diag(0.015, 0.015));
+                c.quadraticBrakeCoefficients.set(Matrix.diag(0.001, 0.001));
+                c.maxAchievableForwardVelocity.set(88.036);
+                c.maxAchievableStrafeVelocity.set(71.881);
+                c.maxAchievableForwardDeceleration.set(30.3333);
+                c.maxAchievableStrafeDeceleration.set(62.58098);
+            }
+    );
+
     @Test
     public void hold_atTargetProducesZeroDrive() {
         Foresight f = new Foresight(foresightConfig);
@@ -179,5 +194,19 @@ public class ForesightTest {
         assertTrue(Double.isFinite(coastLateral));
         // At different angles, the achievable deceleration magnitude differs, so coast output may differ
         assertNotNull("Coast should handle both angles");
+    }
+
+    @Test
+    public void translationalCorrection() {
+        Foresight f = new Foresight(symmetricConfig);
+        assertEquals(Vector2D.cartesian(0.12, -0.21599999999999997), f.computeTranslationalCorrection(Vector2D.cartesian(1,0), new Velocity(10, 30, 0), 0));
+    }
+
+    @Test
+    public void brakeDisplacement() {
+        Foresight f = new Foresight(symmetricConfig);
+        assertEquals(1.3499999999999999, f.getBrakeDisplacement(30, 0));
+        assertEquals(-1.3499999999999999, f.getBrakeDisplacement(-30, 0));
+        assertEquals(1.2215143233657912, f.getBrakeDisplacement(30, 1.2 + Math.PI/2));
     }
 }
