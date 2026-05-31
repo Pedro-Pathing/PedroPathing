@@ -16,6 +16,8 @@ import com.pedropathing.utils.Utils;
 import com.pedropathing.utils.Utils.Angle;
 import com.pedropathing.utils.Utils.Control;
 
+import static com.pedropathing.utils.Utils.Angle.normalizeSigned;
+
 public class Foresight implements Algorithm {
     private final ForesightConfig config;
     private final Ellipse2D maxAchievableVelocity, maxAchievableDeceleration;
@@ -46,7 +48,6 @@ public class Foresight implements Algorithm {
             state.pathTracker().advance();
             state.pathTracker().isFollowing(false);
             return DrivePowers.zero();
-            // return hold(state.pathTracker().current().endPoint().toPose(targetHeading), state);
         }
 
         double headingError = headingError(state.motionState().pose().heading(), targetHeading);
@@ -145,8 +146,6 @@ public class Foresight implements Algorithm {
         // avoid accidental amplification if the configuration is set incorrectly.
         double translationalScale = config.holdPointTranslationalScaling.get();
         double headingScale = config.holdPointHeadingScaling.get();
-        translationalScale = Math.max(0.0, Math.min(1.0, translationalScale));
-        headingScale = Math.max(0.0, Math.min(1.0, headingScale));
 
         translational = translational.times(translationalScale);
         headingPower *= headingScale;
@@ -158,8 +157,8 @@ public class Foresight implements Algorithm {
      */
     public double headingPower(FollowState state, double targetHeading) {
         double current = state.motionState().pose().heading();
-        double error = headingError(current, targetHeading);
-        return config.headingController.get().calculate(targetHeading, error);
+        double error = -headingError(current, targetHeading);
+        return config.headingController.get().calculate(0, error);
     }
 
     /**
@@ -225,7 +224,7 @@ public class Foresight implements Algorithm {
     }
 
     public double headingError(double current, double target) {
-        return Angle.smallestDifference(current, target) * Angle.turnDirection(current, target);
+        return normalizeSigned(target - current);
     }
 
     public double translationalError(Pose currentPose, Vector2D closestPointVector, Vector2D closestNormalVector) {

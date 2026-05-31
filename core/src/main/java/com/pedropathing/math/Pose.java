@@ -4,6 +4,7 @@
  */
 package com.pedropathing.math;
 
+import com.pedropathing.utils.Utils;
 import lombok.Value;
 import lombok.With;
 
@@ -14,6 +15,16 @@ public class Pose {
     double x;
     double y;
     double heading;
+
+    public Pose(double x, double y, double heading) {
+        this.x = x;
+        this.y = y;
+        this.heading = Utils.Angle.normalize(heading);
+    }
+
+    public Pose(double x, double y) {
+        this(x, y, 0);
+    }
 
     public static Pose zero() {
         return ZERO;
