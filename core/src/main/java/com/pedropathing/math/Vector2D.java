@@ -93,7 +93,7 @@ public class Vector2D {
     }
 
     public boolean isZero() {
-        return x < 1e-9 && y < 1e-9;
+        return (x * x + y * y) < 1e-9;
     }
 
     public double quadraticForm(Matrix m) {

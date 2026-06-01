@@ -13,7 +13,6 @@ import com.pedropathing.math.Vector2D;
 import com.pedropathing.math.Velocity;
 import com.pedropathing.utils.Pair;
 import com.pedropathing.utils.Utils;
-import com.pedropathing.utils.Utils.Angle;
 import com.pedropathing.utils.Utils.Control;
 
 import static com.pedropathing.utils.Utils.Angle.normalizeSigned;
@@ -220,7 +219,7 @@ public class Foresight implements Algorithm {
         Vector2D robotFrameDrivePower = fieldRelativeDrivePower.rotate(-state.motionState().pose().heading());
         double forward = Control.clampBrakingPower(robotFrameDrivePower.x(), state.motionState().twist().vx(), config.maxBrakingPower.get());
         double strafe = Control.clampBrakingPower(robotFrameDrivePower.y(), state.motionState().twist().vy(), config.maxBrakingPower.get());
-        return new DrivePowers(forward, strafe, headingPower);
+        return new DrivePowers(forward, -strafe, headingPower);
     }
 
     public double headingError(double current, double target) {
