@@ -7,11 +7,17 @@ plugins {
 dependencies {
     compileOnly(libs.annotations)
     dokkaPlugin(libs.dokka.java.plugin)
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 val dokkaJar = tasks.register<Jar>("dokkaJar") {

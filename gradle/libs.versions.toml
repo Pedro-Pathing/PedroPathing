@@ -6,6 +6,8 @@ ftc-robot-core = { group = "org.firstinspires.ftc", name = "RobotCore", version.
 ftc-hardware = { group = "org.firstinspires.ftc", name = "Hardware", version.ref = "ftc" }
 annotations = { group = "org.jetbrains", name = "annotations", version = "23.0.0" }
 dokka-java-plugin = "org.jetbrains.dokka:kotlin-as-java-plugin:2.0.0"
+junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version = "5.10.2" }
+junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher", version = "1.10.2" }
 
 [bundles]
 ftc = ["ftc-robot-core", "ftc-hardware"]

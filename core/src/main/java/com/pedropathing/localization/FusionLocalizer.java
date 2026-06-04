@@ -9,18 +9,40 @@ import java.util.NavigableMap;
 import java.util.TreeMap;
 
 public class FusionLocalizer implements Localizer {
+    /** Floor applied to per-axis measurement variance so a "fully trusted" (variance 0) axis can't
+     * freeze that axis or make the innovation covariance S = Pm + R singular. */
+    private static final double MEASUREMENT_VARIANCE_FLOOR = 1e-6;
+    /** History is kept for this wall-clock window (the acceptable vision-latency budget), making the
+     * budget independent of loop rate; {@code bufferSize} additionally caps the entry count. */
+    private static final long BUFFER_DURATION_NANOS = 1_000_000_000L;
+
     private final Localizer deadReckoning;
     private Pose currentPosition;
     private Pose currentVelocity;
+    private Pose previousOdometryPose;
     private Matrix P; //State Covariance
     private final Matrix Q; //Process Noise Covariance
     private final Matrix R; //Measurement Noise Covariance
-    private long lastUpdateTime = -1;
     private final NavigableMap<Long, Pose> poseHistory = new TreeMap<>();
-    private final NavigableMap<Long, Pose> twistHistory = new TreeMap<>();
+    private final NavigableMap<Long, Pose> odometryHistory = new TreeMap<>();
     private final NavigableMap<Long, Matrix> covarianceHistory = new TreeMap<>();
     private final int bufferSize;
 
+    /**
+     * Creates a fusion localizer that corrects a dead-reckoning localizer with vision measurements.
+     *
+     * @param deadReckoning      the underlying odometry localizer whose increments are fused
+     * @param initialCovariance  the initial state covariance diagonal (x, y, heading variances)
+     * @param processVariance    the per-axis process-noise coefficients (x, y, heading). <b>Note:</b>
+     *                           these are scaled by the distance/rotation actually travelled
+     *                           ({@code ΔP = R(θ)·diag(|Δx|·qₓ, |Δy|·q_y, |Δθ|·q_θ)·R(θ)ᵀ}), so the
+     *                           units are variance per inch / per radian — not per second². Values
+     *                           tuned against an older {@code Q·Δt²} formulation must be re-tuned.
+     * @param measurementVariance the default per-axis vision measurement variance (x, y, heading);
+     *                           each axis is floored to {@value #MEASUREMENT_VARIANCE_FLOOR}
+     * @param bufferSize         the maximum number of history entries to retain (a count cap on top
+     *                           of the {@code BUFFER_DURATION_NANOS} wall-clock latency window)
+     */
     public FusionLocalizer(
             Localizer deadReckoning,
             Pose initialCovariance,
@@ -36,61 +58,67 @@ public class FusionLocalizer implements Localizer {
         this.Q = Matrix.diag(processVariance.getX(), processVariance.getY(), processVariance.getHeading());
         this.R = Matrix.diag(measurementVariance.getX(), measurementVariance.getY(), measurementVariance.getHeading());
         this.bufferSize = bufferSize;
-        twistHistory.put(0L, new Pose());
+    }
+
+    /**
+     * Source of the monotonic clock (nanoseconds) used to key the history buffers. Exposed so tests
+     * can supply deterministic timestamps; production uses {@link System#nanoTime()}.
+     *
+     * @return the current time in nanoseconds
+     */
+    protected long currentTimeNanos() {
+        return System.nanoTime();
     }
 
     @Override
     public void update() {
         //Updates odometry
         deadReckoning.update();
-        long now = System.nanoTime();
-        double dt = lastUpdateTime < 0 ? 0 : (now - lastUpdateTime) / 1e9;
-        lastUpdateTime = now;
+        long now = currentTimeNanos();
 
-        //Updates twist, note that the dead reckoning localizer returns world-frame twist
-        Pose twist = deadReckoning.getVelocity();
-        twistHistory.put(now, twist.copy());
-        currentVelocity = twist.copy();
+        Pose odometryPose = deadReckoning.getPose().copy();
+        currentVelocity = deadReckoning.getVelocity().copy();
 
-        //Perform twist integration to propagate the fused position estimate based on how the odometry thinks the robot has moved
-        currentPosition = integrate(currentPosition, twist, dt);
-
-        //Update Kalman Filter
-        updateCovariance(dt);
+        // Propagate the fused mean by the odometry's body-frame increment composed onto the fused
+        // pose: translation follows the *fused* heading, so vision heading corrections are honored,
+        // and the SE(2) composition integrates arcs exactly (no forward-Euler drift).
+        Pose increment = previousOdometryPose == null
+                ? new Pose()
+                : relativeTransform(previousOdometryPose, odometryPose);
+        P = P.plus(processNoise(increment, currentPosition.getHeading()));
+        currentPosition = compose(currentPosition, increment);
+        previousOdometryPose = odometryPose;
 
         poseHistory.put(now, currentPosition.copy());
+        odometryHistory.put(now, odometryPose);
         covarianceHistory.put(now, P.copy());
-        if (poseHistory.size() > bufferSize) poseHistory.pollFirstEntry();
-        if (twistHistory.size() > bufferSize) twistHistory.pollFirstEntry();
-        if (covarianceHistory.size() > bufferSize) covarianceHistory.pollFirstEntry();
+        trim(poseHistory, now);
+        trim(odometryHistory, now);
+        trim(covarianceHistory, now);
     }
 
     /**
-     * Consider the system xₖ₊₁ = xₖ + (f(xₖ, uₖ) + wₖ) * Δt.
+     * Process-noise contribution G·Q·Gᵀ added to the state covariance for one odometry increment.
      * <p>
-     * wₖ is the noise in the system caused by sensor uncertainty, a zero-mean random vector with covariance Q.
-     * <p>
-     * The Kalman Filter update step is given by:
+     * Instead of the loop-rate-dependent {@code Q·Δt²} of a fixed-rate model, the noise is scaled by
+     * the distance/rotation actually travelled:
      * <pre>
-     *     Pₖ₊₁ = F * Pₖ * Fᵀ + G * Q * Gᵀ
+     *     ΔP = R(θ) · diag(|Δx|·qₓ, |Δy|·q_y, |Δθ|·q_θ) · R(θ)ᵀ
      * </pre>
-     * Here F and G represent the State Transition Matrix and Control-to-State Matrix respectively.
-     * <p>
-     * The State Transition Matrix F is given by I + ∂f/∂x.
-     * We computed our twist integration using a first-order forward-Euler approximation.
-     * Therefore, f only depends on the twist, not on x, so ∂f/∂x = 0 and F = I.
-     * <p>
-     * The Control-to-State Matrix G is given by ∂xₖ₊₁ / ∂wₖ.
-     * Here this is simply I * Δt.
-     * <p>
-     * The Kalman update is Pₖ₊₁ = F * Pₖ * Fᵀ + G * Q * Gᵀ.
-     * With F = I and G = I * Δt, we get Pₖ₊₁ = Q * Δt².
+     * This matches how odometry drifts, is invariant to loop rate, and keeps a stationary robot's
+     * covariance from inflating (|Δ| ≈ 0 ⇒ no growth).
      *
-     * @param dt the time step Δt in seconds
+     * @param increment the body-frame odometry increment (Δx, Δy, Δθ)
+     * @param heading   the fused heading the increment is applied at, rotating Q into the world frame
+     * @return the covariance increment to add to P
      */
-    private void updateCovariance(double dt) {
-        Matrix G = Matrix.createRotation(getPose().getHeading()).multiply(dt);
-        P = P.plus(G.multiply(Q.multiply(G.transposed())));
+    private Matrix processNoise(Pose increment, double heading) {
+        Matrix G = Matrix.createRotation(heading);
+        Matrix scaledQ = Matrix.diag(
+                Math.abs(increment.getX()) * Q.get(0, 0),
+                Math.abs(increment.getY()) * Q.get(1, 1),
+                Math.abs(increment.getHeading()) * Q.get(2, 2));
+        return G.multiply(scaledQ.multiply(G.transposed()));
     }
 
     /**
@@ -110,8 +138,12 @@ public class FusionLocalizer implements Localizer {
      */
     public void addMeasurement(Pose measuredPose, long timestamp, Pose measurementVariance) {
         Matrix measurementR = measurementVariance == null
-                ? R
+                ? R.copy()
                 : Matrix.diag(measurementVariance.getX(), measurementVariance.getY(), measurementVariance.getHeading());
+        // Floor variances so a "fully trusted" axis (variance 0) can't freeze the axis or make S singular.
+        for (int i = 0; i < 3; i++)
+            measurementR.set(i, i, Math.max(measurementR.get(i, i), MEASUREMENT_VARIANCE_FLOOR));
+
         // Reject if timestamp is outside our poseHistory time window
         if (poseHistory.isEmpty() || timestamp < poseHistory.firstKey() || timestamp > poseHistory.lastKey())
             return;
@@ -144,8 +176,13 @@ public class FusionLocalizer implements Localizer {
         // Innovation covariance S = P + R
         Matrix S = Pm.plus(measurementR);
 
-        // Apply gain K = P * (P + R)^(-1)
-        Matrix K = Pm.multiply(S.inverse());
+        // Apply gain K = P * (P + R)^(-1); skip (don't crash) if S is singular / ill-conditioned
+        Matrix K;
+        try {
+            K = Pm.multiply(S.inverse());
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return;
+        }
 
         // Apply mask
         K = M.multiply(K);
@@ -169,31 +206,26 @@ public class FusionLocalizer implements Localizer {
 
         covarianceHistory.put(timestamp, updatedCovariance);
 
-        // Forward propagate pose + covariance
-        long prevTime = timestamp;
+        // Forward propagate pose + covariance from the correction, using the odometry's relative
+        // transforms (same SE(2) composition as update(), so the correction's heading is honored).
         Pose prevPose = updatedPast;
+        Pose prevOdom = interpolate(timestamp, odometryHistory);
         Matrix prevCov = updatedCovariance;
 
-        for (NavigableMap.Entry<Long, Pose> entry :
-                poseHistory.tailMap(timestamp, false).entrySet()) {
+        for (Long t : poseHistory.tailMap(timestamp, false).keySet()) {
+            Pose currOdom = interpolate(t, odometryHistory);
+            Pose increment = (prevOdom == null || currOdom == null)
+                    ? new Pose()
+                    : relativeTransform(prevOdom, currOdom);
 
-            long t = entry.getKey();
-            Pose twist = interpolate(t, twistHistory);
-            if (twist == null)
-                twist = getVelocity();
-
-            double dt = (t - prevTime) / 1e9;
-
-            Pose nextPose = integrate(prevPose, twist, dt);
+            Pose nextPose = compose(prevPose, increment);
             poseHistory.put(t, nextPose);
 
-            // Covariance propagation: P ← P + Q dt²
-            Matrix G = Matrix.createRotation(prevPose.getHeading()).multiply(dt);
-            prevCov = prevCov.plus(G.multiply(Q.multiply(G.transposed())));
+            prevCov = prevCov.plus(processNoise(increment, prevPose.getHeading()));
             covarianceHistory.put(t, prevCov);
 
             prevPose = nextPose;
-            prevTime = t;
+            prevOdom = currOdom;
         }
 
         currentPosition = poseHistory.lastEntry().getValue().copy();
@@ -221,17 +253,35 @@ public class FusionLocalizer implements Localizer {
         return new Pose(x, y, heading);
     }
 
-    private Pose integrate(Pose previousPose, Pose twist, double dt) {
-        //Standard forward-Euler first-order approximation for twist integration
-        double dx = twist.getX() * dt;
-        double dy = twist.getY() * dt;
-        double dTheta = twist.getHeading() * dt;
-
+    /** SE(2) body-frame increment that takes {@code from} to {@code to}: from⁻¹ ⊕ to. */
+    private static Pose relativeTransform(Pose from, Pose to) {
+        double cos = Math.cos(from.getHeading());
+        double sin = Math.sin(from.getHeading());
+        double dx = to.getX() - from.getX();
+        double dy = to.getY() - from.getY();
         return new Pose(
-                previousPose.getX() + dx,
-                previousPose.getY() + dy,
-                MathFunctions.normalizeAngle(previousPose.getHeading() + dTheta)
+                dx * cos + dy * sin,
+                -dx * sin + dy * cos,
+                MathFunctions.normalizeAngleSigned(to.getHeading() - from.getHeading())
         );
+    }
+
+    /** SE(2) composition {@code base ⊕ relative}: applies a body-frame increment at base's heading. */
+    private static Pose compose(Pose base, Pose relative) {
+        double cos = Math.cos(base.getHeading());
+        double sin = Math.sin(base.getHeading());
+        return new Pose(
+                base.getX() + relative.getX() * cos - relative.getY() * sin,
+                base.getY() + relative.getX() * sin + relative.getY() * cos,
+                MathFunctions.normalizeAngle(base.getHeading() + relative.getHeading())
+        );
+    }
+
+    /** Drops history older than the latency window, then caps total entries at {@code bufferSize}. */
+    private void trim(NavigableMap<Long, ?> history, long now) {
+        Long floor = history.floorKey(now - BUFFER_DURATION_NANOS);
+        if (floor != null) history.headMap(floor, false).clear();
+        while (history.size() > bufferSize) history.pollFirstEntry();
     }
 
     @Override
@@ -248,7 +298,9 @@ public class FusionLocalizer implements Localizer {
     @Override
     public void setStartPose(Pose setStart) {
         deadReckoning.setStartPose(setStart);
+        previousOdometryPose = deadReckoning.getPose().copy();
         poseHistory.put(0L, setStart.copy());
+        odometryHistory.put(0L, previousOdometryPose.copy());
         covarianceHistory.put(0L, P.copy());
         currentPosition = setStart.copy();
     }
@@ -257,11 +309,16 @@ public class FusionLocalizer implements Localizer {
     public void setPose(Pose setPose) {
         currentPosition = setPose.copy();
         deadReckoning.setPose(setPose);
+        previousOdometryPose = deadReckoning.getPose().copy();
 
-        if (poseHistory.lastEntry() != null)
-            poseHistory.lastEntry().setValue(setPose.copy());
-        else
+        // NavigableMap.lastEntry() returns an immutable snapshot, so overwrite via put(lastKey, ...).
+        if (poseHistory.isEmpty()) {
             setStartPose(setPose);
+        } else {
+            poseHistory.put(poseHistory.lastKey(), setPose.copy());
+            if (!odometryHistory.isEmpty())
+                odometryHistory.put(odometryHistory.lastKey(), previousOdometryPose.copy());
+        }
     }
 
     @Override
