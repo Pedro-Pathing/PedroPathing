@@ -5,7 +5,18 @@ import com.pedropathing.math.MathFunctions;
 import com.pedropathing.math.Matrix;
 import com.pedropathing.math.Vector;
 
-public class FusionLocalizer implements Localizer {
+import java.util.NavigableMap;
+import java.util.TreeMap;
+
+/**
+ * Frozen baseline copy of {@link FusionLocalizer} as of the TreeMap-backed implementation, kept in
+ * the test source set purely so we can A/B benchmark it against a future ring-buffer-backed version.
+ * <p>
+ * This is intentionally <em>not</em> shipped in the production jar and must stay behaviour-identical
+ * to the original so the race measures only the data-structure change, not algorithm differences.
+ * Do not "improve" this class — it is the control.
+ */
+public class FusionLocalizerTreeMap implements Localizer {
     /** Floor applied to per-axis measurement variance so a "fully trusted" (variance 0) axis can't
      * freeze that axis or make the innovation covariance S = Pm + R singular. */
     private static final double MEASUREMENT_VARIANCE_FLOOR = 1e-6;
@@ -20,7 +31,9 @@ public class FusionLocalizer implements Localizer {
     private Matrix P; //State Covariance
     private final Matrix Q; //Process Noise Covariance
     private final Matrix R; //Measurement Noise Covariance
-    private final History history;
+    private final NavigableMap<Long, Pose> poseHistory = new TreeMap<>();
+    private final NavigableMap<Long, Pose> odometryHistory = new TreeMap<>();
+    private final NavigableMap<Long, Matrix> covarianceHistory = new TreeMap<>();
     private final int bufferSize;
 
     /**
@@ -38,7 +51,7 @@ public class FusionLocalizer implements Localizer {
      * @param bufferSize         the maximum number of history entries to retain (a count cap on top
      *                           of the {@code BUFFER_DURATION_NANOS} wall-clock latency window)
      */
-    public FusionLocalizer(
+    public FusionLocalizerTreeMap(
             Localizer deadReckoning,
             Pose initialCovariance,
             Pose processVariance,
@@ -53,7 +66,6 @@ public class FusionLocalizer implements Localizer {
         this.Q = Matrix.diag(processVariance.getX(), processVariance.getY(), processVariance.getHeading());
         this.R = Matrix.diag(measurementVariance.getX(), measurementVariance.getY(), measurementVariance.getHeading());
         this.bufferSize = bufferSize;
-        this.history = new History(bufferSize);
     }
 
     /**
@@ -81,18 +93,20 @@ public class FusionLocalizer implements Localizer {
         Pose increment = previousOdometryPose == null
                 ? new Pose()
                 : relativeTransform(previousOdometryPose, odometryPose);
-        addProcessNoiseInPlace(P, increment, currentPosition.getHeading());
+        P = P.plus(processNoise(increment, currentPosition.getHeading()));
         currentPosition = compose(currentPosition, increment);
         previousOdometryPose = odometryPose;
 
-        history.append(now, currentPosition.copy(), odometryPose, P.copy());
-        history.trimOlderThan(now - BUFFER_DURATION_NANOS);
-        history.enforceCountCap(bufferSize);
+        poseHistory.put(now, currentPosition.copy());
+        odometryHistory.put(now, odometryPose);
+        covarianceHistory.put(now, P.copy());
+        trim(poseHistory, now);
+        trim(odometryHistory, now);
+        trim(covarianceHistory, now);
     }
 
     /**
-     * Adds the process-noise contribution G·Q·Gᵀ for one odometry increment directly into
-     * {@code target} (a 3×3 covariance), allocating nothing.
+     * Process-noise contribution G·Q·Gᵀ added to the state covariance for one odometry increment.
      * <p>
      * Instead of the loop-rate-dependent {@code Q·Δt²} of a fixed-rate model, the noise is scaled by
      * the distance/rotation actually travelled:
@@ -101,38 +115,18 @@ public class FusionLocalizer implements Localizer {
      * </pre>
      * This matches how odometry drifts, is invariant to loop rate, and keeps a stationary robot's
      * covariance from inflating (|Δ| ≈ 0 ⇒ no growth).
-     * <p>
-     * Because G = R(θ) is a planar rotation (identity on the heading axis) and Q is diagonal, the
-     * product has a closed form, so this writes the five affected entries in place rather than
-     * allocating the rotation, the diagonal, and two matrix-multiply temporaries each call. The
-     * factor order matches {@code G.multiply(scaledQ.multiply(G.transposed()))} entry-for-entry.
      *
-     * @param target    the covariance to accumulate into (mutated)
      * @param increment the body-frame odometry increment (Δx, Δy, Δθ)
      * @param heading   the fused heading the increment is applied at, rotating Q into the world frame
+     * @return the covariance increment to add to P
      */
-    private void addProcessNoiseInPlace(Matrix target, Pose increment, double heading) {
-        double co = Math.cos(heading);
-        double si = Math.sin(heading);
-        double qx = Math.abs(increment.getX()) * Q.get(0, 0);
-        double qy = Math.abs(increment.getY()) * Q.get(1, 1);
-        double qh = Math.abs(increment.getHeading()) * Q.get(2, 2);
-
-        // scaledQ · Gᵀ = [[qx·co, qx·si, 0], [-qy·si, qy·co, 0], [0, 0, qh]]
-        double m00 = qx * co, m01 = qx * si;
-        double m10 = -(qy * si), m11 = qy * co;
-
-        // G · (scaledQ · Gᵀ), top-left 2×2 (heading axis is just qh)
-        double d00 = co * m00 + (-si) * m10;
-        double d01 = co * m01 + (-si) * m11;
-        double d10 = si * m00 + co * m10;
-        double d11 = si * m01 + co * m11;
-
-        target.set(0, 0, target.get(0, 0) + d00);
-        target.set(0, 1, target.get(0, 1) + d01);
-        target.set(1, 0, target.get(1, 0) + d10);
-        target.set(1, 1, target.get(1, 1) + d11);
-        target.set(2, 2, target.get(2, 2) + qh);
+    private Matrix processNoise(Pose increment, double heading) {
+        Matrix G = Matrix.createRotation(heading);
+        Matrix scaledQ = Matrix.diag(
+                Math.abs(increment.getX()) * Q.get(0, 0),
+                Math.abs(increment.getY()) * Q.get(1, 1),
+                Math.abs(increment.getHeading()) * Q.get(2, 2));
+        return G.multiply(scaledQ.multiply(G.transposed()));
     }
 
     /**
@@ -158,11 +152,11 @@ public class FusionLocalizer implements Localizer {
         for (int i = 0; i < 3; i++)
             measurementR.set(i, i, Math.max(measurementR.get(i, i), MEASUREMENT_VARIANCE_FLOOR));
 
-        // Reject if timestamp is outside our history time window
-        if (history.isEmpty() || timestamp < history.firstTime() || timestamp > history.lastTime())
+        // Reject if timestamp is outside our poseHistory time window
+        if (poseHistory.isEmpty() || timestamp < poseHistory.firstKey() || timestamp > poseHistory.lastKey())
             return;
 
-        Pose pastPose = history.interpolateFused(timestamp);
+        Pose pastPose = interpolate(timestamp, poseHistory);
         if (pastPose == null)
             pastPose = getPose();
 
@@ -184,8 +178,8 @@ public class FusionLocalizer implements Localizer {
                 measH ? 1 : 0
         );
 
-        // Covariance at measurement time (floor entry: latest sample at or before the timestamp)
-        Matrix Pm = history.covAt(history.floorIndex(timestamp));
+        // Covariance at measurement time
+        Matrix Pm = covarianceHistory.floorEntry(timestamp).getValue();
 
         // Innovation covariance S = P + R
         Matrix S = Pm.plus(measurementR);
@@ -209,6 +203,7 @@ public class FusionLocalizer implements Localizer {
                 pastPose.getY() + Ky.get(1, 0),
                 MathFunctions.normalizeAngle(pastPose.getHeading() + Ky.get(2, 0))
         );
+        poseHistory.put(timestamp, updatedPast);
 
         // Joseph-form covariance update
         Matrix I = Matrix.identity(3);
@@ -217,42 +212,53 @@ public class FusionLocalizer implements Localizer {
                 IK.multiply(Pm).multiply(IK.transposed())
                         .plus(K.multiply(measurementR).multiply(K.transposed()));
 
-        // Insert (or overwrite) the corrected sample at the measurement time. The odometry pose at
-        // that time is interpolated so every sample carries a full (fused, odom, covariance) row.
-        Pose odomAtTimestamp = history.interpolateOdom(timestamp);
-        history.putCorrection(timestamp, updatedPast, odomAtTimestamp, updatedCovariance);
+        covarianceHistory.put(timestamp, updatedCovariance);
 
         // Forward propagate pose + covariance from the correction, using the odometry's relative
         // transforms (same SE(2) composition as update(), so the correction's heading is honored).
         Pose prevPose = updatedPast;
-        Pose prevOdom = odomAtTimestamp;
+        Pose prevOdom = interpolate(timestamp, odometryHistory);
         Matrix prevCov = updatedCovariance;
 
-        for (int i = history.floorIndex(timestamp) + 1; i < history.size(); i++) {
-            Pose currOdom = history.odomAt(i);
+        for (Long t : poseHistory.tailMap(timestamp, false).keySet()) {
+            Pose currOdom = interpolate(t, odometryHistory);
             Pose increment = (prevOdom == null || currOdom == null)
                     ? new Pose()
                     : relativeTransform(prevOdom, currOdom);
 
             Pose nextPose = compose(prevPose, increment);
-            history.setFused(i, nextPose);
+            poseHistory.put(t, nextPose);
 
-            // Copy once (each stored row needs its own matrix), then accumulate noise in place.
-            Matrix nextCov = prevCov.copy();
-            addProcessNoiseInPlace(nextCov, increment, prevPose.getHeading());
-            history.setCov(i, nextCov);
+            prevCov = prevCov.plus(processNoise(increment, prevPose.getHeading()));
+            covarianceHistory.put(t, prevCov);
 
             prevPose = nextPose;
             prevOdom = currOdom;
-            prevCov = nextCov;
         }
 
-        currentPosition = history.lastFused().copy();
-        P = history.lastCov().copy();
+        currentPosition = poseHistory.lastEntry().getValue().copy();
+        P = covarianceHistory.lastEntry().getValue().copy();
+    }
 
-        // A new sample was inserted at the correction time; re-apply the count cap (drops the oldest)
-        // so the buffer is back at <= bufferSize before the next measurement or update.
-        history.enforceCountCap(bufferSize);
+    //Performs linear interpolation inside the history map for the value at a given timestamp
+    private static Pose interpolate(long timestamp, NavigableMap<Long, Pose> history) {
+        Long lowerKey = history.floorKey(timestamp);
+        Long upperKey = history.ceilingKey(timestamp);
+
+        if (lowerKey == null || upperKey == null) return null;
+        if (lowerKey.equals(upperKey)) return history.get(lowerKey).copy();
+
+        Pose lowerPose = history.get(lowerKey);
+        Pose upperPose = history.get(upperKey);
+
+        double ratio = (double) (timestamp - lowerKey) / (upperKey - lowerKey);
+
+        double x = lowerPose.getX() + ratio * (upperPose.getX() - lowerPose.getX());
+        double y = lowerPose.getY() + ratio * (upperPose.getY() - lowerPose.getY());
+        double headingDiff = MathFunctions.getSmallestAngleDifference(upperPose.getHeading(), lowerPose.getHeading());
+        double heading = MathFunctions.normalizeAngle(lowerPose.getHeading() + ratio * headingDiff);
+
+        return new Pose(x, y, heading);
     }
 
     /** SE(2) body-frame increment that takes {@code from} to {@code to}: from⁻¹ ⊕ to. */
@@ -279,6 +285,13 @@ public class FusionLocalizer implements Localizer {
         );
     }
 
+    /** Drops history older than the latency window, then caps total entries at {@code bufferSize}. */
+    private void trim(NavigableMap<Long, ?> history, long now) {
+        Long floor = history.floorKey(now - BUFFER_DURATION_NANOS);
+        if (floor != null) history.headMap(floor, false).clear();
+        while (history.size() > bufferSize) history.pollFirstEntry();
+    }
+
     @Override
     public Pose getPose() { return currentPosition; }
 
@@ -294,7 +307,9 @@ public class FusionLocalizer implements Localizer {
     public void setStartPose(Pose setStart) {
         deadReckoning.setStartPose(setStart);
         previousOdometryPose = deadReckoning.getPose().copy();
-        history.put(0L, setStart.copy(), previousOdometryPose.copy(), P.copy());
+        poseHistory.put(0L, setStart.copy());
+        odometryHistory.put(0L, previousOdometryPose.copy());
+        covarianceHistory.put(0L, P.copy());
         currentPosition = setStart.copy();
     }
 
@@ -304,12 +319,13 @@ public class FusionLocalizer implements Localizer {
         deadReckoning.setPose(setPose);
         previousOdometryPose = deadReckoning.getPose().copy();
 
-        if (history.isEmpty()) {
+        // NavigableMap.lastEntry() returns an immutable snapshot, so overwrite via put(lastKey, ...).
+        if (poseHistory.isEmpty()) {
             setStartPose(setPose);
         } else {
-            int last = history.size() - 1;
-            history.setFused(last, setPose.copy());
-            history.setOdom(last, previousOdometryPose.copy());
+            poseHistory.put(poseHistory.lastKey(), setPose.copy());
+            if (!odometryHistory.isEmpty())
+                odometryHistory.put(odometryHistory.lastKey(), previousOdometryPose.copy());
         }
     }
 
@@ -339,160 +355,5 @@ public class FusionLocalizer implements Localizer {
     @Override
     public double getAngularVelocity() {
         return deadReckoning.getAngularVelocity();
-    }
-
-    /**
-     * Fixed-capacity, time-sorted ring buffer holding the (timestamp, fused pose, odometry pose,
-     * covariance) history as a struct-of-arrays. Replaces three {@link java.util.TreeMap}s: the keys
-     * are monotonic, so appends are O(1) and lookups are O(log n) binary searches — same asymptotics
-     * as the trees — but with no boxed keys, no per-entry node objects, and no garbage on trim, since
-     * the backing arrays are allocated once and slots are reused.
-     */
-    private static final class History {
-        private final long[] time;
-        private final Pose[] fused;
-        private final Pose[] odom;
-        private final Matrix[] cov;
-        private final int capacity;
-        private int head; // logical index 0 lives at array index `head`
-        private int size;
-
-        History(int maxEntries) {
-            // +2 headroom absorbs a transient interior insert (a vision sample) before the count cap
-            // is re-applied, so the arrays never have to grow.
-            capacity = Math.max(maxEntries, 1) + 2;
-            time = new long[capacity];
-            fused = new Pose[capacity];
-            odom = new Pose[capacity];
-            cov = new Matrix[capacity];
-        }
-
-        boolean isEmpty() { return size == 0; }
-        int size() { return size; }
-        long firstTime() { return time[head]; }
-        long lastTime() { return time[arr(size - 1)]; }
-
-        Pose odomAt(int i) { return odom[arr(i)]; }
-        Matrix covAt(int i) { return cov[arr(i)]; }
-        Pose lastFused() { return fused[arr(size - 1)]; }
-        Matrix lastCov() { return cov[arr(size - 1)]; }
-
-        void setFused(int i, Pose v) { fused[arr(i)] = v; }
-        void setOdom(int i, Pose v) { odom[arr(i)] = v; }
-        void setCov(int i, Matrix v) { cov[arr(i)] = v; }
-
-        /** Array index backing logical index {@code i} (0 == oldest). */
-        private int arr(int i) { return (head + i) % capacity; }
-
-        private long timeAt(int i) { return time[arr(i)]; }
-
-        /** Appends a strictly-newer sample at the back; evicts the oldest if somehow at capacity. */
-        void append(long t, Pose f, Pose o, Matrix c) {
-            if (size == capacity) evictOldest();
-            int p = arr(size);
-            time[p] = t; fused[p] = f; odom[p] = o; cov[p] = c;
-            size++;
-        }
-
-        /** Inserts or fully overwrites a sample, keeping the buffer time-sorted. */
-        void put(long t, Pose f, Pose o, Matrix c) {
-            int fi = floorIndex(t);
-            if (fi >= 0 && timeAt(fi) == t) {
-                int p = arr(fi);
-                fused[p] = f; odom[p] = o; cov[p] = c;
-            } else {
-                insertAt(fi + 1, t, f, o, c);
-            }
-        }
-
-        /**
-         * Applies a vision correction at {@code t}: overwrites fused + covariance if a sample already
-         * exists there (leaving its odometry pose), otherwise inserts a new full row.
-         */
-        void putCorrection(long t, Pose f, Pose o, Matrix c) {
-            int fi = floorIndex(t);
-            if (fi >= 0 && timeAt(fi) == t) {
-                int p = arr(fi);
-                fused[p] = f; cov[p] = c;
-            } else {
-                insertAt(fi + 1, t, f, o, c);
-            }
-        }
-
-        /** Largest logical index whose time is ≤ {@code ts}, or -1 if none (binary search). */
-        int floorIndex(long ts) {
-            int lo = 0, hi = size - 1, res = -1;
-            while (lo <= hi) {
-                int mid = (lo + hi) >>> 1;
-                if (timeAt(mid) <= ts) { res = mid; lo = mid + 1; }
-                else hi = mid - 1;
-            }
-            return res;
-        }
-
-        /** Smallest logical index whose time is ≥ {@code ts}, or {@code size} if none. */
-        private int ceilingIndex(long ts) {
-            int lo = 0, hi = size - 1, res = size;
-            while (lo <= hi) {
-                int mid = (lo + hi) >>> 1;
-                if (timeAt(mid) >= ts) { res = mid; hi = mid - 1; }
-                else lo = mid + 1;
-            }
-            return res;
-        }
-
-        Pose interpolateFused(long ts) { return interpolate(fused, ts); }
-        Pose interpolateOdom(long ts) { return interpolate(odom, ts); }
-
-        /** Linear interpolation of a pose column at {@code ts}; null if {@code ts} is out of range. */
-        private Pose interpolate(Pose[] column, long ts) {
-            int lo = floorIndex(ts);
-            int hi = ceilingIndex(ts);
-            if (lo < 0 || hi >= size) return null;
-            if (lo == hi) return column[arr(lo)].copy();
-
-            Pose lower = column[arr(lo)];
-            Pose upper = column[arr(hi)];
-            long lowerTime = timeAt(lo);
-            long upperTime = timeAt(hi);
-            double ratio = (double) (ts - lowerTime) / (upperTime - lowerTime);
-
-            double x = lower.getX() + ratio * (upper.getX() - lower.getX());
-            double y = lower.getY() + ratio * (upper.getY() - lower.getY());
-            double headingDiff = MathFunctions.getSmallestAngleDifference(upper.getHeading(), lower.getHeading());
-            double heading = MathFunctions.normalizeAngle(lower.getHeading() + ratio * headingDiff);
-            return new Pose(x, y, heading);
-        }
-
-        /** Drops samples older than the most recent sample at or before {@code cutoff}. */
-        void trimOlderThan(long cutoff) {
-            int floor = floorIndex(cutoff);
-            for (int k = 0; k < floor; k++) evictOldest();
-        }
-
-        void enforceCountCap(int max) {
-            while (size > max) evictOldest();
-        }
-
-        private void evictOldest() {
-            fused[head] = null; odom[head] = null; cov[head] = null; // release for GC
-            head = (head + 1) % capacity;
-            size--;
-        }
-
-        /**
-         * Inserts a row at logical position {@code pos}, shifting the (small) suffix right by one.
-         * Callers keep {@code size <= capacity - 1} before inserting (the +2 headroom), so there is
-         * always room for the new row without disturbing the logical indices.
-         */
-        private void insertAt(int pos, long t, Pose f, Pose o, Matrix c) {
-            for (int i = size; i > pos; i--) {
-                int dst = arr(i), src = arr(i - 1);
-                time[dst] = time[src]; fused[dst] = fused[src]; odom[dst] = odom[src]; cov[dst] = cov[src];
-            }
-            int p = arr(pos);
-            time[p] = t; fused[p] = f; odom[p] = o; cov[p] = c;
-            size++;
-        }
     }
 }

@@ -20,6 +20,15 @@ tasks.test {
     useJUnitPlatform()
 }
 
+tasks.register<JavaExec>("benchmarkFusion") {
+    group = "verification"
+    description = "Races the TreeMap baseline vs. the ring-buffer FusionLocalizer (time, allocation, GC)."
+    classpath = sourceSets["test"].runtimeClasspath
+    mainClass.set("com.pedropathing.localization.FusionLocalizerBenchmark")
+    // Per-thread allocation accounting is always on; a modest heap makes GC pressure visible.
+    jvmArgs("-Xmx256m")
+}
+
 val dokkaJar = tasks.register<Jar>("dokkaJar") {
     dependsOn(tasks.named("dokkaGenerate"))
     from(dokka.basePublicationsDirectory.dir("html"))
