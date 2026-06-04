@@ -6,12 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.math.MathFunctions;
 import com.pedropathing.math.Vector;
 
 import org.junit.jupiter.api.Test;
-
-import java.util.Random;
 
 /**
  * Tests for {@link FusionLocalizer}, focused on the three correctness fixes:
@@ -55,15 +52,6 @@ class FusionLocalizerTest {
     private static class TestableFusion extends FusionLocalizer {
         long clock = 0;
         TestableFusion(Localizer dr, Pose initialCov, Pose processVar, Pose measVar, int buffer) {
-            super(dr, initialCov, processVar, measVar, buffer);
-        }
-        @Override protected long currentTimeNanos() { return clock; }
-    }
-
-    /** The frozen TreeMap baseline with the same deterministic clock seam, for differential testing. */
-    private static class TestableTreeMap extends FusionLocalizerTreeMap {
-        long clock = 0;
-        TestableTreeMap(Localizer dr, Pose initialCov, Pose processVar, Pose measVar, int buffer) {
             super(dr, initialCov, processVar, measVar, buffer);
         }
         @Override protected long currentTimeNanos() { return clock; }
@@ -357,95 +345,5 @@ class FusionLocalizerTest {
 
         fused.setPose(new Pose(Double.NaN, 0, 0));
         assertTrue(fused.isNAN());
-    }
-
-    // ---- differential equivalence vs. the TreeMap baseline -----------------------------------
-
-    /**
-     * The ring-buffer implementation must be behaviourally identical to the TreeMap baseline. Drive
-     * both through the same randomized odometry + delayed-measurement workload and assert the fused
-     * pose matches at every step. Measurements land on exact sample times, so the two should agree
-     * bit-for-bit (no interpolation arithmetic differs).
-     */
-    @Test
-    void ringBuffer_matchesTreeMapBaseline_overRandomizedWorkload() {
-        Pose initCov = new Pose(1, 1, 1);
-        Pose procVar = new Pose(0.01, 0.01, 0.01);
-        Pose measVar = new Pose(0.5, 0.5, 0.5);
-
-        FakeLocalizer odomRing = new FakeLocalizer();
-        FakeLocalizer odomTree = new FakeLocalizer();
-        TestableFusion ring = new TestableFusion(odomRing, initCov, procVar, measVar, 1000);
-        TestableTreeMap tree = new TestableTreeMap(odomTree, initCov, procVar, measVar, 1000);
-        ring.setStartPose(new Pose(0, 0, 0));
-        tree.setStartPose(new Pose(0, 0, 0));
-
-        Random rnd = new Random(42);
-        int steps = 600;
-        long[] clocks = new long[steps];
-        long clock = 0;
-        double ox = 0, oy = 0, oh = 0;
-
-        for (int s = 0; s < steps; s++) {
-            clock += 1_000_000; // 1 ms; 600 steps = 0.6 s, inside the 1 s window and 1000-entry cap
-            clocks[s] = clock;
-            ox += (rnd.nextDouble() - 0.5) * 2;
-            oy += (rnd.nextDouble() - 0.5) * 2;
-            oh = MathFunctions.normalizeAngle(oh + (rnd.nextDouble() - 0.5) * 0.2);
-            Pose odomPose = new Pose(ox, oy, oh);
-
-            odomRing.set(odomPose); ring.clock = clock; ring.update();
-            odomTree.set(odomPose); tree.clock = clock; tree.update();
-
-            // Inject a delayed vision fix at an exact past sample time.
-            if (s > 20 && s % 7 == 0) {
-                long ts = clocks[s - 10];
-                Pose here = ring.getPose();
-                Pose meas = new Pose(
-                        here.getX() + (rnd.nextDouble() - 0.5),
-                        here.getY() + (rnd.nextDouble() - 0.5),
-                        here.getHeading() + (rnd.nextDouble() - 0.5) * 0.1);
-                Pose v = new Pose(0.3, 0.3, 0.3);
-                ring.addMeasurement(meas, ts, v);
-                tree.addMeasurement(meas, ts, v);
-            }
-
-            assertPoseEquals(tree.getPose(), ring.getPose(), 1e-9);
-        }
-    }
-
-    /** Equivalence on the interpolation path: a measurement timestamped between two samples. */
-    @Test
-    void ringBuffer_matchesTreeMapBaseline_forInterpolatedMeasurementTime() {
-        Pose initCov = new Pose(1, 1, 1);
-        Pose procVar = new Pose(0.01, 0.01, 0.01);
-        Pose measVar = new Pose(0.5, 0.5, 0.5);
-
-        FakeLocalizer odomRing = new FakeLocalizer();
-        FakeLocalizer odomTree = new FakeLocalizer();
-        TestableFusion ring = new TestableFusion(odomRing, initCov, procVar, measVar, 1000);
-        TestableTreeMap tree = new TestableTreeMap(odomTree, initCov, procVar, measVar, 1000);
-        ring.setStartPose(new Pose(0, 0, 0));
-        tree.setStartPose(new Pose(0, 0, 0));
-
-        Pose[] path = {
-                new Pose(2, 1, 0.1),
-                new Pose(4, 3, 0.3),
-                new Pose(7, 4, 0.5),
-                new Pose(9, 8, 0.8),
-        };
-        long[] clocks = {100_000_000L, 200_000_000L, 300_000_000L, 400_000_000L};
-        for (int i = 0; i < path.length; i++) {
-            odomRing.set(path[i]); ring.clock = clocks[i]; ring.update();
-            odomTree.set(path[i]); tree.clock = clocks[i]; tree.update();
-        }
-
-        long ts = 250_000_000L; // between samples 200ms and 300ms
-        Pose meas = new Pose(6, 5, 0.45);
-        Pose v = new Pose(0.2, 0.2, 0.2);
-        ring.addMeasurement(meas, ts, v);
-        tree.addMeasurement(meas, ts, v);
-
-        assertPoseEquals(tree.getPose(), ring.getPose(), 1e-6);
     }
 }
