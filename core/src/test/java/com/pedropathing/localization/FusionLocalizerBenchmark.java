@@ -81,18 +81,18 @@ public final class FusionLocalizerBenchmark {
 
             subject.update(clock);
 
-            if (i > 20 && i % 10 == 0) {
-                long ts = clocks[i - 5];
-                Pose here = subject.getPose();
-                Pose meas = new Pose(
-                        here.getX() + (rnd.nextDouble() - 0.5),
-                        here.getY() + (rnd.nextDouble() - 0.5),
-                        here.getHeading() + (rnd.nextDouble() - 0.5) * 0.1);
-                subject.addMeasurement(meas, ts, MEASUREMENT_VAR);
-            }
-
+            // One getPose() per step (as a real consumer caches it), reused below.
             Pose p = subject.getPose();
             checksum += p.getX() + p.getY() + p.getHeading(); // defeat dead-code elimination
+
+            if (i > 20 && i % 10 == 0) {
+                long ts = clocks[i - 5];
+                Pose meas = new Pose(
+                        p.getX() + (rnd.nextDouble() - 0.5),
+                        p.getY() + (rnd.nextDouble() - 0.5),
+                        p.getHeading() + (rnd.nextDouble() - 0.5) * 0.1);
+                subject.addMeasurement(meas, ts, MEASUREMENT_VAR);
+            }
         }
 
         long wall = System.nanoTime() - t0;
