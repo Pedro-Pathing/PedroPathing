@@ -47,4 +47,8 @@ public class Twist {
     public Twist times(double scalar) {
         return new Twist(vx * scalar, vy * scalar, omega * scalar);
     }
+
+    public Vector2D toLinear() {
+        return Vector2D.cartesian(vx, vy);
+    }
 }

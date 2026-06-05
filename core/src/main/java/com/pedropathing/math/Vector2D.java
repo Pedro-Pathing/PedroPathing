@@ -123,4 +123,8 @@ public class Vector2D {
     public Pose toPose() {
         return new Pose(x, y, 0);
     }
+
+    public Vector2D abs() {
+        return Vector2D.cartesian(Math.abs(x), Math.abs(y));
+    }
 }

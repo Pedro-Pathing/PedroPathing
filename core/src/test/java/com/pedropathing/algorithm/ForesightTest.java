@@ -6,6 +6,7 @@ import com.pedropathing.follower.FollowState;
 import com.pedropathing.localization.MotionState;
 import com.pedropathing.math.Matrix;
 import com.pedropathing.math.Pose;
+import com.pedropathing.math.Twist;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.math.Velocity;
 import com.pedropathing.paths.PathTracker;
@@ -45,12 +46,12 @@ public class ForesightTest {
             }
     );
 
-    static ForesightConfig symmetricConfig = new ForesightConfig(
+    static ForesightConfig brakeConfig = new ForesightConfig(
             c -> {
                 c.translationalController.set(Controller.pid(0.16,0,0));
                 c.headingController.set(Controller.pid(2.0,0,0.1));
-                c.linearBrakeCoefficients.set(Matrix.diag(0.015, 0.015));
-                c.quadraticBrakeCoefficients.set(Matrix.diag(0.001, 0.001));
+                c.linearBrakeCoefficients.set(Matrix.diag(0.015, 0.02));
+                c.quadraticBrakeCoefficients.set(Matrix.diag(0.001, 0.0015));
                 c.maxAchievableForwardVelocity.set(88.036);
                 c.maxAchievableStrafeVelocity.set(71.881);
                 c.maxAchievableForwardDeceleration.set(30.3333);
@@ -197,16 +198,16 @@ public class ForesightTest {
     }
 
     @Test
-    public void translationalCorrection() {
-        Foresight f = new Foresight(symmetricConfig);
-        assertEquals(Vector2D.cartesian(0.12, -0.21599999999999997), f.computeTranslationalCorrection(Vector2D.cartesian(1,0), new Velocity(10, 30, 0), 0));
-    }
-
-    @Test
     public void brakeDisplacement() {
-        Foresight f = new Foresight(symmetricConfig);
-        assertEquals(1.3499999999999999, f.getBrakeDisplacement(30, 0));
-        assertEquals(-1.3499999999999999, f.getBrakeDisplacement(-30, 0));
-        assertEquals(1.2215143233657912, f.getBrakeDisplacement(30, 1.2 + Math.PI/2));
+        Foresight f = new Foresight(brakeConfig);
+        assertEquals(Vector2D.cartesian(2.2, 0), f.getBrakeDisplacement(new Twist(40, 0, 0) ,0));
+        assertEquals(Vector2D.cartesian(-2.2, 0), f.getBrakeDisplacement(new Twist(-40, 0, 0),0));
+        assertEquals(Vector2D.cartesian(1.35, 0), f.getBrakeDisplacement(new Twist(30, 0, 0),0));
+
+        assertEquals(Vector2D.cartesian(3.2, -1.592040838891559E-16), f.getBrakeDisplacement(new Velocity(40, 0, 0).toTwist(Math.PI/2),Math.PI/2));
+
+        assertEquals(0, f.excessVelocityAfterBraking(10, f.getBrakeDisplacement(new Twist(30, 0, 0),0).x(),0));
+
+        assertEquals(24.2214438511238, f.excessVelocityAfterBraking(5, f.getBrakeDisplacement(new Twist(70, 0, 0),0).x(),0));
     }
 }
