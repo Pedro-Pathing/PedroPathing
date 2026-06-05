@@ -277,7 +277,7 @@ public class Foresight implements Algorithm {
         double error = targetVel - tangentialVel;
 
         // TODO: Kalman Filter?
-        return config.brakeController.get().calculate(targetVel - excessVelocityAfterBraking(remainingDistance, brakingDisplacement, closestTangentVector.angleTo(Vector2D.unit(heading))), error);
+        return config.brakeController.get().calculate(targetVel - excessVelocityAfterBraking(remainingDistance, brakingDisplacement, theta), error);
     }
 
     public double coast(double tangentialVel, double theta, double remainingDistance, double constrainedVelocity) {
