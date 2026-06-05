@@ -36,6 +36,8 @@ public final class ForesightConfig {
     /** Centripetal force to power scaling. */
     public final ConfigVar<Double> centripetalScaling = ConfigVar.of(0.005, Validator.nonnegative());
 
+    public final ConfigVar<Double> robotMass = ConfigVar.of(12.9, Validator.positive());
+
     /**
      * The maximum amount of power the robot can apply in the opposite direction of momentum. Default is 0.2. Too high of a value might burn out the control hub and too low of a value might not be able to stop quickly after back-emf is overcome.
      */

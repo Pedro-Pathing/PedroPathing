@@ -40,8 +40,8 @@ public class Vector2D {
 
     public Vector2D normalized() {
         double magnitude = magnitude();
-        if (Math.abs(magnitude) < 1e-6) throw new IllegalArgumentException("Cannot normalize 0 vector");
-        return this.div(magnitude);
+        if (isZero()) throw new IllegalArgumentException("Cannot normalize 0 vector");
+        return div(magnitude);
     }
 
     public Vector2D plus(Vector2D other) {
