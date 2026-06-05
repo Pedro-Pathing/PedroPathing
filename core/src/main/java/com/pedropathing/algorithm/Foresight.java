@@ -36,7 +36,8 @@ public class Foresight implements Algorithm {
                 .current()
                 .closestT(state.motionState().pose().toVector2D());
         double targetHeading = state.pathTracker().current().heading(t);
-        double drivePower, translationalError, translationalPower;
+        double translationalError;
+        Vector2D driveVector, translationalVector;
 
         if (t >= (1 - config.parametricTConstraint.get())) { // End Constraint
             if (state.pathTracker().size() > 1) { // advance if constraints met
@@ -74,7 +75,7 @@ public class Foresight implements Algorithm {
 
         Vector2D brakingDisplacement = getBrakeDisplacement(state.motionState().twist(), state.motionState().pose().heading());
 
-        drivePower = drive(
+        driveVector = closestTangentVector.times(drive(
                 tangentialSpeed,
                 closestTangentVector,
                 state.motionState().pose().heading(),
@@ -82,26 +83,27 @@ public class Foresight implements Algorithm {
                 velocityToBrakeInTime,
                 isBraking,
                 remainingDistance,
-                brakingDisplacement.dot(closestTangentVector));
+                brakingDisplacement.dot(closestTangentVector))
+        );
 
         if (t <= config.parametricTConstraint.get()) { // Start Constraint
             Vector2D start = state.pathTracker().current().startPoint();
             Vector2D disp = start.minus(state.motionState().pose().toVector2D());
+            translationalError = disp.magnitude();
             double dot = disp.dot(state.pathTracker().current().tangent(t)); // originally was 0.0 for t
 
             // If the start point lies ahead of the robot along the path tangent (dot > 0)
             // we need to apply a translational correction to drive toward the start.
-            if (dot > 0) {
-                translationalError = disp.magnitude();
-                translationalPower = computeTranslationalCorrection(
+            if (dot > 1e-3) {
+                translationalVector = computeTranslationalCorrection(
                                 disp,
-                                brakingDisplacement)
-                        .magnitude();
-                drivePower *= Math.abs(disp.dot(closestTangentVector));
+                                brakingDisplacement
+                );
+                driveVector = driveVector.times(Math.abs(disp.dot(closestTangentVector) / translationalError));
                 return allocatePowers(
                         state,
-                        translationalPower,
-                        drivePower,
+                        translationalVector,
+                        driveVector,
                         headingPower,
                         closestTangentVector,
                         closestNormalVector,
@@ -112,21 +114,21 @@ public class Foresight implements Algorithm {
 
         translationalError = translationalError(
                 state.motionState().pose(), state.pathTracker().current().get(t), closestNormalVector);
-        translationalPower = computeTranslationalCorrection(
+        double translationalPower = computeTranslationalCorrection(
                         closestNormalVector.times(translationalError),
                         brakingDisplacement)
                 .dot(closestNormalVector);
-        double centripetal =
-                centripetal(tangentialSpeed, state.pathTracker().current().curvature(t));
+        double centripetal = centripetal(tangentialSpeed, state.pathTracker().current().curvature(t));
         translationalPower = translationalPower + centripetal;
+        translationalVector = closestNormalVector.times(translationalPower);
 
         if ((Math.abs(headingError) > 2 * config.headingDeviationTolerance.get()) || (Math.abs(translationalError) > 2 * config.translationalDeviationTolerance.get()))
-            drivePower *= getDriveScalar(translationalError, headingError);
+            driveVector = driveVector.times(getDriveScalar(translationalError, headingError));
 
         return allocatePowers(
                 state,
-                translationalPower,
-                drivePower,
+                translationalVector,
+                driveVector,
                 headingPower,
                 closestTangentVector,
                 closestNormalVector,
@@ -175,9 +177,11 @@ public class Foresight implements Algorithm {
     private static final int HEADING = 1;
     private static final int DRIVE = 2;
 
-    public DrivePowers allocatePowers(FollowState state, double translationalPower, double drivePower, double headingPower, Vector2D closestTangentVector, Vector2D closestNormalVector, double translationalError, double headingError) {
+    public DrivePowers allocatePowers(FollowState state, Vector2D translationalVector, Vector2D driveVector, double headingPower, Vector2D closestTangentVector, Vector2D closestNormalVector, double translationalError, double headingError) {
         boolean translationalPriority = Math.abs(translationalError) > config.translationalDeviationTolerance.get();
         boolean headingPriority = Math.abs(headingError) > config.headingDeviationTolerance.get();
+        double translationalPower = translationalVector.magnitude();
+        double drivePower = driveVector.magnitude();
 
         int[] prioritization;
         double[] powers;
@@ -195,9 +199,12 @@ public class Foresight implements Algorithm {
 
         powers = clampPowers(powers);
 
-        Vector2D fieldRelativeDrivePower = closestNormalVector
+        Vector2D translationalDirection = Math.abs(translationalPower) < 1e-6 ? Vector2D.zero() : translationalVector.div(translationalPower);
+        Vector2D driveDirection = Math.abs(drivePower) < 1e-6 ? Vector2D.zero() : driveVector.div(drivePower);
+
+        Vector2D fieldRelativeDrivePower = translationalDirection
                 .times(powers[prioritization[TRANSLATIONAL]])
-                .plus(closestTangentVector.times(powers[prioritization[DRIVE]]));
+                .plus(driveDirection.times(powers[prioritization[DRIVE]]));
 
         return getDrivePowers(fieldRelativeDrivePower, state, powers[prioritization[HEADING]]);
     }
@@ -241,7 +248,7 @@ public class Foresight implements Algorithm {
     }
 
     public double centripetal(double speed, double curvature) {
-        return speed * speed * curvature * config.centripetalScaling.get();
+        return speed * speed * curvature * config.centripetalScaling.get() * config.robotMass.get();
     }
 
     public double getVelocityToBrakeInTime(double distanceRemaining, double theta) {
