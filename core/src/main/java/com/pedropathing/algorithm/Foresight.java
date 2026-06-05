@@ -9,7 +9,6 @@ import com.pedropathing.follower.FollowState;
 import com.pedropathing.math.Ellipse2D;
 import com.pedropathing.math.Pose;
 import com.pedropathing.math.Twist;
-import com.pedropathing.math.Vector;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.utils.Pair;
 import com.pedropathing.utils.Utils;
@@ -105,8 +104,6 @@ public class Foresight implements Algorithm {
                         translationalVector,
                         driveVector,
                         headingPower,
-                        closestTangentVector,
-                        closestNormalVector,
                         translationalError,
                         headingError);
             }
@@ -130,8 +127,6 @@ public class Foresight implements Algorithm {
                 translationalVector,
                 driveVector,
                 headingPower,
-                closestTangentVector,
-                closestNormalVector,
                 translationalError,
                 headingError);
     }
@@ -177,7 +172,7 @@ public class Foresight implements Algorithm {
     private static final int HEADING = 1;
     private static final int DRIVE = 2;
 
-    public DrivePowers allocatePowers(FollowState state, Vector2D translationalVector, Vector2D driveVector, double headingPower, Vector2D closestTangentVector, Vector2D closestNormalVector, double translationalError, double headingError) {
+    public DrivePowers allocatePowers(FollowState state, Vector2D translationalVector, Vector2D driveVector, double headingPower, double translationalError, double headingError) {
         boolean translationalPriority = Math.abs(translationalError) > config.translationalDeviationTolerance.get();
         boolean headingPriority = Math.abs(headingError) > config.headingDeviationTolerance.get();
         double translationalPower = translationalVector.magnitude();
