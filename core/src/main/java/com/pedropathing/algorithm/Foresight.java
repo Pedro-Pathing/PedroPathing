@@ -7,10 +7,10 @@ package com.pedropathing.algorithm;
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.follower.FollowState;
 import com.pedropathing.math.Ellipse2D;
-import com.pedropathing.math.Matrix;
 import com.pedropathing.math.Pose;
+import com.pedropathing.math.Twist;
+import com.pedropathing.math.Vector;
 import com.pedropathing.math.Vector2D;
-import com.pedropathing.math.Velocity;
 import com.pedropathing.utils.Pair;
 import com.pedropathing.utils.Utils;
 import com.pedropathing.utils.Utils.Control;
@@ -72,6 +72,8 @@ public class Foresight implements Algorithm {
             return calculate(state);
         }
 
+        Vector2D brakingDisplacement = getBrakeDisplacement(state.motionState().twist(), state.motionState().pose().heading());
+
         drivePower = drive(
                 tangentialSpeed,
                 closestTangentVector,
@@ -79,7 +81,8 @@ public class Foresight implements Algorithm {
                 state.deltaTime(),
                 velocityToBrakeInTime,
                 isBraking,
-                remainingDistance);
+                remainingDistance,
+                brakingDisplacement.dot(closestTangentVector));
 
         if (t <= config.parametricTConstraint.get()) { // Start Constraint
             Vector2D start = state.pathTracker().current().startPoint();
@@ -92,8 +95,7 @@ public class Foresight implements Algorithm {
                 translationalError = disp.magnitude();
                 translationalPower = computeTranslationalCorrection(
                                 disp,
-                                state.motionState().velocity(),
-                                state.motionState().pose().heading())
+                                brakingDisplacement)
                         .magnitude();
                 drivePower *= Math.abs(disp.dot(closestTangentVector));
                 return allocatePowers(
@@ -112,8 +114,7 @@ public class Foresight implements Algorithm {
                 state.motionState().pose(), state.pathTracker().current().get(t), closestNormalVector);
         translationalPower = computeTranslationalCorrection(
                         closestNormalVector.times(translationalError),
-                        state.motionState().velocity(),
-                        state.motionState().pose().heading())
+                        brakingDisplacement)
                 .dot(closestNormalVector);
         double centripetal =
                 centripetal(tangentialSpeed, state.pathTracker().current().curvature(t));
@@ -138,8 +139,7 @@ public class Foresight implements Algorithm {
         Vector2D translationalError = target.minus(state.motionState().pose()).toVector2D();
         Vector2D translational = computeTranslationalCorrection(
                 translationalError,
-                state.motionState().velocity(),
-                state.motionState().pose().heading());
+                getBrakeDisplacement(state.motionState().twist(), state.motionState().pose().heading()));
         double headingPower = headingPower(state, target.heading());
         // Apply hold-point scalers. Clamp the scaler values to [0, 1] at runtime to
         // avoid accidental amplification if the configuration is set incorrectly.
@@ -230,19 +230,8 @@ public class Foresight implements Algorithm {
         return currentPose.toVector2D().minus(closestPointVector).dot(closestNormalVector);
     }
 
-    public Vector2D computeTranslationalCorrection(Vector2D displacementVector, Velocity velocity, double currentHeading) {
+    public Vector2D computeTranslationalCorrection(Vector2D displacementVector, Vector2D brakingDisplacement) {
         if (displacementVector == null || displacementVector.isZero()) return Vector2D.zero();
-        Vector2D linearVel = velocity.toLinear();
-        Vector2D brakingDisplacement;
-        if (linearVel.isZero()) {
-            brakingDisplacement = Vector2D.zero();
-        } else {
-            double theta = displacementVector.angleTo(Vector2D.unit(currentHeading));
-            brakingDisplacement = Vector2D.cartesian(
-                    getBrakeDisplacement(linearVel.x(), theta),
-                    getBrakeDisplacement(linearVel.y(), theta + Math.PI/2)
-            );
-        }
         Vector2D adjustedError = displacementVector.minus(brakingDisplacement);
         double distance = adjustedError.magnitude();
         if (distance < config.minCorrectionDistance.get()) return Vector2D.zero();
@@ -271,7 +260,7 @@ public class Foresight implements Algorithm {
         return Math.max(velocityInversion.first(), velocityInversion.second());
     }
 
-    public double drive(double tangentialVel, Vector2D closestTangentVector, double heading, double deltaTime, double targetVelocityToBrakeInTime, boolean isBraking, double remainingDistance) {
+    public double drive(double tangentialVel, Vector2D closestTangentVector, double heading, double deltaTime, double targetVelocityToBrakeInTime, boolean isBraking, double remainingDistance, double brakingDisplacement) {
         double maxVelocityToFitAccel = tangentialVel + config.maxAccelerationConstraint.get() * deltaTime;
         double constrainedVelocity = Math.min(config.maxVelocityConstraint.get(), maxVelocityToFitAccel);
         double theta = closestTangentVector.angleTo(Vector2D.unit(heading));
@@ -288,7 +277,7 @@ public class Foresight implements Algorithm {
         double error = targetVel - tangentialVel;
 
         // TODO: Kalman Filter?
-        return config.brakeController.get().calculate(targetVel, error);
+        return config.brakeController.get().calculate(targetVel - excessVelocityAfterBraking(remainingDistance, brakingDisplacement, theta), error);
     }
 
     public double coast(double tangentialVel, double theta, double remainingDistance, double constrainedVelocity) {
@@ -309,20 +298,31 @@ public class Foresight implements Algorithm {
         return config.coastController.get().calculate(feedforwardVelocity, error);
     }
 
-    public double getBrakeDisplacement(double v, double theta) {
-        double cosT = Math.cos(theta);
-        double sinT = Math.sin(theta);
+    public Vector2D getBrakeDisplacement(Twist twist, double heading) {
+        Vector2D linearTwist = twist.toLinear();
 
-        Matrix quad = config.quadraticBrakeCoefficients.get();
-        double qx = cosT * Math.abs(cosT) * quad.get(0,0);
-        double qy = sinT * Math.abs(sinT) * quad.get(1,1);
-        double quadratic = (qx * cosT + qy * sinT) * v * Math.abs(v);
+        Vector2D quadratic = linearTwist.hadamardProduct(linearTwist.abs()).transform(config.quadraticBrakeCoefficients.get());
+        Vector2D linear = linearTwist.transform(config.linearBrakeCoefficients.get());
 
-        Matrix lin = config.linearBrakeCoefficients.get();
-        double lx = cosT * lin.get(0,0);
-        double ly = sinT * lin.get(1,1);
-        double linear = (lx * cosT + ly * sinT) * v;
+        return quadratic.plus(linear).rotate(heading);
+    }
 
-        return quadratic + linear;
+    double excessVelocityAfterBraking(
+            double availableDisplacement,
+            double brakingDisplacement,
+            double theta
+    ) {
+        double overshootDisplacement =
+                brakingDisplacement - availableDisplacement;
+
+        boolean stopsBeforeTarget =
+                Math.signum(overshootDisplacement)
+                        != Math.signum(availableDisplacement);
+
+        if (stopsBeforeTarget) {
+            return 0;
+        }
+
+        return getVelocityToBrakeInTime(overshootDisplacement, theta);
     }
 }
