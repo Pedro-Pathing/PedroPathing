@@ -89,8 +89,8 @@ public class FusionLocalizer implements Localizer {
      * @param dt the time step Δt in seconds
      */
     private void updateCovariance(double dt) {
-        Matrix G = Matrix.createRotation(getPose().getHeading()).multiply(dt);
-        P = P.plus(G.multiply(Q.multiply(G.transposed())));
+        P = P.plus(Q.multiply(dt*dt));
+        clampCovariance(P);
     }
 
     /**
@@ -166,6 +166,7 @@ public class FusionLocalizer implements Localizer {
         Matrix updatedCovariance =
                 IK.multiply(Pm).multiply(IK.transposed())
                         .plus(K.multiply(measurementR).multiply(K.transposed()));
+        clampCovariance(updatedCovariance);
 
         covarianceHistory.put(timestamp, updatedCovariance);
 
@@ -188,8 +189,8 @@ public class FusionLocalizer implements Localizer {
             poseHistory.put(t, nextPose);
 
             // Covariance propagation: P ← P + Q dt²
-            Matrix G = Matrix.createRotation(prevPose.getHeading()).multiply(dt);
-            prevCov = prevCov.plus(G.multiply(Q.multiply(G.transposed())));
+            prevCov = prevCov.plus(Q.multiply(dt * dt));
+            clampCovariance(prevCov);
             covarianceHistory.put(t, prevCov);
 
             prevPose = nextPose;
@@ -232,6 +233,16 @@ public class FusionLocalizer implements Localizer {
                 previousPose.getY() + dy,
                 MathFunctions.normalizeAngle(previousPose.getHeading() + dTheta)
         );
+    }
+
+    private void clampCovariance(Matrix P) {
+        double eps = 1e-6; // minimum allowed variance
+        for (int i = 0; i < 3; i++) {
+            double v = P.get(i, i);
+            if (v < eps) {
+                P.set(i, i, eps);
+            }
+        }
     }
 
     @Override
