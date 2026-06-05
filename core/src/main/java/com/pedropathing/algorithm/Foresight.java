@@ -87,18 +87,19 @@ public class Foresight implements Algorithm {
 
         if (t <= config.parametricTConstraint.get()) { // Start Constraint
             Vector2D start = state.pathTracker().current().startPoint();
-            Vector2D disp = start.minus(state.motionState().pose().toVector2D());
-            translationalError = disp.magnitude();
-            double dot = disp.dot(state.pathTracker().current().tangent(t)); // originally was 0.0 for t
+            Vector2D displacementToStart = start.minus(state.motionState().pose().toVector2D());
+            translationalError = displacementToStart.magnitude();
+            double tangentDisplacementToStart = displacementToStart.dot(state.pathTracker().current().tangent(t));
+            boolean isBeforePathStart = tangentDisplacementToStart > 1e-3; // originally was 0.0 for t
 
             // If the start point lies ahead of the robot along the path tangent (dot > 0)
             // we need to apply a translational correction to drive toward the start.
-            if (dot > 1e-3) {
+            if (isBeforePathStart) {
                 translationalVector = computeTranslationalCorrection(
-                                disp,
+                                displacementToStart,
                                 brakingDisplacement
                 );
-                driveVector = driveVector.times(Math.abs(disp.dot(closestTangentVector) / translationalError));
+                driveVector = driveVector.times(tangentDisplacementToStart / translationalError);
                 return allocatePowers(
                         state,
                         translationalVector,
