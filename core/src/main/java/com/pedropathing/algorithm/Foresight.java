@@ -35,8 +35,6 @@ public class Foresight implements Algorithm {
                 .current()
                 .closestT(state.motionState().pose().toVector2D());
         double targetHeading = state.pathTracker().current().heading(t);
-        double translationalError;
-        Vector2D driveVector, translationalVector;
 
         if (t >= (1 - config.parametricTConstraint.get())) { // End Constraint
             if (state.pathTracker().size() > 1) { // advance if constraints met
@@ -74,7 +72,7 @@ public class Foresight implements Algorithm {
 
         Vector2D brakingDisplacement = getBrakeDisplacement(state.motionState().twist(), state.motionState().pose().heading());
 
-        driveVector = closestTangentVector.times(drive(
+        Vector2D driveVector = closestTangentVector.times(drive(
                 tangentialSpeed,
                 closestTangentVector,
                 state.motionState().pose().heading(),
@@ -85,43 +83,25 @@ public class Foresight implements Algorithm {
                 brakingDisplacement.dot(closestTangentVector))
         );
 
-        if (t <= config.parametricTConstraint.get()) { // Start Constraint
-            Vector2D start = state.pathTracker().current().startPoint();
-            Vector2D displacementToStart = start.minus(state.motionState().pose().toVector2D());
-            translationalError = displacementToStart.magnitude();
-            double tangentDisplacementToStart = displacementToStart.dot(state.pathTracker().current().tangent(t));
-            boolean isBeforePathStart = tangentDisplacementToStart > 1e-3; // originally was 0.0 for t
+        Vector2D displacementToPath = state.pathTracker().current().get(t).minus(state.motionState().pose().toVector2D());
+        double translationalError = displacementToPath.magnitude();
+        Vector2D translationalVector = computeTranslationalCorrection(
+                displacementToPath,
+                brakingDisplacement);
 
-            // If the start point lies ahead of the robot along the path tangent (dot > 0)
-            // we need to apply a translational correction to drive toward the start.
-            if (isBeforePathStart) {
-                translationalVector = computeTranslationalCorrection(
-                                displacementToStart,
-                                brakingDisplacement
-                );
-                driveVector = driveVector.times(tangentDisplacementToStart / translationalError);
-                return allocatePowers(
-                        state,
-                        translationalVector,
-                        driveVector,
-                        headingPower,
-                        translationalError,
-                        headingError);
-            }
+        Vector2D displacementToStart = state.pathTracker().current().startPoint().minus(state.motionState().pose().toVector2D());
+        double tangentDisplacementToStart = displacementToStart.dot(closestTangentVector);
+        boolean isBeforePath = tangentDisplacementToStart > 0;
+        if (isBeforePath) {
+            driveVector = driveVector.times(tangentDisplacementToStart / translationalError);
         }
+        else {
+            double centripetal = centripetal(tangentialSpeed, state.pathTracker().current().curvature(t));
+            translationalVector = translationalVector.plus(closestNormalVector.times(centripetal));
 
-        translationalError = translationalError(
-                state.motionState().pose(), state.pathTracker().current().get(t), closestNormalVector);
-        double translationalPower = computeTranslationalCorrection(
-                        closestNormalVector.times(translationalError),
-                        brakingDisplacement)
-                .dot(closestNormalVector);
-        double centripetal = centripetal(tangentialSpeed, state.pathTracker().current().curvature(t));
-        translationalPower = translationalPower + centripetal;
-        translationalVector = closestNormalVector.times(translationalPower);
-
-        if ((Math.abs(headingError) > 2 * config.headingDeviationTolerance.get()) || (Math.abs(translationalError) > 2 * config.translationalDeviationTolerance.get()))
-            driveVector = driveVector.times(getDriveScalar(translationalError, headingError));
+            if ((Math.abs(headingError) > 2 * config.headingDeviationTolerance.get()) || (Math.abs(translationalError) > 2 * config.translationalDeviationTolerance.get()))
+                driveVector = driveVector.times(getDriveScalar(translationalError, headingError));
+        }
 
         return allocatePowers(
                 state,
