@@ -212,10 +212,6 @@ public class Foresight implements Algorithm {
         return normalizeSigned(target - current);
     }
 
-    public double translationalError(Pose currentPose, Vector2D closestPointVector, Vector2D closestNormalVector) {
-        return currentPose.toVector2D().minus(closestPointVector).dot(closestNormalVector);
-    }
-
     public Vector2D computeTranslationalCorrection(Vector2D displacementVector, Vector2D brakingDisplacement) {
         if (displacementVector == null || displacementVector.isZero()) return Vector2D.zero();
         Vector2D adjustedError = displacementVector.minus(brakingDisplacement);
