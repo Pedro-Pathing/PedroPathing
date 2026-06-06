@@ -48,9 +48,21 @@ public class FusionLocalizer implements Localizer {
         currentRawPose = new Pose();
 
         //Standard Deviations for Kalman Filter
-        this.P = Matrix.diag(initialCovariance.getX(), initialCovariance.getY(), initialCovariance.getHeading());
-        this.Q = Matrix.diag(processVariance.getX(), processVariance.getY(), processVariance.getHeading());
-        this.R = Matrix.diag(measurementVariance.getX(), measurementVariance.getY(), measurementVariance.getHeading());
+        this.P = Matrix.diag(
+                Math.max(initialCovariance.getX(), EPSILON),
+                Math.max(initialCovariance.getY(), EPSILON),
+                Math.max(initialCovariance.getHeading(), EPSILON)
+        );
+        this.Q = Matrix.diag(
+                Math.max(processVariance.getX(), EPSILON),
+                Math.max(processVariance.getY(), EPSILON),
+                Math.max(processVariance.getHeading(), EPSILON)
+        );
+        this.R = Matrix.diag(
+                Math.max(measurementVariance.getX(), EPSILON),
+                Math.max(measurementVariance.getY(), EPSILON),
+                Math.max(measurementVariance.getHeading(), EPSILON)
+        );
         this.bufferSize = bufferSize;
         history.put(0L, new KalmanState(currentPosition, new Pose(), currentRawPose, P));
     }
