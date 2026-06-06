@@ -44,11 +44,23 @@ public class Twist {
         return new Twist(vx + other.vx, vy + other.vy, omega + other.omega);
     }
 
+    public Twist minus(Twist other) {
+        return new Twist(vx - other.vx, vy - other.vy, omega - other.omega);
+    }
+
     public Twist times(double scalar) {
         return new Twist(vx * scalar, vy * scalar, omega * scalar);
     }
 
     public Vector2D toLinear() {
         return Vector2D.cartesian(vx, vy);
+    }
+
+    public static Twist fromPose(Pose pose) {
+        return new Twist(pose.x(), pose.y(), pose.heading());
+    }
+
+    public static Twist riemannianLog(Pose a, Pose b) {
+        return a.invert().compose(b).log();
     }
 }

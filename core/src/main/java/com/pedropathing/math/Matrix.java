@@ -40,6 +40,14 @@ public class Matrix {
         return new Matrix(data);
     }
 
+    public static Matrix diag(Vector vector) {
+        return diag(vector.elements());
+    }
+
+    public static Matrix diag(Vector2D vector) {
+        return diag(vector.x(), vector.y());
+    }
+
     public static Matrix identity(int n) {
         double[][] data = new double[n][n];
         for (int i = 0; i < n; i++) data[i][i] = 1;
@@ -54,9 +62,56 @@ public class Matrix {
     public static Matrix rotation(double theta) {
         double sin = Math.sin(theta);
         double cos = Math.cos(theta);
+
         return new Matrix(new double[][] {
             {cos, -sin},
             {sin, cos}
+        });
+    }
+
+    /**
+     * Create a 3x3 matrix with a 2d rotation minor matrix on the top left
+     * @param theta radians; + = CCW, - = CW
+     * @return 3x3 affine rotation matrix
+     */
+    public static Matrix rotationTransform(double theta) {
+        double sin = Math.sin(theta);
+        double cos = Math.cos(theta);
+        return new Matrix(new double[][]{
+                {cos, -sin, 0.0},
+                {sin,  cos, 0.0},
+                {0.0,  0.0, 1.0}
+        });
+    }
+
+    /**
+     * Returns an affine translation matrix of 3x3 size
+     * @param x x translation
+     * @param y y translation
+     * @return Matrix of 3x3 size
+     */
+    public static Matrix translationTransform(double x, double y){
+        return new Matrix(new double[][]{
+                {1, 0, x},
+                {0, 1, y},
+                {0, 0, 1}
+        });
+    }
+
+    /**
+     * Returns an affine transformation of 3x3 matrix. This matrix represents a rotation and then a translation
+     * @param x x translation
+     * @param y y translation
+     * @param angle radians; + = CCW, - = CW
+     * @return 3x3 transformation matrix
+     */
+    public static Matrix createTransformation(double x, double y, double angle){
+        double sin = Math.sin(angle);
+        double cos = Math.cos(angle);
+        return new Matrix(new double[][]{
+                {cos, -sin,   x},
+                {sin,  cos,   y},
+                {0.0,  0.0, 1.0}
         });
     }
 
@@ -85,6 +140,25 @@ public class Matrix {
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
                 data[i][j] = get(i, j) + other.get(i, j);
+            }
+        }
+        return new Matrix(data);
+    }
+
+    /**
+     * Performs matrix subtraction.
+     * * @param other The matrix to subtract from this one.
+     *
+     * @return A new Matrix representing the sum.
+     * @throws IllegalArgumentException if dimensions do not match.
+     */
+    public Matrix minus(Matrix other) {
+        if (this.rows != other.rows || this.cols != other.cols)
+            throw new IllegalArgumentException("Matrix dimensions must match for addition.");
+        double[][] data = new double[rows][cols];
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                data[i][j] = get(i, j) - other.get(i, j);
             }
         }
         return new Matrix(data);
@@ -142,7 +216,32 @@ public class Matrix {
         return new Vector(result);
     }
 
+    public Vector getDiagonal() {
+        double[] elements = new double[Math.min(rows, cols)];
+        for (int i = 0; i < elements.length; i++) {
+            elements[i] = get(i, i);
+        }
+        return new Vector(elements);
+    }
+
+    public Matrix clampDiagonals(double epsilon) {
+        double[][] data = new double[rows][cols];
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                if (i != j) data[i][j] = get(i, j);
+                else data[i][j] = Math.max(epsilon, get(i, j));
+            }
+        }
+
+        return new Matrix(data);
+    }
+
     public Pair<Matrix, Matrix> rref(Matrix augment) {
         throw new UnsupportedOperationException("i graciously decline to work");
+    }
+
+    public Matrix invert() {
+        throw new UnsupportedOperationException("we will do it at some point");
     }
 }
