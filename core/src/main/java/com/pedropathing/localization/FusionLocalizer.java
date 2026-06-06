@@ -285,7 +285,8 @@ public class FusionLocalizer implements Localizer {
         //Linear interpolation in twist space
         double dx = a.getX() + ratio * (b.getX() - a.getX());
         double dy = a.getY() + ratio * (b.getY() - a.getY());
-        double dtheta = a.getHeading() + ratio * (b.getHeading() - a.getHeading());
+        double headingDiff = MathFunctions.getSmallestAngleDifference(b.getHeading(), a.getHeading());
+        double dtheta = MathFunctions.normalizeAngle(a.getHeading() + ratio * headingDiff);
 
         //Exponential map back to SE(2)
         double eps = 1e-4;
