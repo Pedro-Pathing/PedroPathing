@@ -637,8 +637,7 @@ public class Matrix {
      * @return the inverse matrix
      */
     public Matrix inverse() {
-        if (rowCount != colCount)
-            throw new IllegalStateException("Matrix must be square");
+        if (rowCount != colCount) throw new IllegalStateException("Matrix must be square");
 
         Matrix I = Matrix.identity(rowCount);
         Matrix[] r = Matrix.rref(this, I);

@@ -23,6 +23,7 @@ public class FusionLocalizer implements Localizer {
         }
     }
 
+    public static double EPSILON = 1e-6; //floor for covariance matrices
     private final Localizer deadReckoning;
     private Pose currentRawPose;
     private Pose currentPosition;
@@ -68,11 +69,11 @@ public class FusionLocalizer implements Localizer {
         //Update the pose estimate based on dead reckoning pose transformation
         Pose rawPose = deadReckoning.getPose();
         currentRelativeTransform = compose(invert(currentRawPose), rawPose);
+
+        //Update Kalman states
+        P = updateCovariance(P, currentPosition, currentVelocity, dt);
         currentPosition = compose(currentPosition, currentRelativeTransform);
         currentRawPose = rawPose;
-
-        //Update Kalman Filter
-        updateCovariance(P, currentPosition, currentVelocity, dt);
 
         history.put(now, new KalmanState(currentPosition, currentVelocity, currentRelativeTransform, P));
         if (history.size() > bufferSize) history.pollFirstEntry();
@@ -101,7 +102,7 @@ public class FusionLocalizer implements Localizer {
      *
      * @param dt the time step Δt in seconds
      */
-    private void updateCovariance(Matrix P, Pose pose, Pose twist, double dt) {
+    private Matrix updateCovariance(Matrix P, Pose pose, Pose twist, double dt) {
         double dist_x = Math.abs(twist.getX() * dt);
         double dist_y = Math.abs(twist.getY() * dt);
         double dist_theta = Math.abs(twist.getHeading() * dt);
@@ -110,18 +111,15 @@ public class FusionLocalizer implements Localizer {
         double q_y = Q.get(1, 1);
         double q_theta = Q.get(2, 2);
 
-        Matrix motionQ = Matrix.diag(
+        Matrix worldQ = Matrix.diag(
                 dist_x * q_x,
                 dist_y * q_y,
                 dist_theta * q_theta
         );
 
-        // Rotate into world frame
-        Matrix Rtheta = Matrix.createRotation(pose.getHeading());
-        Matrix worldQ = Rtheta.multiply(motionQ).multiply(Rtheta.transposed());
-
         P = P.plus(worldQ);
         clampCovariance(P);
+        return P;
     }
 
     private KalmanState getKalmanState() {
@@ -147,6 +145,7 @@ public class FusionLocalizer implements Localizer {
     public void addMeasurement(Pose measuredPose, long timestamp, Pose measurementVariance) {
         Matrix measurementR = measurementVariance == null ? R :
                 Matrix.diag(measurementVariance.getX(), measurementVariance.getY(), measurementVariance.getHeading());
+        clampCovariance(measurementR);
         // Reject if timestamp is outside our poseHistory time window
         if (history.isEmpty() || timestamp < history.firstKey() || timestamp > history.lastKey())
             return;
@@ -183,7 +182,9 @@ public class FusionLocalizer implements Localizer {
         Matrix S = Pm.plus(measurementR);
 
         // Apply gain K = P * (P + R)^(-1)
-        Matrix K = Pm.multiply(S.inverse());
+        Matrix S_inv = invert(S);
+        if (S_inv == null) return;
+        Matrix K = Pm.multiply(S_inv);
 
         // Apply mask
         K = M.multiply(K);
@@ -216,9 +217,9 @@ public class FusionLocalizer implements Localizer {
             double dt = (t - prevTime) / 1e9;
 
             Pose relativeTransform = entry.getValue().relativeTransform;
-            updateCovariance(cov, prevPose, twist, dt);
+            cov = updateCovariance(cov, prevPose, twist, dt);
             prevPose = compose(prevPose, relativeTransform);
-            history.put(t, new KalmanState(prevPose, twist, entry.getValue().relativeTransform, P));
+            history.put(t, new KalmanState(prevPose, twist, entry.getValue().relativeTransform, cov));
             prevTime = t;
         }
 
@@ -278,12 +279,12 @@ public class FusionLocalizer implements Localizer {
     }
 
     public static Pose interpolateTransform(Pose a, Pose b, double ratio) {
-        // 1. Linear interpolation in twist space
+        //Linear interpolation in twist space
         double dx = a.getX() + ratio * (b.getX() - a.getX());
         double dy = a.getY() + ratio * (b.getY() - a.getY());
         double dtheta = a.getHeading() + ratio * (b.getHeading() - a.getHeading());
 
-        // 2. Exponential map back to SE(2)
+        //Exponential map back to SE(2)
         double eps = 1e-4;
         double x, y;
 
@@ -306,13 +307,22 @@ public class FusionLocalizer implements Localizer {
     }
 
     private void clampCovariance(Matrix P) {
-        double eps = 1e-6; // minimum allowed variance
         for (int i = 0; i < 3; i++) {
             double v = P.get(i, i);
-            if (v < eps) {
-                P.set(i, i, eps);
+            if (v < EPSILON) {
+                P.set(i, i, EPSILON);
             }
         }
+    }
+
+    private static Matrix invert(Matrix matrix) {
+        if (matrix.getRows() != matrix.getColumns()) return null;
+
+        Matrix I = Matrix.identity(matrix.getRows());
+        Matrix[] r = Matrix.rref(matrix, I);
+
+        if (!r[0].equals(I)) return null;
+        return r[1];
     }
 
     @Override
