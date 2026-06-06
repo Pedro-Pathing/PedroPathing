@@ -89,11 +89,14 @@ public class Foresight implements Algorithm {
                 displacementToPath,
                 brakingDisplacement);
 
-        Vector2D displacementToStart = state.pathTracker().current().startPoint().minus(state.motionState().pose().toVector2D());
-        double tangentDisplacementToStart = displacementToStart.dot(closestTangentVector);
-        boolean isBeforePath = tangentDisplacementToStart > 0;
-        if (isBeforePath) {
-            driveVector = driveVector.times(tangentDisplacementToStart / translationalError);
+        boolean atParametricStart = t <= config.parametricTConstraint.get();
+        if (atParametricStart) {
+            Vector2D displacementToStart = state.pathTracker().current().startPoint().minus(state.motionState().pose().toVector2D());
+            double tangentDisplacementToStart = displacementToStart.dot(closestTangentVector);
+            boolean isBeforePath = tangentDisplacementToStart > 0;
+            if (isBeforePath) {
+                driveVector = driveVector.times(tangentDisplacementToStart / translationalError);
+            }
         }
         else {
             double centripetal = centripetal(tangentialSpeed, state.pathTracker().current().curvature(t));
