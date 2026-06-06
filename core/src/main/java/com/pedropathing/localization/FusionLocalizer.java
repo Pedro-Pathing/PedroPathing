@@ -103,20 +103,23 @@ public class FusionLocalizer implements Localizer {
      * @param dt the time step Δt in seconds
      */
     private Matrix updateCovariance(Matrix P, Pose pose, Pose twist, double dt) {
-        double dist_x = Math.abs(twist.getX() * dt);
-        double dist_y = Math.abs(twist.getY() * dt);
-        double dist_theta = Math.abs(twist.getHeading() * dt);
+        Pose bodyTwist = twist.rotate(-pose.getHeading(), false);
+        double dist_x = Math.abs(bodyTwist.getX() * dt);
+        double dist_y = Math.abs(bodyTwist.getY() * dt);
+        double dist_theta = Math.abs(bodyTwist.getHeading() * dt);
 
         double q_x = Q.get(0, 0);
         double q_y = Q.get(1, 1);
         double q_theta = Q.get(2, 2);
 
-        Matrix worldQ = Matrix.diag(
+        Matrix bodyQ = Matrix.diag(
                 dist_x * q_x,
                 dist_y * q_y,
                 dist_theta * q_theta
         );
 
+        Matrix rotation = Matrix.createRotation(pose.getHeading());
+        Matrix worldQ = rotation.times(bodyQ).times(rotation.transposed());
         P = P.plus(worldQ);
         clampCovariance(P);
         return P;
