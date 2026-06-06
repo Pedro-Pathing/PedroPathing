@@ -9,13 +9,13 @@ import java.util.NavigableMap;
 import java.util.TreeMap;
 
 public class FusionLocalizer implements Localizer {
-    private static class PoseData {
+    private static class KalmanState {
         Pose pose;
         Pose twist;
         Pose relativeTransform;
         Matrix covariance;
 
-        public PoseData(Pose pose, Pose twist, Pose relativeTransform, Matrix covariance) {
+        public KalmanState(Pose pose, Pose twist, Pose relativeTransform, Matrix covariance) {
             this.pose = pose;
             this.twist = twist;
             this.relativeTransform = relativeTransform;
@@ -32,7 +32,7 @@ public class FusionLocalizer implements Localizer {
     private final Matrix Q; //Process Noise Covariance
     private final Matrix R; //Measurement Noise Covariance
     private long lastUpdateTime = -1;
-    private final NavigableMap<Long, PoseData> history = new TreeMap<>();
+    private final NavigableMap<Long, KalmanState> history = new TreeMap<>();
     private final int bufferSize;
 
     public FusionLocalizer(
@@ -51,7 +51,7 @@ public class FusionLocalizer implements Localizer {
         this.Q = Matrix.diag(processVariance.getX(), processVariance.getY(), processVariance.getHeading());
         this.R = Matrix.diag(measurementVariance.getX(), measurementVariance.getY(), measurementVariance.getHeading());
         this.bufferSize = bufferSize;
-        history.put(0L, new PoseData(currentPosition, new Pose(), currentRawPose, P));
+        history.put(0L, new KalmanState(currentPosition, new Pose(), currentRawPose, P));
     }
 
     @Override
@@ -74,7 +74,7 @@ public class FusionLocalizer implements Localizer {
         //Update Kalman Filter
         updateCovariance(P, currentPosition, currentVelocity, dt);
 
-        history.put(now, new PoseData(currentPosition, currentVelocity, currentRelativeTransform, P));
+        history.put(now, new KalmanState(currentPosition, currentVelocity, currentRelativeTransform, P));
         if (history.size() > bufferSize) history.pollFirstEntry();
     }
 
@@ -124,8 +124,8 @@ public class FusionLocalizer implements Localizer {
         clampCovariance(P);
     }
 
-    private PoseData getPoseData() {
-        return new PoseData(currentPosition, currentVelocity, currentRelativeTransform, P);
+    private KalmanState getKalmanState() {
+        return new KalmanState(currentPosition, currentVelocity, currentRelativeTransform, P);
     }
 
 
@@ -151,8 +151,8 @@ public class FusionLocalizer implements Localizer {
         if (history.isEmpty() || timestamp < history.firstKey() || timestamp > history.lastKey())
             return;
 
-        PoseData interpolatedData = interpolate(timestamp);
-        if (interpolatedData == null) interpolatedData = getPoseData();
+        KalmanState interpolatedData = interpolate(timestamp);
+        if (interpolatedData == null) interpolatedData = getKalmanState();
         Pose pastPose = interpolatedData.pose;
 
         if (pastPose == null)
@@ -202,13 +202,13 @@ public class FusionLocalizer implements Localizer {
         Matrix IK = I.minus(K);
         Matrix cov = IK.multiply(Pm).multiply(IK.transposed()).plus(K.multiply(measurementR).multiply(K.transposed()));
         clampCovariance(cov);
-        history.put(timestamp, new PoseData(updatedPast, interpolatedData.twist, interpolatedData.relativeTransform, cov));
+        history.put(timestamp, new KalmanState(updatedPast, interpolatedData.twist, interpolatedData.relativeTransform, cov));
 
         // Forward propagate pose + covariance
         long prevTime = timestamp;
         Pose prevPose = updatedPast;
 
-        for (NavigableMap.Entry<Long, PoseData> entry : history.tailMap(timestamp, false).entrySet()) {
+        for (NavigableMap.Entry<Long, KalmanState> entry : history.tailMap(timestamp, false).entrySet()) {
             long t = entry.getKey();
             Pose twist = entry.getValue().twist;
             if (twist == null) twist = getVelocity();
@@ -218,7 +218,7 @@ public class FusionLocalizer implements Localizer {
             Pose relativeTransform = entry.getValue().relativeTransform;
             updateCovariance(cov, prevPose, twist, dt);
             prevPose = compose(prevPose, relativeTransform);
-            history.put(t, new PoseData(prevPose, twist, entry.getValue().relativeTransform, P));
+            history.put(t, new KalmanState(prevPose, twist, entry.getValue().relativeTransform, P));
             prevTime = t;
         }
 
@@ -226,33 +226,33 @@ public class FusionLocalizer implements Localizer {
         P = history.lastEntry().getValue().covariance;
     }
 
-    private PoseData interpolate(long timestamp) {
+    private KalmanState interpolate(long timestamp) {
         Long lowerKey = history.floorKey(timestamp);
         Long upperKey = history.ceilingKey(timestamp);
 
         if (lowerKey == null || upperKey == null) return null;
         if (lowerKey.equals(upperKey)) return history.get(lowerKey);
 
-        PoseData lower = history.get(lowerKey);
-        PoseData upper = history.get(upperKey);
-        Pose[] lowerPoseData = new Pose[] {lower.pose, lower.twist, lower.relativeTransform};
-        Pose[] upperPoseData = new Pose[] {upper.pose, upper.twist, upper.relativeTransform};
+        KalmanState lower = history.get(lowerKey);
+        KalmanState upper = history.get(upperKey);
+        Pose[] lowerKalmanState = new Pose[] {lower.pose, lower.twist, lower.relativeTransform};
+        Pose[] upperKalmanState = new Pose[] {upper.pose, upper.twist, upper.relativeTransform};
 
         double ratio = (double) (timestamp - lowerKey) / (upperKey - lowerKey);
 
         Pose[] interpolData = new Pose[3];
         for (int i = 0; i < interpolData.length - 1; i++) {
-            Pose lowerPose = lowerPoseData[i];
-            Pose upperPose = upperPoseData[i];
+            Pose lowerPose = lowerKalmanState[i];
+            Pose upperPose = upperKalmanState[i];
             double x = lowerPose.getX() + ratio * (upperPose.getX() - lowerPose.getX());
             double y = lowerPose.getY() + ratio * (upperPose.getY() - lowerPose.getY());
             double headingDiff = MathFunctions.getSmallestAngleDifference(upperPose.getHeading(), lowerPose.getHeading());
             double heading = MathFunctions.normalizeAngle(lowerPose.getHeading() + ratio * headingDiff);
             interpolData[i] = new Pose(x, y, heading);
         }
-        interpolData[2] = interpolateTransform(lowerPoseData[2], upperPoseData[2], ratio);
+        interpolData[2] = interpolateTransform(lowerKalmanState[2], upperKalmanState[2], ratio);
 
-        return new PoseData(interpolData[0], interpolData[1], interpolData[2], lower.covariance);
+        return new KalmanState(interpolData[0], interpolData[1], interpolData[2], lower.covariance);
     }
 
     public static Pose invert(Pose pose) {
@@ -329,7 +329,7 @@ public class FusionLocalizer implements Localizer {
     @Override
     public void setStartPose(Pose setStart) {
         deadReckoning.setStartPose(setStart);
-        history.put(0L, new PoseData(setStart, new Pose(), setStart, P));
+        history.put(0L, new KalmanState(setStart, new Pose(), setStart, P));
         currentPosition = setStart;
         currentRawPose = setStart;
     }
