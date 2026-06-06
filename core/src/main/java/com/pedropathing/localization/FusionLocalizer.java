@@ -216,8 +216,8 @@ public class FusionLocalizer implements Localizer {
             double dt = (t - prevTime) / 1e9;
 
             Pose relativeTransform = entry.getValue().relativeTransform;
-            prevPose = compose(prevPose, relativeTransform);
             updateCovariance(cov, prevPose, twist, dt);
+            prevPose = compose(prevPose, relativeTransform);
             history.put(t, new PoseData(prevPose, twist, entry.getValue().relativeTransform, P));
             prevTime = t;
         }
