@@ -27,6 +27,15 @@ public class Pinpoint implements Localizer {
 
         odometry.setOffsets(config.xPodOffset.get(), config.yPodOffset.get(), config.offsetUnits.get());
 
+        odometry.setBulkReadScope(
+                GoBildaPinpointDriver.Register.X_POSITION,
+                GoBildaPinpointDriver.Register.Y_POSITION,
+                GoBildaPinpointDriver.Register.X_VELOCITY,
+                GoBildaPinpointDriver.Register.Y_VELOCITY,
+                GoBildaPinpointDriver.Register.H_ORIENTATION,
+                GoBildaPinpointDriver.Register.H_VELOCITY
+        );
+
         if (config.ticksPerUnit.get().isPresent()) {
             odometry.setEncoderResolution(config.ticksPerUnit.get().get(), config.encoderResolutionUnit.get());
         } else {

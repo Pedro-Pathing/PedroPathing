@@ -43,24 +43,6 @@ public class Utils {
             }
             return Math.copySign(Math.min(Math.abs(power), maxBrakingPower), power);
         }
-
-        /**
-         * Scales all values proportionally so none exceed a magnitude of 1.0
-         */
-        public static void desaturate(double[] powers) {
-            double max = 1.0;
-
-            for (double power : powers) {
-                max = Math.max(max, Math.abs(power));
-            }
-
-            if (max > 1.0) {
-                double scale = 1 / max;
-                for (int i = 0; i < powers.length; i++) {
-                    powers[i] *= scale;
-                }
-            }
-        }
     }
 
     public static class Angle {

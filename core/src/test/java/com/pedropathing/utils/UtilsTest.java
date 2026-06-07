@@ -10,10 +10,6 @@ public class UtilsTest {
         assertEquals(3.0, Utils.Control.getRemainingMagnitude(5.0, 4.0), 1e-9);
         assertEquals(2.5, Utils.Control.allocatePower(2.5, 3.0), 1e-9);
         assertEquals(-3.0, Utils.Control.allocatePower(-4.0, 3.0), 1e-9);
-
-        double[] powers = {2.0, -4.0, 1.0};
-        Utils.Control.desaturate(powers);
-        assertArrayEquals(new double[] {0.5, -1.0, 0.25}, powers, 1e-9);
     }
 
     @Test
