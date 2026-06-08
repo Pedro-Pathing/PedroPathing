@@ -4,25 +4,39 @@
  */
 package com.pedropathing.config;
 
-import java.util.Objects;
-import java.util.function.Function;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Supplier;
-import lombok.RequiredArgsConstructor;
+import java.util.stream.Collectors;
 
-@RequiredArgsConstructor(staticName = "memo")
-public final class Memoize<T, U> implements Supplier<U> {
+public final class Memoize<T> implements Supplier<T> {
     private final Supplier<T> supplier;
-    private final Function<T, U> function;
-    private T cachedSource;
-    private U cachedValue;
+    private final List<Supplier<?>> dependencies;
+    private T cachedValue;
+    private List<?> cachedDependencies;
+
+    private Memoize(Supplier<T> supplier, List<Supplier<?>> dependencies) {
+        this.supplier = supplier;
+        this.dependencies = dependencies;
+    }
+
+    public static <T> Memoize<T> memo(Supplier<T> supplier, List<Supplier<?>> dependencies) {
+        if (dependencies.isEmpty()) throw new IllegalArgumentException("Memoize requires at least one dependency");
+        return new Memoize<>(supplier, Collections.unmodifiableList(dependencies));
+    }
+
+    public static <T> Memoize<T> memo(Supplier<T> supplier, Supplier<?>... dependencies) {
+        return memo(supplier, Collections.unmodifiableList(Arrays.asList(dependencies)));
+    }
 
     @Override
-    public U get() {
-        T source = supplier.get();
-        if (Objects.equals(source, cachedSource)) return cachedValue;
-        else {
-            cachedSource = source;
-            return cachedValue = function.apply(source);
+    public T get() {
+        List<?> dependencies = this.dependencies.stream().map(Supplier::get).collect(Collectors.toList());
+        if (cachedDependencies == null || !cachedDependencies.equals(dependencies)) {
+            cachedValue = supplier.get();
+            cachedDependencies = dependencies;
         }
+        return cachedValue;
     }
 }
