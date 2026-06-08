@@ -132,14 +132,15 @@ public class BezierCurve implements Curve {
      */
     public void initialize() {
         if (initialized && !lazyInitialize) return; // If already initialized, do nothing
-        if (controlPoints.isEmpty() && !futureControlPoints.isEmpty()) {
+        if (lazyInitialize && !futureControlPoints.isEmpty()) {
+            controlPoints.clear();
             for (FuturePose pose : futureControlPoints) {
                 controlPoints.add(pose.getPose());
             }
-            futureControlPoints.clear();
         }
         initialized = true;
         generateBezierCurve();
+        completionMap = new NumericBijectiveMap();
         length = approximateLength();
         endTangent.setOrthogonalComponents(controlPoints.get(controlPoints.size()-1).getX()-controlPoints.get(controlPoints.size()-2).getX(),
                 controlPoints.get(controlPoints.size()-1).getY()-controlPoints.get(controlPoints.size()-2).getY());

@@ -239,14 +239,10 @@ public class BezierLine extends BezierCurve {
 
     @Override
     public void initialize() {
-        if (initialized) return;
-        if ((startPoint == null || endPoint == null) && !futureControlPoints.isEmpty()) {
-            if (startPoint == null) {
-                startPoint = futureControlPoints.get(0).getPose();
-            }
-            if (endPoint == null) {
-                endPoint = futureControlPoints.get(1).getPose();
-            }
+        if (initialized && !lazyInitialize) return; // If already initialized, do nothing
+        if (lazyInitialize && !futureControlPoints.isEmpty()) {
+            startPoint = futureControlPoints.get(0).getPose();
+            endPoint = futureControlPoints.get(1).getPose();
         }
         initialized = true;
         length = approximateLength();

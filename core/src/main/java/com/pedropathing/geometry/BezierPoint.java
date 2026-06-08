@@ -249,9 +249,11 @@ public class BezierPoint extends BezierCurve {
 
     @Override
     public void initialize() {
-        if (initialized) return;
+        if (initialized && !lazyInitialize) return; // If already initialized, do nothing
+        if (lazyInitialize && !futureControlPoints.isEmpty()) {
+            pose = futureControlPoints.get(0).getPose();
+        }
         initialized = true;
-        if (pose == null && !futureControlPoints.isEmpty()) pose = futureControlPoints.get(0).getPose();
         length = approximateLength();
         super.initializePanelsDrawingPoints();
     }
