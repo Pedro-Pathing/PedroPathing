@@ -4,22 +4,18 @@
  */
 package com.pedropathing.math;
 
-import com.pedropathing.utils.Utils;
-import lombok.Value;
-import lombok.With;
+import com.pedropathing.utils.Angle;
 
-@Value
-@With
 public class Pose {
     private static final Pose ZERO = new Pose(0, 0, 0);
-    double x;
-    double y;
-    double heading;
+    private final double x;
+    private final double y;
+    private final double heading;
 
     public Pose(double x, double y, double heading) {
         this.x = x;
         this.y = y;
-        this.heading = Utils.Angle.normalize(heading);
+        this.heading = Angle.normalize(heading);
     }
 
     public Pose(double x, double y) {
@@ -28,6 +24,38 @@ public class Pose {
 
     public static Pose zero() {
         return ZERO;
+    }
+
+    public static Pose interpolate(Pose lowerPose, Pose upperPose, double ratio) {
+        double x = lowerPose.x() + ratio * (upperPose.x() - lowerPose.x());
+        double y = lowerPose.y() + ratio * (upperPose.y() - lowerPose.y());
+        double headingDiff = Angle.smallestDifference(upperPose.heading(), lowerPose.heading());
+        double heading = Angle.normalize(lowerPose.heading() + ratio * headingDiff);
+        return new Pose(x, y, heading);
+    }
+
+    public double x() {
+        return x;
+    }
+
+    public double y() {
+        return y;
+    }
+
+    public double heading() {
+        return heading;
+    }
+
+    public Pose withX(double x) {
+        return new Pose(x, y, heading);
+    }
+
+    public Pose withY(double y) {
+        return new Pose(x, y, heading);
+    }
+
+    public Pose withHeading(double heading) {
+        return new Pose(x, y, heading);
     }
 
     public Vector2D toVector2D() {
@@ -87,20 +115,12 @@ public class Pose {
         return Math.hypot(x - other.x, y - other.y);
     }
 
-    public static Pose interpolate(Pose lowerPose, Pose upperPose, double ratio) {
-        double x = lowerPose.x() + ratio * (upperPose.x() - lowerPose.x());
-        double y = lowerPose.y() + ratio * (upperPose.y() - lowerPose.y());
-        double headingDiff = Utils.Angle.smallestDifference(upperPose.heading(), lowerPose.heading());
-        double heading = Utils.Angle.normalize(lowerPose.heading() + ratio * headingDiff);
-        return new Pose(x, y, heading);
-    }
-
     public Pose invert() {
         double c = Math.cos(heading);
         double s = Math.sin(heading);
 
         double x_inv = -x * c - y * s;
-        double y_inv =  x * s - y * c;
+        double y_inv = x * s - y * c;
         double heading_inv = -heading;
 
         return new Pose(x_inv, y_inv, heading_inv);

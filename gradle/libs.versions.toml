@@ -7,6 +7,7 @@ deployer = "0.18.0"
 freefair = "9.5.0"
 aspectj = "1.9.25.1"
 spotless = "8.4.0"
+
 [libraries]
 ftc-robot-core = { group = "org.firstinspires.ftc", name = "RobotCore", version.ref = "ftc" }
 ftc-hardware = { group = "org.firstinspires.ftc", name = "Hardware", version.ref = "ftc" }
@@ -22,6 +23,5 @@ android-library = { id = "com.android.library", version.ref = "agp" }
 deployer = { id = "io.deepmedia.tools.deployer", version.ref = "deployer" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-lombok = { id = "io.freefair.lombok", version.ref = "freefair" }
 aspectj = { id = "io.freefair.aspectj.post-compile-weaving", version.ref = "freefair" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

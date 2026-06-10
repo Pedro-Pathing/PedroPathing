@@ -6,12 +6,12 @@ package com.pedropathing.config;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.function.Supplier;
 
+import static com.pedropathing.utils.Utils.concat;
 import static com.pedropathing.utils.Utils.listOf;
-import static com.pedropathing.utils.Utils.toUnmodifiableList;
 
-public class ConfigVar<T> {
+public class ConfigVar<T> implements Supplier<T> {
     private final List<Validator<T>> validators;
     private T value;
     private boolean hasValue;
@@ -29,7 +29,7 @@ public class ConfigVar<T> {
     }
 
     public static <T> ConfigVar<T> required(List<Validator<T>> validators) {
-        return new ConfigVar<>(Stream.concat(validators.stream(), Stream.of(Validator.<T>nonnull())).collect(toUnmodifiableList()));
+        return new ConfigVar<>(concat(validators, Collections.singletonList(Validator.nonnull())));
     }
 
     @SafeVarargs
@@ -48,7 +48,7 @@ public class ConfigVar<T> {
 
 
     public static <T> ConfigVar<T> of(T value, List<Validator<T>> validators) {
-        return new ConfigVar<>(value, Stream.concat(validators.stream(), Stream.of(Validator.<T>nonnull())).collect(toUnmodifiableList()));
+        return new ConfigVar<>(value, concat(validators, Collections.singletonList(Validator.nonnull())));
     }
 
     @SafeVarargs
@@ -65,6 +65,7 @@ public class ConfigVar<T> {
         return ofNullable(value, listOf(validators));
     }
 
+    @Override
     public T get() {
         require();
         return value;

@@ -77,7 +77,7 @@ public class Pinpoint implements Localizer {
     }
 
     @Override
-    public MotionState motionState() {
+    public MotionState state() {
         return motionState;
     }
 

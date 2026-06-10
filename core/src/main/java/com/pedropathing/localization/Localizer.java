@@ -24,18 +24,18 @@ public interface Localizer {
     }
 
     default Pose pose() {
-        return motionState().pose();
+        return state().pose();
     }
 
     default Twist twist() {
-        return motionState().twist();
+        return state().twist();
     }
 
     default Velocity velocity() {
-        return motionState().velocity();
+        return state().velocity();
     }
 
-    MotionState motionState();
+    MotionState state();
 
     void update();
 

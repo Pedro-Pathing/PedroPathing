@@ -46,7 +46,7 @@ public class Velocity {
         return new Velocity(vx * time, vy * time, omega * time);
     }
 
-    public Vector2D toLinear() {
+    public Vector2D toVector2D() {
         return Vector2D.cartesian(vx, vy);
     }
 

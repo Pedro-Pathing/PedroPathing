@@ -4,14 +4,17 @@
  */
 package com.pedropathing.math;
 
-import lombok.Value;
-
-@Value
 public class Twist {
     private static final Twist ZERO = new Twist(0, 0, 0);
-    double vx;
-    double vy;
-    double omega;
+    private final double vx;
+    private final double vy;
+    private final double omega;
+
+    public Twist(double vx, double vy, double omega) {
+        this.vx = vx;
+        this.vy = vy;
+        this.omega = omega;
+    }
 
     public static Twist zero() {
         return ZERO;
@@ -19,6 +22,26 @@ public class Twist {
 
     public static Twist fromVector(Vector2D vector) {
         return new Twist(vector.x(), vector.y(), 0);
+    }
+
+    public static Twist fromPose(Pose pose) {
+        return new Twist(pose.x(), pose.y(), pose.heading());
+    }
+
+    public static Twist riemannianLog(Pose a, Pose b) {
+        return a.invert().compose(b).log();
+    }
+
+    public double vx() {
+        return vx;
+    }
+
+    public double vy() {
+        return vy;
+    }
+
+    public double omega() {
+        return omega;
     }
 
     public Velocity toVelocity(double heading) {
@@ -33,10 +56,10 @@ public class Twist {
     }
 
     public Matrix toMatrix() {
-        return new Matrix(new double[][] {
-            {0.0, -omega, vx},
-            {omega, 0.0, vy},
-            {0.0, 0.0, 0.0}
+        return new Matrix(new double[][]{
+                {0.0, -omega, vx},
+                {omega, 0.0, vy},
+                {0.0, 0.0, 0.0}
         });
     }
 
@@ -52,15 +75,7 @@ public class Twist {
         return new Twist(vx * scalar, vy * scalar, omega * scalar);
     }
 
-    public Vector2D toLinear() {
+    public Vector2D toVector2D() {
         return Vector2D.cartesian(vx, vy);
-    }
-
-    public static Twist fromPose(Pose pose) {
-        return new Twist(pose.x(), pose.y(), pose.heading());
-    }
-
-    public static Twist riemannianLog(Pose a, Pose b) {
-        return a.invert().compose(b).log();
     }
 }
