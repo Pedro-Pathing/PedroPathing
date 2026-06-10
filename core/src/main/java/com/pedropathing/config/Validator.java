@@ -4,9 +4,12 @@
  */
 package com.pedropathing.config;
 
+import java.util.Objects;
+
 /**
  * @author jjophoven
  */
+@FunctionalInterface
 public interface Validator<T> {
     boolean validate(T value);
 
@@ -20,5 +23,9 @@ public interface Validator<T> {
 
     static Validator<Double> negative() {
         return v -> v < 0;
+    }
+
+    static <T> Validator<T> nonnull() {
+        return Objects::nonNull;
     }
 }
