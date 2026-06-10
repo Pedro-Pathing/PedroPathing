@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static com.pedropathing.utils.Utils.listOf;
+
 public final class Memoize<T> implements Supplier<T> {
     private final Supplier<T> supplier;
     private final List<Supplier<?>> dependencies;
@@ -27,7 +29,7 @@ public final class Memoize<T> implements Supplier<T> {
     }
 
     public static <T> Memoize<T> memo(Supplier<T> supplier, Supplier<?>... dependencies) {
-        return memo(supplier, Collections.unmodifiableList(Arrays.asList(dependencies)));
+        return memo(supplier, listOf(dependencies));
     }
 
     @Override
