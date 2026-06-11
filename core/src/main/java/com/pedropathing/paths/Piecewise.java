@@ -5,9 +5,9 @@
 package com.pedropathing.paths;
 
 import com.pedropathing.paths.tvalue.TValue;
+
 import java.util.*;
 import java.util.function.ToDoubleFunction;
-import lombok.Value;
 
 public final class Piecewise<T> {
     private final ToDoubleFunction<T> getLength;
@@ -55,9 +55,21 @@ public final class Piecewise<T> {
         return Collections.unmodifiableList(segments);
     }
 
-    @Value
     public static class Segment<T> {
-        double startT;
-        T value;
+        private final double startT;
+        private final T value;
+
+        public Segment(double startT, T value) {
+            this.startT = startT;
+            this.value = value;
+        }
+
+        public double startT() {
+            return startT;
+        }
+
+        public T value() {
+            return value;
+        }
     }
 }

@@ -4,7 +4,7 @@ import com.pedropathing.math.Pose;
 import com.pedropathing.math.Twist;
 import com.pedropathing.math.Vector;
 import com.pedropathing.math.Velocity;
-import com.pedropathing.utils.Utils.Angle;
+import com.pedropathing.utils.Angle;
 
 import java.util.NavigableMap;
 import java.util.TreeMap;
@@ -68,7 +68,7 @@ public class FusionLocalizer implements Localizer {
     }
 
     @Override
-    public MotionState motionState() {
+    public MotionState state() {
         return motionState;
     }
 

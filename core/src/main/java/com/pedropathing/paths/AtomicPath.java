@@ -11,7 +11,7 @@ import com.pedropathing.paths.tvalue.TValue;
 import java.util.Collections;
 import java.util.List;
 
-public abstract class AtomicPath extends Path {
+public class AtomicPath extends Path {
     private final Interpolator interpolator;
 
     public AtomicPath(Curve curve, Interpolator interpolator, Modifier[] modifiers) {

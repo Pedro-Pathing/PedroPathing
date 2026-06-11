@@ -75,7 +75,7 @@ public class Mecanum implements Drivetrain {
 
 
     @Override
-    public void drive(DrivePowers powers) {
+    public void drive(DrivePowers powers, boolean manual) {
         if (manual) {
             if (manualBrakeMode)
                 setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);

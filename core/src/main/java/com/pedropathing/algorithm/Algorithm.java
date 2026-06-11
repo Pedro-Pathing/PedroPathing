@@ -5,11 +5,12 @@
 package com.pedropathing.algorithm;
 
 import com.pedropathing.drivetrain.DrivePowers;
-import com.pedropathing.follower.FollowState;
+import com.pedropathing.localization.MotionState;
 import com.pedropathing.math.Pose;
+import com.pedropathing.paths.PathTracker;
 
 public interface Algorithm {
-    DrivePowers calculate(FollowState state);
+    DrivePowers calculatePath(PathTracker pathTracker, MotionState state, double deltaTime);
 
-    DrivePowers hold(Pose target, FollowState state);
+    DrivePowers calculateHold(Pose target, MotionState state, double deltaTime);
 }

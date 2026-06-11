@@ -4,52 +4,87 @@
  */
 package com.pedropathing.config;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
-public class ConfigVar<T> {
+import static com.pedropathing.utils.Utils.concat;
+import static com.pedropathing.utils.Utils.listOf;
+
+public class ConfigVar<T> implements Supplier<T> {
+    private final List<Validator<T>> validators;
     private T value;
     private boolean hasValue;
-    private final List<Validator<T>> validators = new ArrayList<>();
 
-    private ConfigVar(T value) {
+    private ConfigVar(T value, List<Validator<T>> validators) {
         this.value = value;
         this.hasValue = true;
+        this.validators = Collections.unmodifiableList(validators);
+        validate(value);
     }
 
-    private ConfigVar() {
+    private ConfigVar(List<Validator<T>> validators) {
         this.hasValue = false;
+        this.validators = Collections.unmodifiableList(validators);
     }
 
-    public static <T> ConfigVar<T> required() {
-        return new ConfigVar<>();
+    public static <T> ConfigVar<T> required(List<Validator<T>> validators) {
+        return new ConfigVar<>(concat(validators, Collections.singletonList(Validator.nonnull())));
     }
 
-    public static <T> ConfigVar<T> of(T value) {
-        return new ConfigVar<>(value);
+    @SafeVarargs
+    public static <T> ConfigVar<T> required(Validator<T>... validators) {
+        return required(listOf(validators));
     }
 
-    public static <T> ConfigVar<T> of(T value, Validator<T> validator) {
-        return new ConfigVar<>(value).validate(validator);
+    public static <T> ConfigVar<T> requiredNullable(List<Validator<T>> validators) {
+        return new ConfigVar<>(validators);
     }
 
+    @SafeVarargs
+    public static <T> ConfigVar<T> requiredNullable(Validator<T>... validators) {
+        return requiredNullable(listOf(validators));
+    }
+
+
+    public static <T> ConfigVar<T> of(T value, List<Validator<T>> validators) {
+        return new ConfigVar<>(value, concat(validators, Collections.singletonList(Validator.nonnull())));
+    }
+
+    @SafeVarargs
+    public static <T> ConfigVar<T> of(T value, Validator<T>... validators) {
+        return of(value, listOf(validators));
+    }
+
+    public static <T> ConfigVar<T> ofNullable(T value, List<Validator<T>> validators) {
+        return new ConfigVar<>(value, validators);
+    }
+
+    @SafeVarargs
+    public static <T> ConfigVar<T> ofNullable(T value, Validator<T>... validators) {
+        return ofNullable(value, listOf(validators));
+    }
+
+    @Override
     public T get() {
         require();
         return value;
     }
 
     public void set(T value) {
+        validate(value);
         this.value = value;
-        validate();
         this.hasValue = true;
     }
 
     public Modifier modify(T tempValue) {
+        validate(tempValue);
         return new Modifier() {
             private T originalValue;
 
             @Override
             public void apply() {
+                require();
                 originalValue = value;
                 value = tempValue;
             }
@@ -61,15 +96,7 @@ public class ConfigVar<T> {
         };
     }
 
-    public ConfigVar<T> validate(Validator<T> validator) {
-        this.validators.add(validator);
-        return this;
-    }
-
-    private void validate() {
-        if (value == null) {
-            throw new IllegalArgumentException("Config variable cannot be null");
-        }
+    private void validate(T value) {
         for (Validator<T> validator : validators) {
             if (!validator.validate(value)) {
                 throw new IllegalArgumentException("Invalid value for config variable of " + value);

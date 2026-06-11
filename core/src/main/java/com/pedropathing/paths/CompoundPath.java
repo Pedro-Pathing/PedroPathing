@@ -20,7 +20,7 @@ public class CompoundPath extends Path {
     public CompoundPath(Interpolator interpolator, Modifier[] modifiers, Path[] paths) {
         super(new CompoundCurve(Arrays.stream(paths).map(path -> path.curve).toArray(Curve[]::new)), modifiers);
         this.interpolator = interpolator;
-        this.paths = new Piecewise<>(Path::length, paths);
+        this.paths = new Piecewise<>(path -> path.curve.length(), paths);
     }
 
     public CompoundPath(Path... paths) {

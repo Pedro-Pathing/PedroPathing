@@ -2,7 +2,6 @@ package com.pedropathing.algorithm;
 
 import com.pedropathing.controllers.Controller;
 import com.pedropathing.drivetrain.DrivePowers;
-import com.pedropathing.follower.FollowState;
 import com.pedropathing.localization.MotionState;
 import com.pedropathing.math.Matrix;
 import com.pedropathing.math.Pose;
@@ -10,7 +9,6 @@ import com.pedropathing.math.Twist;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.math.Velocity;
 import com.pedropathing.paths.PathTracker;
-import com.pedropathing.paths.SimplePath;
 import com.pedropathing.paths.curves.Line;
 import com.pedropathing.paths.interpolator.Interpolator;
 import org.junit.jupiter.api.Test;
@@ -65,7 +63,7 @@ public class ForesightTest {
         Pose pose = Pose.zero();
         MotionState ms = MotionState.ofVelocity(pose, Velocity.zero());
         // use a very short non-zero line to avoid Line normalizing a zero vector
-        DrivePowers dp = f.hold(pose, new FollowState(ms, new PathTracker(new SimplePath(new Line(Pose.zero(), new Pose(0.01, 0, 0)), Interpolator.tangent)), 0.02));
+        DrivePowers dp = f.calculateHold(pose, new FollowState(ms, new PathTracker(new SimplePath(new Line(Pose.zero(), new Pose(0.01, 0, 0)), Interpolator.tangent)), 0.02));
         assertNotNull(dp);
         assertEquals(0.0, dp.forward(), 1e-6);
         assertEquals(0.0, dp.strafe(), 1e-6);
@@ -93,7 +91,7 @@ public class ForesightTest {
         MotionState ms = MotionState.ofVelocity(Pose.zero(), Velocity.zero());
         FollowState state = new FollowState(ms, tracker, 0.02);
 
-        DrivePowers dp = f.calculate(state);
+        DrivePowers dp = f.calculatePath(state);
         assertNotNull(dp);
         // drive should be commanding forward motion when stationary at the start of a forward path
         assertTrue(dp.forward() >= 0.0);
@@ -113,7 +111,7 @@ public class ForesightTest {
         MotionState ms = MotionState.ofVelocity(robotPose, Velocity.zero());
         FollowState state = new FollowState(ms, tracker, 0.02);
 
-        DrivePowers dp = f.calculate(state);
+        DrivePowers dp = f.calculatePath(state);
         assertNotNull(dp);
         // Expect very strong forward output since robot is on-path and heading correctly
         assertTrue(dp.forward() > 0.5, "Forward output should be strong (> 0.5) when on-path and correctly heading");
@@ -131,7 +129,7 @@ public class ForesightTest {
         MotionState ms = MotionState.ofVelocity(robotPose, Velocity.zero());
         FollowState state = new FollowState(ms, tracker, 0.02);
 
-        DrivePowers dp = f.calculate(state);
+        DrivePowers dp = f.calculatePath(state);
         assertNotNull(dp);
         // When perfectly on-line and heading correctly, strafe should be minimal
         assertTrue(Math.abs(dp.strafe()) < 0.2, "Strafe should be minimal when perfectly on-line");
@@ -149,7 +147,7 @@ public class ForesightTest {
         MotionState ms = MotionState.ofVelocity(robotPose, Velocity.zero());
         FollowState state = new FollowState(ms, tracker, 0.02);
 
-        DrivePowers dp = f.calculate(state);
+        DrivePowers dp = f.calculatePath(state);
         assertNotNull(dp);
         // When off-line to the left, robot should strafe right to correct
         assertTrue(dp.strafe() > 0.0, "Should strafe right to correct being off-line to the left");
@@ -167,7 +165,7 @@ public class ForesightTest {
         MotionState ms = MotionState.ofVelocity(robotPose, Velocity.zero());
         FollowState state = new FollowState(ms, tracker, 0.02);
 
-        DrivePowers dp = f.calculate(state);
+        DrivePowers dp = f.calculatePath(state);
         assertNotNull(dp);
         // When heading wrong direction, robot should produce turn correction
         assertTrue(Math.abs(dp.turn()) > 0.1, "Should produce turn correction when heading wrong direction");
