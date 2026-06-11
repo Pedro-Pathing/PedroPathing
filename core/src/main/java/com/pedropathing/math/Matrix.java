@@ -6,6 +6,9 @@ package com.pedropathing.math;
 
 import com.pedropathing.utils.Pair;
 
+import java.util.Arrays;
+import java.util.Locale;
+
 /**
  * Represents a mathematical matrix of doubles.
  * Provides basic linear algebra operations including addition,
@@ -216,12 +219,32 @@ public class Matrix {
         return new Vector(result);
     }
 
-    public Vector getDiagonal() {
+    public double[] getDiagonal() {
         double[] elements = new double[Math.min(rows, cols)];
         for (int i = 0; i < elements.length; i++) {
             elements[i] = get(i, i);
         }
-        return new Vector(elements);
+        return elements;
+    }
+
+    public double[] getRow(int i) {
+        if (i >= rows) throw new IllegalArgumentException("Row index out of bounds");
+        double[] vals = new double[cols];
+
+        for (int j = 0; j < cols; j++)
+            vals[j] = get(i, j);
+
+        return vals;
+    }
+
+    public double[] getCol(int i) {
+        if (i >= cols) throw new IllegalArgumentException("Col index out of bounds");
+        double[] vals = new double[rows];
+
+        for (int j = 0; j < rows; j++)
+            vals[j] = get(j, i);
+
+        return vals;
     }
 
     public Matrix clampDiagonals(double epsilon) {
@@ -237,11 +260,288 @@ public class Matrix {
         return new Matrix(data);
     }
 
+    private int isPivotInCol(int startRow, int col) {
+        int best = -1;
+        double max = 0.0;
+
+        for (int r = startRow; r < rows; r++) {
+            double v = Math.abs(get(r, col));
+            if (v > max) {
+                max = v;
+                best = r;
+            }
+        }
+        return max == 0.0 ? -1 : best;
+    }
+
+    public Matrix rowSwap(int srcRow, int destRow) {
+        double[][] data = new double[rows][cols];
+
+        for (int i = 0; i < rows; i++) {
+            int j = i;
+            if (j == srcRow) j = destRow;
+            else if (j == destRow) j = srcRow;
+            data[j] = getRow(j);
+        }
+
+        return new Matrix(data);
+    }
+
+    public Matrix rowScale(int row, double scalar) {
+        double[][] data = new double[rows][cols];
+
+        for (int i = 0; i < rows; i++) {
+            if (i != row) data[i] = getRow(i);
+            else {
+                for (int j = 0; j < cols; j++)
+                    data[i][j] = get(i, j) * scalar;
+            }
+        }
+
+        return new Matrix(data);
+    }
+
+    public Matrix rowAdd(int srcRow, int destRow, double scalar) {
+        double[][] data = new double[rows][cols];
+
+        for (int i = 0; i < rows; i++) {
+            if (i != srcRow) data[i] = getRow(i);
+            else {
+                for (int j = 0; j < cols; j++)
+                    data[i][j] = get(i, j) + get(destRow, j) * scalar;
+            }
+        }
+
+        return new Matrix(data);
+    }
+
     public Pair<Matrix, Matrix> rref(Matrix augment) {
-        throw new UnsupportedOperationException("i graciously decline to work");
+        int leadCol = 0;
+        Matrix A = this;
+        Matrix B = augment;
+
+        // Forward elimination
+        for (int r = 0; r < rows && leadCol < cols; r++) {
+
+            int pivot = isPivotInCol(r, leadCol);
+            while (pivot == -1) {
+                leadCol++;
+                if (leadCol >= cols) {
+                    return Pair.of(this, augment);
+                }
+                pivot = isPivotInCol(r, leadCol);
+            }
+
+            A = A.rowSwap(r, pivot);
+            B = B.rowSwap(r, pivot);
+
+            for (int r2 = r + 1; r2 < rows; r2++) {
+                if (A.get(r2, leadCol) != 0.0) {
+                    double scalar = -A.get(r2, leadCol) / A.get(r, leadCol);
+                    A = A.rowAdd(r, r2, scalar);
+                    B = B.rowAdd(r, r2, scalar);
+                }
+            }
+
+            leadCol++;
+        }
+
+        // Normalize pivot rows
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                if (A.get(r, c) != 0.0) {
+                    double inv = 1.0 / A.get(r, c);
+                    A = A.rowScale(r, inv);
+                    B = B.rowScale(r, inv);
+                    break;
+                }
+            }
+        }
+
+        // Back substitution (FIXED LOOP BOUND)
+        for (int r = rows - 1; r >= 0; r--) {
+            int pivotCol = -1;
+            for (int c = 0; c < cols; c++) {
+                if (A.get(r, c) != 0.0) {
+                    pivotCol = c;
+                    break;
+                }
+            }
+
+            if (pivotCol != -1) {
+                for (int r2 = 0; r2 < r; r2++) {
+                    double scalar = -A.get(r2, pivotCol);
+                    A = A.rowAdd(r, r2, scalar);
+                    B = B.rowAdd(r, r2, scalar);
+                }
+            }
+        }
+
+        return Pair.of(A, B);
+    }
+
+    /**
+     * Returns the minor of this matrix formed by removing the specified row
+     * and column.
+     *
+     * @param skipRow the row to exclude
+     * @param skipCol the column to exclude
+     * @return the submatrix with the given row and column removed
+     */
+    private Matrix minor(int skipRow, int skipCol) {
+        double[][] minor = new double[rows - 1][cols - 1];
+        int r = 0;
+
+        for (int i = 0; i < rows; i++) {
+            if (i == skipRow) continue;
+            int c = 0;
+            for (int j = 0; j < cols; j++) {
+                if (j == skipCol) continue;
+                minor[r][c++] = get(i, j);
+            }
+            r++;
+        }
+        return new Matrix(minor);
+    }
+
+    /**
+     * Computes the determinant of the matrix using Laplace Expansion
+     * @precondition The matrix must be a square matrix
+     * @return the determinant of the matrix
+     */
+    public double determinant() {
+        if (rows != cols)
+            throw new IllegalStateException("Determinant only defined for square matrices");
+
+        switch (rows) {
+            case 0: return 1;
+            case 1: return get(0, 0);
+            case 2: return get(0, 0) * get(1, 1) - get(0, 1) * get(1, 0);
+        }
+
+        double det = 0;
+        for (int j = 0; j < cols; j++)
+            det += ((j % 2 == 0) ? 1 : -1) * get(0, j) * minor(0, j).determinant();
+        return det;
+    }
+
+    /**
+     * Gets the inverse matrix
+     * @param matrix An invertible 2x2 matrix to compute the inverse of
+     * @return the inverse of the given matrix
+     */
+    public static Matrix inverse2x2(Matrix matrix) {
+        if (matrix.rows != 2 || matrix.cols != 2)
+            throw new IllegalArgumentException("Matrix is not 2x2");
+
+        double det = matrix.determinant();
+        if (det == 0.0)
+            throw new IllegalArgumentException("Matrix is singular");
+
+        double[][] inv = new double[2][2];
+
+        inv[0][0] =  matrix.get(1,1) / det;
+        inv[0][1] = -matrix.get(0,1) / det;
+        inv[1][0] = -matrix.get(1,0) / det;
+        inv[1][1] =  matrix.get(0,0) / det;
+
+        return new Matrix(inv);
+    }
+
+    /**
+     * Gets the inverse matrix
+     * @param matrix An invertible 3x3 matrix to compute the inverse of
+     * @return the inverse of the given matrix
+     */
+    public static Matrix inverse3x3(Matrix matrix) {
+        if (matrix.rows != 3 || matrix.cols != 3)
+            throw new IllegalArgumentException("Matrix is not 3x3");
+
+        double det = matrix.determinant();
+        if (det == 0.0)
+            throw new IllegalArgumentException("Matrix is singular");
+
+        double[][] inv = new double[3][3];
+
+        inv[0][0] =  (matrix.get(1,1)*matrix.get(2,2) - matrix.get(1,2)*matrix.get(2,1)) / det;
+        inv[0][1] = -(matrix.get(0,1)*matrix.get(2,2) - matrix.get(0,2)*matrix.get(2,1)) / det;
+        inv[0][2] =  (matrix.get(0,1)*matrix.get(1,2) - matrix.get(0,2)*matrix.get(1,1)) / det;
+
+        inv[1][0] = -(matrix.get(1,0)*matrix.get(2,2) - matrix.get(1,2)*matrix.get(2,0)) / det;
+        inv[1][1] =  (matrix.get(0,0)*matrix.get(2,2) - matrix.get(0,2)*matrix.get(2,0)) / det;
+        inv[1][2] = -(matrix.get(0,0)*matrix.get(1,2) - matrix.get(0,2)*matrix.get(1,0)) / det;
+
+        inv[2][0] =  (matrix.get(1,0)*matrix.get(2,1) - matrix.get(1,1)*matrix.get(2,0)) / det;
+        inv[2][1] = -(matrix.get(0,0)*matrix.get(2,1) - matrix.get(0,1)*matrix.get(2,0)) / det;
+        inv[2][2] =  (matrix.get(0,0)*matrix.get(1,1) - matrix.get(0,1)*matrix.get(1,0)) / det;
+
+        return new Matrix(inv);
     }
 
     public Matrix invert() {
-        throw new UnsupportedOperationException("we will do it at some point");
+        if (rows != cols) throw new IllegalStateException("Matrix must be square");
+
+        if (rows == 1) {
+            if (get(0, 0) == 0.0) throw new IllegalArgumentException("Matrix is singular");
+            else return new Matrix(new double[][]{{1 / get(0, 0)}});
+        }
+        if (rows == 2) return Matrix.inverse2x2(this);
+        if (rows == 3) return Matrix.inverse3x3(this);
+
+        Matrix I = Matrix.identity(rows);
+        Pair<Matrix, Matrix> r = rref(I);
+
+        if (!r.first().equals(I)) throw new IllegalArgumentException("Matrix not invertible");
+        return r.second();
+    }
+
+    /**
+     * Build a string that represents the elements of the matrix
+     * @return String obj
+     */
+    @Override
+    public String toString(){
+        StringBuilder builder = new StringBuilder("[");
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                builder.append(String.format(Locale.getDefault(), "%.5f, ", get(i, j)));
+            }
+            builder.append("\b\b; ");
+        }
+        builder.append("\b\b]");
+        return builder.toString();
+    }
+
+    /**
+     * Checks whether this matrix is approximately equal to another matrix.
+     * Equality is determined element-wise within a given tolerance.
+     *
+     * @param other the matrix to compare against
+     * @param eps numerical tolerance
+     * @return true if matrices are equal within tolerance
+     */
+    public boolean equals(Matrix other, double eps) {
+        if (other == null) return false;
+        if (this.rows != other.rows || this.cols != other.cols)
+            return false;
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                if (Math.abs(get(i, j) - other.get(i, j)) > eps)
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof Matrix)) return false;
+        return equals((Matrix) other, 1e-9);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(data);
     }
 }

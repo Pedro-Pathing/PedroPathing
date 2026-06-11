@@ -128,7 +128,7 @@ public class FusionLocalizer implements Localizer {
     private Matrix updateCovariance(Matrix P, Pose pose, Velocity velocity, double dt) {
         Twist twist = velocity.toTwist(pose.heading());
         Vector dist = twist.toVector().abs().times(dt);
-        Vector Q_diag = Q.getDiagonal();
+        Vector Q_diag = new Vector(Q.getDiagonal());
         Matrix bodyQ = Matrix.diag(dist.hadamardProduct(Q_diag));
         Matrix rotation = Matrix.rotationTransform(pose.heading());
         Matrix worldQ = rotation.times(bodyQ).times(rotation.transpose());
