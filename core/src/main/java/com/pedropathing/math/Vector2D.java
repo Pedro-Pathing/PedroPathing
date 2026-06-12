@@ -4,15 +4,21 @@
  */
 package com.pedropathing.math;
 
-import lombok.Value;
-
-@Value(staticConstructor = "cartesian")
 public class Vector2D {
     private static final Vector2D ZERO = new Vector2D(0, 0);
     private static final Vector2D I_HAT = new Vector2D(1, 0);
     private static final Vector2D J_HAT = new Vector2D(0, 1);
-    double x;
-    double y;
+    private final double x;
+    private final double y;
+
+    private Vector2D(double x, double y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    public static Vector2D cartesian(double x, double y) {
+        return new Vector2D(x, y);
+    }
 
     public static Vector2D polar(double radius, double angle) {
         return new Vector2D(radius * Math.cos(angle), radius * Math.sin(angle));
@@ -32,6 +38,14 @@ public class Vector2D {
 
     public static Vector2D jHat() {
         return J_HAT;
+    }
+
+    public double x() {
+        return x;
+    }
+
+    public double y() {
+        return y;
     }
 
     public double magnitude() {

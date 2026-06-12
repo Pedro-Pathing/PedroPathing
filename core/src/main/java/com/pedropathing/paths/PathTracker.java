@@ -4,40 +4,29 @@
  */
 package com.pedropathing.paths;
 
+import com.pedropathing.math.Pose;
+
 import java.util.ArrayDeque;
 import java.util.Deque;
-
-import com.pedropathing.math.Pose;
-import lombok.Getter;
-import lombok.Setter;
 
 public final class PathTracker {
     private final Deque<AtomicPath> atomicPaths;
 
-    @Getter
-    @Setter
-    private boolean isFollowing;
-
-    @Getter
-    private Pose end;
-
     public PathTracker(Path path) {
         atomicPaths = new ArrayDeque<>(path.getPaths());
-        if (!atomicPaths.isEmpty()) {
-            Path lastPath = atomicPaths.peekLast();
-            end = lastPath.endPoint().toPose(lastPath.heading(1));
-            isFollowing = true;
-        }
+
+        Path lastPath = atomicPaths.getLast();
+        endPose = lastPath.curve.get(1).toPose(lastPath.heading(1));
     }
 
-    /** Creates a PathTracker with no paths for holding a position instead */
-    public PathTracker(Pose pose) {
-        end = pose;
-        isFollowing = false;
-        atomicPaths = new ArrayDeque<>();
+    private final Pose endPose;
+
+    public Pose endPose() {
+        return endPose;
     }
 
     public void advance() {
+        if (atomicPaths.isEmpty()) throw new IllegalStateException("Cannot advance past last path");
         atomicPaths.remove();
     }
 
@@ -45,11 +34,11 @@ public final class PathTracker {
         return atomicPaths.peek();
     }
 
-    public boolean empty() {
+    public boolean done() {
         return atomicPaths.isEmpty();
     }
 
-    public int size() {
+    public int remainingPaths() {
         return atomicPaths.size();
     }
 }

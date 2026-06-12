@@ -95,6 +95,18 @@ public class Vector {
         return sum;
     }
 
+    public Vector hadamardProduct(Vector other) {
+        if (this.size() != other.size()) {
+            throw new IllegalArgumentException("Vector sizes must match.");
+        }
+
+        double[] elements = new double[size()];
+        for (int i = 0; i < size(); i++) {
+            elements[i] = this.elements[i] * other.elements[i];
+        }
+        return new Vector(elements);
+    }
+
     /**
      * Transforms this vector by a matrix (Matrix * Vector).
      * In linear algebra, this is the standard way to apply rotations, scales, or shears.
@@ -122,6 +134,14 @@ public class Vector {
     public Vector2D toVector2D() {
         if (elements.length != 2) throw new IllegalArgumentException("Vector must have exactly 2 elements.");
         return Vector2D.cartesian(elements[0], elements[1]);
+    }
+
+    public Vector abs() {
+        double[] elements = new double[size()];
+        for (int i = 0; i < size(); i++) {
+            elements[i] = Math.abs(get(i));
+        }
+        return new Vector(elements);
     }
 
     /**
@@ -164,5 +184,9 @@ public class Vector {
             data[i][0] = elements[i];
         }
         return new Matrix(data);
+    }
+
+    public double[] elements() {
+        return elements;
     }
 }

@@ -2,22 +2,16 @@ plugins {
     id("java-library")
     id("io.deepmedia.tools.deployer")
     id("org.jetbrains.dokka")
-    id("io.freefair.lombok")
     id("io.freefair.aspectj.post-compile-weaving")
     id("com.diffplug.spotless")
-    id("net.ltgt.errorprone")
 }
 
 dependencies {
     dokkaPlugin(libs.dokka.java.plugin)
     implementation(libs.aspectj.rt)
     aspect(libs.aspectj.tools)
-    errorprone(libs.error.prone.core)
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.3")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.3")
-    testImplementation("org.junit.platform:junit-platform-launcher:1.9.3")
-    testRuntimeOnly("org.junit.platform:junit-platform-engine:1.9.3")
-    testImplementation("org.assertj:assertj-core:3.24.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
+    testImplementation("com.google.truth:truth:1.4.5")
 }
 
 java {

@@ -4,6 +4,8 @@ import com.pedropathing.config.ConfigVar;
 import com.pedropathing.config.Configuration;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
+import static com.pedropathing.config.Validator.nonnegative;
+
 public class MecanumConfig {
     public final ConfigVar<String> frontLeftName = ConfigVar.required();
     public final ConfigVar<String> backLeftName = ConfigVar.required();
@@ -18,7 +20,7 @@ public class MecanumConfig {
     public final ConfigVar<Boolean> manualBrakeMode = ConfigVar.of(false);
 
     /** Smallest power change that triggers a hardware write. */
-    public final ConfigVar<Double> powerThreshold = ConfigVar.of(0.01);
+    public final ConfigVar<Double> powerThreshold = ConfigVar.of(0.01, nonnegative());
 
     public MecanumConfig(Configuration<MecanumConfig> config) {
         config.configure(this);

@@ -37,7 +37,7 @@ public class Pinpoint implements Localizer {
         );
 
         if (config.ticksPerUnit.get().isPresent()) {
-            odometry.setEncoderResolution(config.ticksPerUnit.get().get(), config.encoderResolutionUnit.get());
+            odometry.setEncoderResolution(config.ticksPerUnit.get().getAsDouble(), config.encoderResolutionUnit.get());
         } else {
             odometry.setEncoderResolution(config.podType.get());
         }
@@ -86,7 +86,7 @@ public class Pinpoint implements Localizer {
     }
 
     @Override
-    public MotionState motionState() {
+    public MotionState state() {
         return motionState;
     }
 

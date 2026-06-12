@@ -4,9 +4,7 @@
  */
 package com.pedropathing.utils;
 
-import java.util.Objects;
-
-public final class Pair<T, U> {
+public class Pair<T, U> {
     private final T first;
     private final U second;
 
@@ -25,19 +23,5 @@ public final class Pair<T, U> {
 
     public U second() {
         return second;
-    }
-
-    public String toString() {
-        return String.format("(%s, %s)", first, second);
-    }
-
-    public boolean equals(Object other) {
-        return other instanceof Pair<?, ?>
-                && Objects.equals(first, ((Pair<?, ?>) other).first)
-                && Objects.equals(second, ((Pair<?, ?>) other).second);
-    }
-
-    public int hashCode() {
-        return Objects.hash(first, second);
     }
 }

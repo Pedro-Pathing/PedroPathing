@@ -35,15 +35,18 @@ public class Velocity {
         });
     }
 
-    public Velocity add(Velocity other) {
+    public Velocity plus(Velocity other) {
         return new Velocity(vx + other.vx, vy + other.vy, omega + other.omega);
+    }
+    public Velocity minus(Velocity other) {
+        return new Velocity(vx - other.vx, vy - other.vy, omega - other.omega);
     }
 
     public Velocity scale(double time) {
         return new Velocity(vx * time, vy * time, omega * time);
     }
 
-    public Vector2D toLinear() {
+    public Vector2D toVector2D() {
         return Vector2D.cartesian(vx, vy);
     }
 
@@ -53,5 +56,9 @@ public class Velocity {
 
     public static Velocity fromVector(Vector2D vector) {
         return new Velocity(vector.x(), vector.y(), 0);
+    }
+
+    public static Velocity fromPose(Pose pose) {
+        return new Velocity(pose.x(), pose.y(), pose.heading());
     }
 }

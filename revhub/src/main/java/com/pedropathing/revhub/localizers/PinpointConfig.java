@@ -5,7 +5,7 @@ import com.pedropathing.config.Configuration;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-import java.util.Optional;
+import java.util.OptionalDouble;
 
 public class PinpointConfig {
     public final ConfigVar<String> name = ConfigVar.required();
@@ -21,7 +21,7 @@ public class PinpointConfig {
 
     public final ConfigVar<GoBildaPinpointDriver.GoBildaOdometryPods> podType = ConfigVar.of(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
 
-    public final ConfigVar<Optional<Double>> ticksPerUnit = ConfigVar.of(Optional.empty());
+    public final ConfigVar<OptionalDouble> ticksPerUnit = ConfigVar.of(OptionalDouble.empty());
 
     public PinpointConfig(Configuration<PinpointConfig> config) {
         config.configure(this);

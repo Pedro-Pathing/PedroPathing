@@ -7,7 +7,7 @@ package com.pedropathing.paths.interpolator;
 import com.pedropathing.math.Pose;
 import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.paths.tvalue.TValue;
-import com.pedropathing.utils.Utils.Angle;
+import com.pedropathing.utils.Angle;
 
 @FunctionalInterface
 public interface Interpolator {
