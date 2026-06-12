@@ -518,11 +518,9 @@ public class Matrix {
         if (rows == 2) return Matrix.inverse2x2(this);
         if (rows == 3) return Matrix.inverse3x3(this);
 
-        Matrix I = Matrix.identity(rows);
-        Pair<Matrix, Matrix> r = rref(I);
-
-        if (!r.first().equals(I)) throw new IllegalArgumentException("Matrix not invertible");
-        return r.second();
+        Matrix[] PLU = PTLUDecomposition();
+        Matrix Y = forwardSubstitute(PLU[1], PLU[0]);
+        return backSubstitute(PLU[2], Y);
     }
 
     public static Vector backSubstitute(Matrix A, Vector b) {
