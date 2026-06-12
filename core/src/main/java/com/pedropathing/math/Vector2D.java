@@ -52,6 +52,10 @@ public class Vector2D {
         return Math.hypot(x, y);
     }
 
+    public double magnitudeSquared() {
+        return x * x + y * y;
+    }
+
     public Vector2D normalized() {
         double magnitude = magnitude();
         if (isZero()) throw new IllegalArgumentException("Cannot normalize 0 vector");
@@ -107,7 +111,7 @@ public class Vector2D {
     }
 
     public boolean isZero() {
-        return (x * x + y * y) < 1e-9;
+        return magnitudeSquared() < 1e-9;
     }
 
     public double quadraticForm(Matrix m) {

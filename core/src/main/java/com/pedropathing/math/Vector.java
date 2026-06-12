@@ -41,8 +41,17 @@ public class Vector {
      * Calculates the Euclidean norm (magnitude).
      */
     public double magnitude() {
-        double sum = this.dot(this);
-        return Math.sqrt(sum);
+        return Math.sqrt(magnitudeSquared());
+    }
+
+    public double magnitudeSquared() {
+        return this.dot(this);
+    }
+
+    public Vector normalized() {
+        double magnitude = magnitude();
+        if (magnitude < 1e-6) throw new IllegalArgumentException("Cannot normalize 0 vector");
+        return div(magnitude);
     }
 
     /**
@@ -50,6 +59,15 @@ public class Vector {
      */
     public Vector times(double scalar) {
         double[] result = Arrays.stream(elements).map(e -> e * scalar).toArray();
+        return new Vector(result);
+    }
+
+    /**
+     * Multiplies this vector by a scalar.
+     */
+    public Vector div(double scalar) {
+        if (scalar == 0) throw new ArithmeticException("Cannot divide Vector by 0");
+        double[] result = Arrays.stream(elements).map(e -> e / scalar).toArray();
         return new Vector(result);
     }
 
@@ -188,5 +206,22 @@ public class Vector {
 
     public double[] elements() {
         return elements;
+    }
+
+    public boolean isZero() {
+        return magnitudeSquared() < 1e-9;
+    }
+
+    public static Vector[] gramSchmidt(Vector... vectors) {
+        for (int i = 0; i < vectors.length; i++) {
+            vectors[i] = vectors[i].normalized();
+
+            for (int j = i + 1; j < vectors.length; j++) {
+                double comp = vectors[i].dot(vectors[j]);
+                vectors[j] = vectors[j].minus(vectors[i].times(comp));
+            }
+        }
+
+        return vectors;
     }
 }

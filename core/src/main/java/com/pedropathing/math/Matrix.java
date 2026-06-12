@@ -247,6 +247,32 @@ public class Matrix {
         return vals;
     }
 
+    public int numRows() {
+        return rows;
+    }
+
+    public int numCols() {
+        return cols;
+    }
+
+    public Vector[] getRows() {
+        Vector[] rows = new Vector[this.rows];
+
+        for (int j = 0; j < rows.length; j++)
+            rows[j] = new Vector(getCol(j));
+
+        return rows;
+    }
+
+    public Vector[] getCols() {
+        Vector[] cols = new Vector[this.cols];
+
+        for (int j = 0; j < cols.length; j++)
+            cols[j] = new Vector(getCol(j));
+
+        return cols;
+    }
+
     public Matrix clampDiagonals(double epsilon) {
         double[][] data = new double[rows][cols];
 
@@ -327,7 +353,7 @@ public class Matrix {
             while (pivot == -1) {
                 leadCol++;
                 if (leadCol >= cols) {
-                    return Pair.of(this, augment);
+                    return Pair.of(A, B);
                 }
                 pivot = isPivotInCol(r, leadCol);
             }
@@ -378,6 +404,10 @@ public class Matrix {
         }
 
         return Pair.of(A, B);
+    }
+
+    public Vector solve(Vector constants) {
+        return new Vector(rref(constants.toMatrix()).second().getCol(0));
     }
 
     /**
@@ -493,6 +523,194 @@ public class Matrix {
 
         if (!r.first().equals(I)) throw new IllegalArgumentException("Matrix not invertible");
         return r.second();
+    }
+
+    public static Vector backSubstitute(Matrix A, Vector b) {
+        if (A.rows != A.cols || A.rows != b.size()) {
+            throw new IllegalArgumentException("Dimension mismatch");
+        }
+
+        double[] x = new double[b.size()];
+
+        for (int i = b.size() - 1; i >= 0; i--) {
+            double sum = b.get(i);
+
+            for (int j = i + 1; j < b.size(); j++) {
+                sum -= A.get(i, j) * x[j];
+            }
+
+            if (Math.abs(A.get(i, i)) < 1e-7) {
+                throw new ArithmeticException("Matrix is singular on diagonal");
+            }
+
+            x[i] = sum / A.get(i, i);
+        }
+
+        return new Vector(x);
+    }
+
+    public static Matrix backSubstitute(Matrix A, Matrix B) {
+        if (A.cols != A.rows || B.rows != A.rows) {
+            throw new IllegalArgumentException("Dimension mismatch");
+        }
+
+        double[][] X = new double[A.rows][B.cols];
+        for (int i = A.rows - 1; i >= 0; i--) {
+            if (Math.abs(A.get(i, i)) < 1e-7) {
+                throw new ArithmeticException("Matrix is singular on diagonal");
+            }
+
+            for (int j = 0; j < B.cols; j++) {
+                double sum = B.get(i, j);
+                for (int k = i + 1; k < A.rows; k++) {
+                    sum -= A.get(i, k) * X[k][j];
+                }
+                X[i][j] = sum / A.get(i, i);
+            }
+        }
+        return new Matrix(X);
+    }
+
+    public static Vector forwardSubstitute(Matrix A, Vector b) {
+        if (A.cols != A.rows || b.size() != A.rows) {
+            throw new IllegalArgumentException("Dimension mismatch");
+        }
+
+        double[] x = new double[A.rows];
+
+        for (int i = 0; i < x.length; i++) {
+            double sum = b.get(i);
+
+            for (int k = 0; k < i; k++) {
+                sum -= A.get(i, k) * x[k];
+            }
+
+            if (Math.abs(A.get(i, i)) < 1e-7) {
+                throw new ArithmeticException("Matrix is singular on diagonal");
+            }
+            x[i] = sum / A.get(i, i);
+        }
+
+        return new Vector(x);
+    }
+
+    public static Matrix forwardSubstitute(Matrix A, Matrix B) {
+        if (A.cols != A.rows || B.rows != A.rows) {
+            throw new IllegalArgumentException("Dimension mismatch");
+        }
+
+        double[][] X = new double[A.rows][B.cols];
+
+        for (int i = 0; i < A.rows; i++) {
+            if (Math.abs(A.get(i, i)) < 1e-7) {
+                throw new ArithmeticException("Matrix is singular on diagonal");
+            }
+
+            for (int j = 0; j < B.cols; j++) {
+                double sum = B.get(i, j);
+                for (int k = 0; k < i; k++) {
+                    sum -= A.get(i, k) * X[k][j];
+                }
+                X[i][j] = sum / A.get(i, i);
+            }
+        }
+
+        return new Matrix(X);
+    }
+
+    public Pair<Matrix, Matrix> QRFactorization() {
+        Vector[] colVectors = getCols();
+        Vector[] orthogonalBasis = Vector.gramSchmidt(colVectors);
+
+        double[][] Q_vals = new double[rows][cols];
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                Q_vals[i][j] = orthogonalBasis[j].get(i);
+            }
+        }
+        Matrix Q = new Matrix(Q_vals);
+
+        double[][] R_vals = new double[cols][cols];
+        for (int i = 0; i < cols; i++) {
+            for (int j = 0; j < cols; j++) {
+                R_vals[i][j] = new Vector(Q.getCol(i)).dot(new Vector(getCol(j)));
+            }
+        }
+        Matrix R = new Matrix(R_vals);
+
+        return Pair.of(Q, R);
+    }
+
+    public Matrix choleskyDecomposition() {
+        double[][] L_vals = new double[rows][rows];
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < rows; j++) {
+                double sum = get(i, j);
+                for (int k = 0; k < j; k++)
+                    sum -= L_vals[i][k] * L_vals[j][k];
+
+                if (i == j) {
+                    if (sum <= 0)
+                        throw new IllegalArgumentException("Cannot use Cholesky decomposition on matrix that isn't positive-definite.");
+
+                    L_vals[i][j] = Math.sqrt(sum);
+                } else {
+                    L_vals[i][j] = sum / L_vals[j][j];
+                }
+            }
+        }
+
+        return new Matrix(L_vals);
+    }
+
+    public Matrix[] PTLUDecomposition() {
+        if (rows != cols) {
+            throw new IllegalArgumentException("LU Decomposition requires a square matrix");
+        }
+
+        Matrix U = this;
+        Matrix P = Matrix.identity(rows);
+        double[][] L_vals = new double[rows][rows];
+
+        for (int r = 0; r < rows; r++) {
+            int pivotRow = r;
+            double maxVal = Math.abs(U.get(r, r));
+
+            for (int i = r + 1; i < rows; i++) {
+                if (Math.abs(U.get(i, r)) > maxVal) {
+                    maxVal = Math.abs(U.get(i, r));
+                    pivotRow = i;
+                }
+            }
+
+            if (maxVal < 1e-7) {
+                throw new ArithmeticException("Matrix is singular");
+            }
+
+            if (pivotRow != r) {
+                U = U.rowSwap(r, pivotRow);
+                P = P.rowSwap(r, pivotRow);
+
+                double[] tempRow = L_vals[r];
+                L_vals[r] = L_vals[pivotRow];
+                L_vals[pivotRow] = tempRow;
+            }
+
+            for (int r2 = r + 1; r2 < rows; r2++) {
+                if (U.get(r2, r) != 0.0) {
+                    double scalar = -U.get(r2, r) / U.get(r, r);
+                    U = U.rowAdd(r, r2, scalar);
+                    L_vals[r2][r] = -scalar;
+                }
+            }
+        }
+
+        for (int i = 0; i < rows; i++)
+            L_vals[i][i] = 1.0;
+        Matrix L = new Matrix(L_vals);
+
+        return new Matrix[] {P, L, U};
     }
 
     /**
