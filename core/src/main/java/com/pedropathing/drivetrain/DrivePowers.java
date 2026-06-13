@@ -9,6 +9,7 @@ public class DrivePowers {
     private final double forward;
     private final double strafe;
     private final double turn;
+
     public DrivePowers(double forward, double strafe, double turn) {
         this.forward = forward;
         this.strafe = strafe;

@@ -4,11 +4,11 @@
  */
 package com.pedropathing.paths.curves;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.pedropathing.math.Pose;
 import com.pedropathing.math.Vector2D;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class LineTest {
     @Test
@@ -203,4 +203,3 @@ public class LineTest {
         assertTrue(closest.magnitude() <= line.length());
     }
 }
-

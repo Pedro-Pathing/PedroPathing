@@ -4,13 +4,12 @@
  */
 package com.pedropathing.config;
 
-import java.util.Arrays;
+import static com.pedropathing.utils.Utils.listOf;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import static com.pedropathing.utils.Utils.listOf;
 
 public final class Memoize<T> implements Supplier<T> {
     private final Supplier<T> supplier;

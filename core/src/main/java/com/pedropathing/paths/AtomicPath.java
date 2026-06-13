@@ -14,7 +14,7 @@ import java.util.List;
 public class AtomicPath extends Path {
     private final Interpolator interpolator;
 
-    public AtomicPath(Curve curve, Interpolator interpolator, Modifier[] modifiers) {
+    public AtomicPath(Curve curve, Interpolator interpolator, List<Modifier> modifiers) {
         super(curve, modifiers);
         this.interpolator = interpolator;
     }
@@ -27,5 +27,15 @@ public class AtomicPath extends Path {
     @Override
     public List<AtomicPath> getPaths() {
         return Collections.singletonList(this);
+    }
+
+    @Override
+    protected Path withHeading(Interpolator interpolator) {
+        return new AtomicPath(curve, interpolator, modifiers);
+    }
+
+    @Override
+    protected Path withModifiers(List<Modifier> modifiers) {
+        return new AtomicPath(curve, interpolator, modifiers);
     }
 }

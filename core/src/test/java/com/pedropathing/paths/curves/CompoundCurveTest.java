@@ -4,10 +4,10 @@
  */
 package com.pedropathing.paths.curves;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.pedropathing.math.Vector2D;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class CompoundCurveTest {
     @Test
@@ -133,7 +133,6 @@ public class CompoundCurveTest {
         assertTrue(cc.remainingDistance(1.0) >= 0);
     }
 
-
     @Test
     public void tangentFromFirstCurve() {
         Line line1 = new Line(Vector2D.cartesian(0, 0), Vector2D.cartesian(10, 0));
@@ -167,15 +166,13 @@ public class CompoundCurveTest {
     }
 
     @Test
-     public void leftNormalOnFirstCurve() {
-         Line line1 = new Line(Vector2D.cartesian(0, 0), Vector2D.cartesian(10, 0));
-         Line line2 = new Line(Vector2D.cartesian(10, 0), Vector2D.cartesian(20, 0));
-         CompoundCurve cc = new CompoundCurve(line1, line2);
-         Vector2D normal = cc.leftNormal(0.25);
-         assertEquals(1, normal.magnitude(), 1e-9);
-         assertEquals(0, normal.x(), 1e-9); // perpendicular to rightward tangent
-         assertEquals(1, normal.y(), 1e-9); // pointing left-up
-     }
+    public void leftNormalOnFirstCurve() {
+        Line line1 = new Line(Vector2D.cartesian(0, 0), Vector2D.cartesian(10, 0));
+        Line line2 = new Line(Vector2D.cartesian(10, 0), Vector2D.cartesian(20, 0));
+        CompoundCurve cc = new CompoundCurve(line1, line2);
+        Vector2D normal = cc.leftNormal(0.25);
+        assertEquals(1, normal.magnitude(), 1e-9);
+        assertEquals(0, normal.x(), 1e-9); // perpendicular to rightward tangent
+        assertEquals(1, normal.y(), 1e-9); // pointing left-up
+    }
 }
-
-

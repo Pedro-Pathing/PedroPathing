@@ -13,8 +13,6 @@ import com.pedropathing.math.Pose;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathTracker;
 
-import java.util.concurrent.TimeUnit;
-
 public class Follower {
     public final Localizer localizer;
     public final Drivetrain drivetrain;

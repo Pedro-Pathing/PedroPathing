@@ -8,11 +8,13 @@ import com.pedropathing.math.Vector2D;
 import com.pedropathing.paths.Piecewise;
 import com.pedropathing.paths.tvalue.TValue;
 
+import java.util.List;
+
 public class CompoundCurve implements Curve {
     private final Piecewise<Curve> curves;
 
-    public CompoundCurve(Curve... curves) {
-        if (curves.length == 0) throw new IllegalArgumentException("Compound curve must have at least one curve.");
+    public CompoundCurve(List<Curve> curves) {
+        if (curves.isEmpty()) throw new IllegalArgumentException("Compound curve must have at least one curve.");
         this.curves = new Piecewise<>(Curve::length, curves);
     }
 

@@ -4,12 +4,12 @@
  */
 package com.pedropathing.config;
 
+import static com.pedropathing.utils.Utils.concat;
+import static com.pedropathing.utils.Utils.listOf;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
-
-import static com.pedropathing.utils.Utils.concat;
-import static com.pedropathing.utils.Utils.listOf;
 
 public class ConfigVar<T> implements Supplier<T> {
     private final List<Validator<T>> validators;
@@ -46,7 +46,6 @@ public class ConfigVar<T> implements Supplier<T> {
         return requiredNullable(listOf(validators));
     }
 
-
     public static <T> ConfigVar<T> of(T value, List<Validator<T>> validators) {
         return new ConfigVar<>(value, concat(validators, Collections.singletonList(Validator.nonnull())));
     }
@@ -77,7 +76,7 @@ public class ConfigVar<T> implements Supplier<T> {
         this.hasValue = true;
     }
 
-    public Modifier modify(T tempValue) {
+    public Modifier at(T tempValue) {
         validate(tempValue);
         return new Modifier() {
             private T originalValue;

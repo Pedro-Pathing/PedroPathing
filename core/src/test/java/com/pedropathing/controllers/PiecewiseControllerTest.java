@@ -1,8 +1,12 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.controllers;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
 
 public class PiecewiseControllerTest {
     @Test
@@ -20,4 +24,3 @@ public class PiecewiseControllerTest {
         assertEquals(3.0, pc.calculate(0.0, 2.0), 1e-9);
     }
 }
-

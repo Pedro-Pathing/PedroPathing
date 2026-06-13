@@ -4,9 +4,9 @@
  */
 package com.pedropathing.math;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
 
 public class MatrixTest {
     @Test
@@ -74,8 +74,8 @@ public class MatrixTest {
 
     @Test
     public void matrixAddition() {
-        Matrix a = new Matrix(new double[][]{{1, 2}, {3, 4}});
-        Matrix b = new Matrix(new double[][]{{5, 6}, {7, 8}});
+        Matrix a = new Matrix(new double[][] {{1, 2}, {3, 4}});
+        Matrix b = new Matrix(new double[][] {{5, 6}, {7, 8}});
         Matrix sum = a.plus(b);
         assertEquals(6, sum.get(0, 0));
         assertEquals(8, sum.get(0, 1));
@@ -85,15 +85,15 @@ public class MatrixTest {
 
     @Test
     public void matrixAdditionThrowsOnMismatchedDimensions() {
-        Matrix a = new Matrix(new double[][]{{1, 2}, {3, 4}});
-        Matrix b = new Matrix(new double[][]{{1, 2, 3}, {4, 5, 6}});
+        Matrix a = new Matrix(new double[][] {{1, 2}, {3, 4}});
+        Matrix b = new Matrix(new double[][] {{1, 2, 3}, {4, 5, 6}});
         assertThrows(IllegalArgumentException.class, () -> a.plus(b));
     }
 
     @Test
     public void matrixMultiplication() {
-        Matrix a = new Matrix(new double[][]{{1, 2}, {3, 4}});
-        Matrix b = new Matrix(new double[][]{{5, 6}, {7, 8}});
+        Matrix a = new Matrix(new double[][] {{1, 2}, {3, 4}});
+        Matrix b = new Matrix(new double[][] {{5, 6}, {7, 8}});
         Matrix prod = a.times(b);
         assertEquals(19, prod.get(0, 0)); // 1*5 + 2*7
         assertEquals(22, prod.get(0, 1)); // 1*6 + 2*8
@@ -103,14 +103,14 @@ public class MatrixTest {
 
     @Test
     public void matrixMultiplicationThrowsOnMismatchedDimensions() {
-        Matrix a = new Matrix(new double[][]{{1, 2}, {3, 4}});
-        Matrix b = new Matrix(new double[][]{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}});
+        Matrix a = new Matrix(new double[][] {{1, 2}, {3, 4}});
+        Matrix b = new Matrix(new double[][] {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}});
         assertThrows(IllegalArgumentException.class, () -> a.times(b));
     }
 
     @Test
     public void transpose() {
-        Matrix m = new Matrix(new double[][]{{1, 2, 3}, {4, 5, 6}});
+        Matrix m = new Matrix(new double[][] {{1, 2, 3}, {4, 5, 6}});
         Matrix t = m.transpose();
         assertEquals(3, t.rows);
         assertEquals(2, t.cols);
@@ -124,7 +124,7 @@ public class MatrixTest {
 
     @Test
     public void matrixTimesVector() {
-        Matrix m = new Matrix(new double[][]{{1, 2}, {3, 4}});
+        Matrix m = new Matrix(new double[][] {{1, 2}, {3, 4}});
         Vector v = new Vector(5, 6);
         Vector result = m.times(v);
         assertEquals(2, result.size());
@@ -134,7 +134,7 @@ public class MatrixTest {
 
     @Test
     public void matrixTimesVectorThrowsOnMismatchedDimensions() {
-        Matrix m = new Matrix(new double[][]{{1, 2}, {3, 4}});
+        Matrix m = new Matrix(new double[][] {{1, 2}, {3, 4}});
         Vector v = new Vector(5, 6, 7);
         assertThrows(IllegalArgumentException.class, () -> m.times(v));
     }
@@ -149,4 +149,3 @@ public class MatrixTest {
         assertEquals(3, result.get(2));
     }
 }
-

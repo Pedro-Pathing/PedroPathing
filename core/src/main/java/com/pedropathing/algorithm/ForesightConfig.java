@@ -4,13 +4,13 @@
  */
 package com.pedropathing.algorithm;
 
+import static com.pedropathing.config.Validator.nonnegative;
+import static com.pedropathing.config.Validator.positive;
+
 import com.pedropathing.config.ConfigVar;
 import com.pedropathing.config.Configuration;
 import com.pedropathing.controllers.Controller;
 import com.pedropathing.math.Matrix;
-
-import static com.pedropathing.config.Validator.nonnegative;
-import static com.pedropathing.config.Validator.positive;
 
 public final class ForesightConfig {
     public final ConfigVar<Controller> headingController = ConfigVar.of(Controller.pid(1.5, 0, 0.1));
@@ -63,8 +63,7 @@ public final class ForesightConfig {
      */
     public final ConfigVar<Double> coastDownToVelocity = ConfigVar.of(0.0, nonnegative());
 
-    public final ConfigVar<Double> headingDeviationTolerance =
-            ConfigVar.of(Math.toRadians(11.25), positive());
+    public final ConfigVar<Double> headingDeviationTolerance = ConfigVar.of(Math.toRadians(11.25), positive());
     public final ConfigVar<Double> translationalDeviationTolerance = ConfigVar.of(2.5, positive());
     public final ConfigVar<Boolean> brakeAtEnd = ConfigVar.of(true);
 
@@ -74,26 +73,22 @@ public final class ForesightConfig {
     /**
      * Maximum achievable speed that the robot can move forward/backward at, in units per second.
      */
-    public final ConfigVar<Double> maxAchievableForwardVelocity =
-            ConfigVar.required(positive());
+    public final ConfigVar<Double> maxAchievableForwardVelocity = ConfigVar.required(positive());
 
     /**
      * Maximum achievable speed that the robot can move laterally, in units per second.
      */
-    public final ConfigVar<Double> maxAchievableStrafeVelocity =
-            ConfigVar.required(positive());
+    public final ConfigVar<Double> maxAchievableStrafeVelocity = ConfigVar.required(positive());
 
     /**
      * Maximum achievable magnitude that the robot can decelerate forward/backward at, in units per second^2.
      */
-    public final ConfigVar<Double> maxAchievableForwardDeceleration =
-            ConfigVar.required(positive());
+    public final ConfigVar<Double> maxAchievableForwardDeceleration = ConfigVar.required(positive());
 
     /**
      * Maximum achievable magnitude that the robot can decelerate laterally, in units per second^2.
      */
-    public final ConfigVar<Double> maxAchievableStrafeDeceleration =
-            ConfigVar.required(positive());
+    public final ConfigVar<Double> maxAchievableStrafeDeceleration = ConfigVar.required(positive());
 
     /**
      * The distance the controller will stop commanding power to correct for path deviations.

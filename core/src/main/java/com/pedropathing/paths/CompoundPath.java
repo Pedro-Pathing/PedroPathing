@@ -9,22 +9,30 @@ import com.pedropathing.paths.curves.CompoundCurve;
 import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.paths.interpolator.Interpolator;
 import com.pedropathing.paths.tvalue.TValue;
-import java.util.Arrays;
+
 import java.util.List;
-import java.util.stream.Collectors;
+
+import static com.pedropathing.utils.Utils.listOf;
+import static com.pedropathing.utils.Utils.toUnmodifiableList;
 
 public class CompoundPath extends Path {
     private final Interpolator interpolator;
     private final Piecewise<Path> paths;
 
-    public CompoundPath(Interpolator interpolator, Modifier[] modifiers, Path[] paths) {
-        super(new CompoundCurve(Arrays.stream(paths).map(path -> path.curve).toArray(Curve[]::new)), modifiers);
+    private CompoundPath(Curve curve, Interpolator interpolator, List<Modifier> modifiers, Piecewise<Path> paths) {
+        super(curve, modifiers);
+        this.interpolator = interpolator;
+        this.paths = paths;
+    }
+
+    public CompoundPath(Interpolator interpolator, List<Modifier> modifiers, List<Path> paths) {
+        super(new CompoundCurve(paths.stream().map(path -> path.curve).collect(toUnmodifiableList())), modifiers);
         this.interpolator = interpolator;
         this.paths = new Piecewise<>(path -> path.curve.length(), paths);
     }
 
     public CompoundPath(Path... paths) {
-        this(null, null, paths);
+        this(null, null, listOf(paths));
     }
 
     @Override
@@ -42,6 +50,16 @@ public class CompoundPath extends Path {
         return paths.segments().stream()
                 .map(Piecewise.Segment::value)
                 .flatMap(path -> path.getPaths().stream())
-                .collect(Collectors.toList());
+                .collect(toUnmodifiableList());
+    }
+
+    @Override
+    protected Path withHeading(Interpolator interpolator) {
+        return new CompoundPath(curve, interpolator, modifiers, paths);
+    }
+
+    @Override
+    protected Path withModifiers(List<Modifier> modifiers) {
+        return new CompoundPath(curve, interpolator, modifiers, paths);
     }
 }

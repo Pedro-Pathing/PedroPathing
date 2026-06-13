@@ -5,6 +5,7 @@
 package com.pedropathing.paths.interpolator;
 
 import com.pedropathing.math.Pose;
+import com.pedropathing.math.Vector2D;
 import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.paths.tvalue.TValue;
 import com.pedropathing.utils.Angle;
@@ -18,6 +19,10 @@ public interface Interpolator {
         return (Curve curve, @TValue double t) -> finalHeading;
     }
 
+    static Interpolator constant(Pose pose) {
+        return constant(pose.heading());
+    }
+
     static Interpolator linear(double start, double end) {
         double finalStart = Angle.normalize(start);
         double finalEnd = Angle.normalize(end);
@@ -28,9 +33,16 @@ public interface Interpolator {
         };
     }
 
-    static Interpolator facingPose(Pose pose) {
-        return (Curve curve, @TValue double t) ->
-                pose.toVector2D().minus(curve.get(t)).theta();
+    static Interpolator linear(Pose start, Pose end) {
+        return linear(start.heading(), end.heading());
+    }
+
+    static Interpolator facingPoint(Vector2D point) {
+        return (Curve curve, @TValue double t) -> point.minus(curve.get(t)).theta();
+    }
+
+    static Interpolator facingPoint(Pose pose) {
+        return facingPoint(pose.toVector2D());
     }
 
     static PiecewiseInterpolator piecewise() {

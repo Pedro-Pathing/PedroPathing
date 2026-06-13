@@ -38,6 +38,7 @@ public class Velocity {
     public Velocity plus(Velocity other) {
         return new Velocity(vx + other.vx, vy + other.vy, omega + other.omega);
     }
+
     public Velocity minus(Velocity other) {
         return new Velocity(vx - other.vx, vy - other.vy, omega - other.omega);
     }

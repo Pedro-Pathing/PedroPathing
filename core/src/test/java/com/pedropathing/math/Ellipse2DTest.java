@@ -4,9 +4,9 @@
  */
 package com.pedropathing.math;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
 
 public class Ellipse2DTest {
     @Test
@@ -26,7 +26,7 @@ public class Ellipse2DTest {
 
     @Test
     public void constructorThrowsOnNegativeEigenvalue() {
-        Matrix m = new Matrix(new double[][]{{-0.25, 0}, {0, 0.25}});
+        Matrix m = new Matrix(new double[][] {{-0.25, 0}, {0, 0.25}});
         assertThrows(IllegalArgumentException.class, () -> new Ellipse2D(m));
     }
 
@@ -130,4 +130,3 @@ public class Ellipse2DTest {
         assertEquals(5, e.getMinorAxis(), 1e-6);
     }
 }
-

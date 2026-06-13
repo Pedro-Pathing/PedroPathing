@@ -4,6 +4,9 @@
  */
 package com.pedropathing.algorithm;
 
+import static com.pedropathing.config.Memoize.memo;
+import static com.pedropathing.utils.Angle.normalizeSigned;
+
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.localization.MotionState;
 import com.pedropathing.math.Ellipse2D;
@@ -14,11 +17,7 @@ import com.pedropathing.paths.PathTracker;
 import com.pedropathing.utils.Control;
 import com.pedropathing.utils.Pair;
 import com.pedropathing.utils.Utils;
-
 import java.util.function.Supplier;
-
-import static com.pedropathing.config.Memoize.memo;
-import static com.pedropathing.utils.Angle.normalizeSigned;
 
 public class Foresight implements Algorithm {
     private static final int TRANSLATIONAL = 0;
@@ -31,24 +30,21 @@ public class Foresight implements Algorithm {
         this.config = config;
 
         maxAchievableVelocity = memo(
-                () -> Ellipse2D.fromAxes(config.maxAchievableForwardVelocity.get(), config.maxAchievableStrafeVelocity.get()),
+                () -> Ellipse2D.fromAxes(
+                        config.maxAchievableForwardVelocity.get(), config.maxAchievableStrafeVelocity.get()),
                 config.maxAchievableForwardVelocity,
-                config.maxAchievableStrafeVelocity
-        );
+                config.maxAchievableStrafeVelocity);
 
         maxAchievableDeceleration = memo(
-                () -> Ellipse2D.fromAxes(config.maxAchievableForwardDeceleration.get(), config.maxAchievableStrafeDeceleration.get()),
+                () -> Ellipse2D.fromAxes(
+                        config.maxAchievableForwardDeceleration.get(), config.maxAchievableStrafeDeceleration.get()),
                 config.maxAchievableForwardDeceleration,
-                config.maxAchievableStrafeDeceleration
-        );
+                config.maxAchievableStrafeDeceleration);
     }
 
     @Override
     public DrivePowers calculatePath(PathTracker pathTracker, MotionState state, double deltaTime) {
-        double t = pathTracker
-                .current()
-                .curve
-                .closestT(state.pose().toVector2D());
+        double t = pathTracker.current().curve.closestT(state.pose().toVector2D());
         double targetHeading = pathTracker.current().heading(t);
 
         if (t >= (1 - config.parametricTConstraint.get())) { // End Constraint
@@ -69,10 +65,10 @@ public class Foresight implements Algorithm {
         // the path tangent and the robot heading (theta) instead of using heading alone.
         Vector2D closestTangentVector = pathTracker.current().curve.tangent(t);
         Vector2D closestNormalVector = pathTracker.current().curve.leftNormal(t);
-        double thetaForBraking = closestTangentVector.angleTo(Vector2D.unit(state.pose().heading()));
+        double thetaForBraking =
+                closestTangentVector.angleTo(Vector2D.unit(state.pose().heading()));
         double velocityToBrakeInTime = getVelocityToBrakeInTime(remainingDistance, thetaForBraking);
-        double tangentialSpeed =
-                closestTangentVector.dot(state.velocity().toVector2D());
+        double tangentialSpeed = closestTangentVector.dot(state.velocity().toVector2D());
         boolean isBraking = tangentialSpeed >= velocityToBrakeInTime;
         // may want hard switch? or maybe add some hysteresis?
         // or hard switch until velocity is going to change directions if it continues to brake?
@@ -84,7 +80,8 @@ public class Foresight implements Algorithm {
             return calculatePath(pathTracker, state, deltaTime);
         }
 
-        Vector2D brakingDisplacement = getBrakeDisplacement(state.twist(), state.pose().heading());
+        Vector2D brakingDisplacement =
+                getBrakeDisplacement(state.twist(), state.pose().heading());
 
         Vector2D driveVector = closestTangentVector.times(drive(
                 tangentialSpeed,
@@ -94,38 +91,33 @@ public class Foresight implements Algorithm {
                 velocityToBrakeInTime,
                 isBraking,
                 remainingDistance,
-                brakingDisplacement.dot(closestTangentVector))
-        );
+                brakingDisplacement.dot(closestTangentVector)));
 
-        Vector2D displacementToPath = pathTracker.current().curve.get(t).minus(state.pose().toVector2D());
+        Vector2D displacementToPath =
+                pathTracker.current().curve.get(t).minus(state.pose().toVector2D());
         double translationalError = displacementToPath.magnitude();
-        Vector2D translationalVector = computeTranslationalCorrection(
-                displacementToPath,
-                brakingDisplacement);
+        Vector2D translationalVector = computeTranslationalCorrection(displacementToPath, brakingDisplacement);
 
         boolean atParametricStart = t <= config.parametricTConstraint.get();
         if (atParametricStart) {
-            Vector2D displacementToStart = pathTracker.current().curve.startPoint().minus(state.pose().toVector2D());
+            Vector2D displacementToStart =
+                    pathTracker.current().curve.startPoint().minus(state.pose().toVector2D());
             double tangentDisplacementToStart = displacementToStart.dot(closestTangentVector);
             boolean isBeforePath = tangentDisplacementToStart > 0;
             if (isBeforePath) {
                 driveVector = driveVector.times(tangentDisplacementToStart / translationalError);
             }
         } else {
-            double centripetal = centripetal(tangentialSpeed, pathTracker.current().curve.curvature(t));
+            double centripetal =
+                    centripetal(tangentialSpeed, pathTracker.current().curve.curvature(t));
             translationalVector = translationalVector.plus(closestNormalVector.times(centripetal));
 
-            if ((Math.abs(headingError) > 2 * config.headingDeviationTolerance.get()) || (Math.abs(translationalError) > 2 * config.translationalDeviationTolerance.get()))
+            if ((Math.abs(headingError) > 2 * config.headingDeviationTolerance.get())
+                    || (Math.abs(translationalError) > 2 * config.translationalDeviationTolerance.get()))
                 driveVector = driveVector.times(getDriveScalar(translationalError, headingError));
         }
 
-        return allocatePowers(
-                state,
-                translationalVector,
-                driveVector,
-                headingPower,
-                translationalError,
-                headingError);
+        return allocatePowers(state, translationalVector, driveVector, headingPower, translationalError, headingError);
     }
 
     @Override
@@ -165,7 +157,13 @@ public class Foresight implements Algorithm {
         return trackDeviationScale * headingScale;
     }
 
-    public DrivePowers allocatePowers(MotionState state, Vector2D translationalVector, Vector2D driveVector, double headingPower, double translationalError, double headingError) {
+    public DrivePowers allocatePowers(
+            MotionState state,
+            Vector2D translationalVector,
+            Vector2D driveVector,
+            double headingPower,
+            double translationalError,
+            double headingError) {
         boolean translationalPriority = Math.abs(translationalError) > config.translationalDeviationTolerance.get();
         boolean headingPriority = Math.abs(headingError) > config.headingDeviationTolerance.get();
         double translationalPower = translationalVector.magnitude();
@@ -175,19 +173,20 @@ public class Foresight implements Algorithm {
         double[] powers;
 
         if (translationalPriority && headingPriority) {
-            prioritization = new int[]{0, 1, 2};
-            powers = new double[]{translationalPower, headingPower, drivePower};
+            prioritization = new int[] {0, 1, 2};
+            powers = new double[] {translationalPower, headingPower, drivePower};
         } else if (translationalPriority) {
-            prioritization = new int[]{0, 2, 1};
-            powers = new double[]{translationalPower, drivePower, headingPower};
+            prioritization = new int[] {0, 2, 1};
+            powers = new double[] {translationalPower, drivePower, headingPower};
         } else {
-            prioritization = new int[]{1, 2, 0};
-            powers = new double[]{drivePower, translationalPower, headingPower};
+            prioritization = new int[] {1, 2, 0};
+            powers = new double[] {drivePower, translationalPower, headingPower};
         }
 
         powers = clampPowers(powers);
 
-        Vector2D translationalDirection = Math.abs(translationalPower) < 1e-6 ? Vector2D.zero() : translationalVector.div(translationalPower);
+        Vector2D translationalDirection =
+                Math.abs(translationalPower) < 1e-6 ? Vector2D.zero() : translationalVector.div(translationalPower);
         Vector2D driveDirection = Math.abs(drivePower) < 1e-6 ? Vector2D.zero() : driveVector.div(drivePower);
 
         Vector2D fieldRelativeDrivePower = translationalDirection
@@ -211,9 +210,12 @@ public class Foresight implements Algorithm {
     }
 
     public DrivePowers getDrivePowers(Vector2D fieldRelativeDrivePower, MotionState state, double headingPower) {
-        Vector2D robotFrameDrivePower = fieldRelativeDrivePower.rotate(-state.pose().heading());
-        double forward = Control.clampBrakingPower(robotFrameDrivePower.x(), state.twist().vx(), config.maxBrakingPower.get());
-        double strafe = Control.clampBrakingPower(robotFrameDrivePower.y(), state.twist().vy(), config.maxBrakingPower.get());
+        Vector2D robotFrameDrivePower =
+                fieldRelativeDrivePower.rotate(-state.pose().heading());
+        double forward = Control.clampBrakingPower(
+                robotFrameDrivePower.x(), state.twist().vx(), config.maxBrakingPower.get());
+        double strafe = Control.clampBrakingPower(
+                robotFrameDrivePower.y(), state.twist().vy(), config.maxBrakingPower.get());
         return new DrivePowers(forward, -strafe, headingPower);
     }
 
@@ -247,11 +249,20 @@ public class Foresight implements Algorithm {
                 + config.quadraticBrakeCoefficients.get().get(1, 1) * sin3;
         double k2 = config.linearBrakeCoefficients.get().get(0, 0) * cos2
                 + config.linearBrakeCoefficients.get().get(1, 1) * sin2;
-        Pair<Double, Double> velocityInversion = Utils.solveQuadratic(k1, k2, -distanceRemaining / config.brakeAggression.get());
+        Pair<Double, Double> velocityInversion =
+                Utils.solveQuadratic(k1, k2, -distanceRemaining / config.brakeAggression.get());
         return Math.max(velocityInversion.first(), velocityInversion.second());
     }
 
-    public double drive(double tangentialVel, Vector2D closestTangentVector, double heading, double deltaTime, double targetVelocityToBrakeInTime, boolean isBraking, double remainingDistance, double brakingDisplacement) {
+    public double drive(
+            double tangentialVel,
+            Vector2D closestTangentVector,
+            double heading,
+            double deltaTime,
+            double targetVelocityToBrakeInTime,
+            boolean isBraking,
+            double remainingDistance,
+            double brakingDisplacement) {
         double maxVelocityToFitAccel = tangentialVel + config.maxAccelerationConstraint.get() * deltaTime;
         double constrainedVelocity = Math.min(config.maxVelocityConstraint.get(), maxVelocityToFitAccel);
         double theta = closestTangentVector.angleTo(Vector2D.unit(heading));
@@ -259,16 +270,17 @@ public class Foresight implements Algorithm {
         double currentMaxAchievableVelocity = maxAchievableVelocity.get().radius(theta);
 
         if (!isBraking)
-            if (constrainedVelocity >= currentMaxAchievableVelocity)
-                return 1.0;
-            else
-                return coast(tangentialVel, theta, remainingDistance, constrainedVelocity);
+            if (constrainedVelocity >= currentMaxAchievableVelocity) return 1.0;
+            else return coast(tangentialVel, theta, remainingDistance, constrainedVelocity);
 
         double targetVel = Math.min(targetVelocityToBrakeInTime, constrainedVelocity);
         double error = targetVel - tangentialVel;
 
         // TODO: Kalman Filter?
-        return config.brakeController.get().calculate(targetVel - excessVelocityAfterBraking(remainingDistance, brakingDisplacement, theta), error);
+        return config.brakeController
+                .get()
+                .calculate(
+                        targetVel - excessVelocityAfterBraking(remainingDistance, brakingDisplacement, theta), error);
     }
 
     public double coast(double tangentialVel, double theta, double remainingDistance, double constrainedVelocity) {
@@ -292,23 +304,17 @@ public class Foresight implements Algorithm {
     public Vector2D getBrakeDisplacement(Twist twist, double heading) {
         Vector2D linearTwist = twist.toVector2D();
 
-        Vector2D quadratic = linearTwist.hadamardProduct(linearTwist.abs()).transform(config.quadraticBrakeCoefficients.get());
+        Vector2D quadratic =
+                linearTwist.hadamardProduct(linearTwist.abs()).transform(config.quadraticBrakeCoefficients.get());
         Vector2D linear = linearTwist.transform(config.linearBrakeCoefficients.get());
 
         return quadratic.plus(linear).rotate(heading);
     }
 
-    double excessVelocityAfterBraking(
-            double availableDisplacement,
-            double brakingDisplacement,
-            double theta
-    ) {
-        double overshootDisplacement =
-                brakingDisplacement - availableDisplacement;
+    double excessVelocityAfterBraking(double availableDisplacement, double brakingDisplacement, double theta) {
+        double overshootDisplacement = brakingDisplacement - availableDisplacement;
 
-        boolean stopsBeforeTarget =
-                Math.signum(overshootDisplacement)
-                        != Math.signum(availableDisplacement);
+        boolean stopsBeforeTarget = Math.signum(overshootDisplacement) != Math.signum(availableDisplacement);
 
         if (stopsBeforeTarget) {
             return 0;

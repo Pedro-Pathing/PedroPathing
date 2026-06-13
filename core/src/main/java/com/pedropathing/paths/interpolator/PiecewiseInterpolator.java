@@ -15,8 +15,8 @@ public class PiecewiseInterpolator implements Interpolator {
 
     PiecewiseInterpolator() {}
 
-    public PiecewiseInterpolator add(@TValue double t, Interpolator interpolator) {
-        if (t < greatestT)
+    public PiecewiseInterpolator until(@TValue double t, Interpolator interpolator) {
+        if (t <= greatestT)
             throw new IllegalArgumentException(
                     "t was " + t + " but  must be greater than " + greatestT + ", the greatest t already defined.");
         if (t > 1.0) throw new IllegalArgumentException("t must be less than or equal to 1.0.");

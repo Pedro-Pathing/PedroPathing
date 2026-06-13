@@ -1,11 +1,15 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.localization;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.pedropathing.math.Pose;
 import com.pedropathing.math.Twist;
 import com.pedropathing.math.Velocity;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class MotionStateTest {
     @Test
@@ -24,4 +28,3 @@ public class MotionStateTest {
         assertEquals(ms2.twist().vx(), t.vx(), 1e-9);
     }
 }
-

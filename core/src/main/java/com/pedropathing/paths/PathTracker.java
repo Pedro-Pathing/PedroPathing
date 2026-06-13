@@ -5,7 +5,6 @@
 package com.pedropathing.paths;
 
 import com.pedropathing.math.Pose;
-
 import java.util.ArrayDeque;
 import java.util.Deque;
 

@@ -11,8 +11,7 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 public final class Utils {
-    private Utils() {
-    }
+    private Utils() {}
 
     public static Pair<Double, Double> solveQuadratic(double a, double b, double c) {
         double sqrtD = java.lang.Math.sqrt(b * b - 4 * a * c);

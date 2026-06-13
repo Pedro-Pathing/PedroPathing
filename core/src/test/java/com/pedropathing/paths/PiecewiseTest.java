@@ -1,8 +1,12 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.paths;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
 
 public class PiecewiseTest {
     @Test
@@ -28,4 +32,3 @@ public class PiecewiseTest {
         assertEquals(0.35, piecewise.globalT(piecewise.segments().get(1), 0.5), 1e-9);
     }
 }
-
