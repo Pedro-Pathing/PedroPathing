@@ -80,6 +80,7 @@ public class Follower {
     }
 
     private void clearState() {
+        if (pathTracker != null) pathTracker.release();
         pathTracker = null;
         holdPose = null;
         manualPowers = null;

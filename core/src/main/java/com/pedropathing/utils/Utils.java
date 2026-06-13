@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class Utils {
     private Utils() {}
@@ -25,15 +26,23 @@ public final class Utils {
 
     @SafeVarargs
     public static <T> List<T> listOf(T... elements) {
+        if (elements.length == 0) return Collections.emptyList();
         return Collections.unmodifiableList(Arrays.asList(elements));
+    }
+
+    public static <T> List<T> copyOf(List<T> list) {
+        if (list.isEmpty()) return Collections.emptyList();
+        else if (list.size() == 1) return Collections.singletonList(list.get(0));
+        return list.stream().collect(toUnmodifiableList());
     }
 
     public static <T> Collector<T, ?, List<T>> toUnmodifiableList() {
         return Collectors.collectingAndThen(Collectors.toList(), Collections::unmodifiableList);
     }
 
-    @SafeVarargs
-    public static <T> List<T> concat(List<T>... lists) {
-        return Arrays.stream(lists).flatMap(List::stream).collect(toUnmodifiableList());
+    public static <T> List<T> concat(List<T> lhs, List<T> rhs) {
+        if (lhs.isEmpty()) return rhs;
+        if (rhs.isEmpty()) return lhs;
+        return Stream.concat(lhs.stream(), rhs.stream()).collect(toUnmodifiableList());
     }
 }

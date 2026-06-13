@@ -4,16 +4,14 @@
  */
 package com.pedropathing.paths;
 
+import static com.pedropathing.utils.Utils.*;
+
 import com.pedropathing.config.Modifier;
 import com.pedropathing.paths.curves.CompoundCurve;
 import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.paths.interpolator.Interpolator;
 import com.pedropathing.paths.tvalue.TValue;
-
 import java.util.List;
-
-import static com.pedropathing.utils.Utils.listOf;
-import static com.pedropathing.utils.Utils.toUnmodifiableList;
 
 public class CompoundPath extends Path {
     private final Interpolator interpolator;
@@ -32,13 +30,19 @@ public class CompoundPath extends Path {
     }
 
     public CompoundPath(Path... paths) {
-        this(null, null, listOf(paths));
+        this(null, listOf(), listOf(paths));
     }
 
     @Override
     public double heading(@TValue double t) {
         if (interpolator != null) return interpolator.interpolate(curve, t);
-        else return paths.get(t).heading(paths.localT(t));
+        return paths.get(t).heading(paths.localT(t));
+    }
+
+    @Override
+    public boolean hasHeading() {
+        if (interpolator != null) return true;
+        return paths.segments().stream().map(Piecewise.Segment::value).allMatch(Path::hasHeading);
     }
 
     public List<Piecewise.Segment<Path>> segments() {
@@ -46,11 +50,22 @@ public class CompoundPath extends Path {
     }
 
     @Override
-    public List<AtomicPath> getPaths() {
+    protected List<PathSegment> getSegments(PathSegment.HeadingProvider parentHeading, List<Modifier> modifiers) {
         return paths.segments().stream()
-                .map(Piecewise.Segment::value)
-                .flatMap(path -> path.getPaths().stream())
+                .flatMap(segment -> segment
+                        .value()
+                        .getSegments(convertChildHeading(parentHeading, segment), concat(modifiers, this.modifiers))
+                        .stream())
                 .collect(toUnmodifiableList());
+    }
+
+    private PathSegment.HeadingProvider convertChildHeading(
+            PathSegment.HeadingProvider parentHeading, Piecewise.Segment<Path> segment) {
+        double totalLength = curve.length();
+        double childLength = segment.value().curve.length();
+        double segStart = segment.startT();
+        double ratio = childLength / totalLength;
+        return childT -> parentHeading.heading(segStart + childT * ratio);
     }
 
     @Override

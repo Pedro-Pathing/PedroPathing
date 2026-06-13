@@ -5,7 +5,6 @@
 package com.pedropathing.api;
 
 import com.pedropathing.math.Pose;
-
 import java.util.function.DoubleUnaryOperator;
 
 public final class PoseFactory {

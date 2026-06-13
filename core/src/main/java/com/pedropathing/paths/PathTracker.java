@@ -4,18 +4,28 @@
  */
 package com.pedropathing.paths;
 
+import static com.pedropathing.utils.Utils.listOf;
+
+import com.pedropathing.config.Modifier;
 import com.pedropathing.math.Pose;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
+import java.util.List;
 
 public final class PathTracker {
-    private final Deque<AtomicPath> atomicPaths;
+    private final Deque<PathSegment> segments;
+    private final List<Modifier> activeModifiers = new ArrayList<>();
 
     public PathTracker(Path path) {
-        atomicPaths = new ArrayDeque<>(path.getPaths());
+        List<PathSegment> resolvedSegments = path.getSegments();
+        if (resolvedSegments.isEmpty())
+            throw new IllegalArgumentException("PathTracker requires at least one path segment");
+        segments = new ArrayDeque<>(resolvedSegments);
+        PathSegment last = resolvedSegments.get(resolvedSegments.size() - 1);
+        endPose = last.curve.get(1).toPose(last.heading(1));
 
-        Path lastPath = atomicPaths.getLast();
-        endPose = lastPath.curve.get(1).toPose(lastPath.heading(1));
+        transitionModifiers(segments.peek().modifiers());
     }
 
     private final Pose endPose;
@@ -25,19 +35,36 @@ public final class PathTracker {
     }
 
     public void advance() {
-        if (atomicPaths.isEmpty()) throw new IllegalStateException("Cannot advance past last path");
-        atomicPaths.remove();
+        if (segments.isEmpty()) throw new IllegalStateException("Cannot advance past last path");
+        segments.remove();
+        PathSegment current = segments.peek();
+        transitionModifiers(current == null ? listOf() : current.modifiers());
     }
 
-    public Path current() {
-        return atomicPaths.peek();
+    public PathSegment current() {
+        return segments.peek();
     }
 
     public boolean done() {
-        return atomicPaths.isEmpty();
+        return segments.isEmpty();
     }
 
     public int remainingPaths() {
-        return atomicPaths.size();
+        return segments.size();
+    }
+
+    public void release() {
+        transitionModifiers(listOf());
+    }
+
+    private void transitionModifiers(List<Modifier> nextModifiers) {
+        for (int i = activeModifiers.size() - 1; i >= 0; i--) {
+            activeModifiers.get(i).revert();
+        }
+        for (Modifier m : nextModifiers) {
+            m.apply();
+        }
+        activeModifiers.clear();
+        activeModifiers.addAll(nextModifiers);
     }
 }
