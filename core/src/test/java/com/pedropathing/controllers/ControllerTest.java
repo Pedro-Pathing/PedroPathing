@@ -1,8 +1,12 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.controllers;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
 
 public class ControllerTest {
     @Test
@@ -32,4 +36,3 @@ public class ControllerTest {
         assertEquals(3.0 * 1.0, scaled.calculate(0.0, 1.0), 1e-9);
     }
 }
-

@@ -1,8 +1,12 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.utils;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
 
 public class PairTest {
     @Test
@@ -32,4 +36,3 @@ public class PairTest {
         assertEquals(Pair.of(null, null), pair);
     }
 }
-

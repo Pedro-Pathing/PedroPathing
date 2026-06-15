@@ -5,7 +5,6 @@
 package com.pedropathing.paths;
 
 import com.pedropathing.paths.tvalue.TValue;
-
 import java.util.*;
 import java.util.function.ToDoubleFunction;
 
@@ -15,11 +14,11 @@ public final class Piecewise<T> {
     private final List<Segment<T>> segments = new ArrayList<>();
     private final NavigableMap<Double, Segment<T>> segmentMap = new TreeMap<>();
 
-    public Piecewise(ToDoubleFunction<T> getLength, T[] items) {
-        if (items.length == 0) throw new IllegalArgumentException("Piecewise must have at least one item.");
+    public Piecewise(ToDoubleFunction<T> getLength, List<T> items) {
+        if (items.isEmpty()) throw new IllegalArgumentException("Piecewise must have at least one item.");
 
         this.getLength = getLength;
-        totalLength = Arrays.stream(items).mapToDouble(getLength).sum();
+        totalLength = items.stream().mapToDouble(getLength).sum();
 
         double currentT = 0.0;
         for (T item : items) {

@@ -1,14 +1,17 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.paths;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.pedropathing.config.Modifier;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.paths.curves.Line;
 import com.pedropathing.paths.interpolator.Interpolator;
-import org.junit.jupiter.api.Test;
-
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 public class PiecewiseAndPathTest {
     @Test
@@ -43,8 +46,7 @@ public class PiecewiseAndPathTest {
     @Test
     public void compoundPathUsesUnderlyingPathsOrExplicitInterpolator() {
         SimplePath first = new SimplePath(
-                new Line(Vector2D.cartesian(0.0, 0.0), Vector2D.cartesian(10.0, 0.0)),
-                Interpolator.constant(0.0));
+                new Line(Vector2D.cartesian(0.0, 0.0), Vector2D.cartesian(10.0, 0.0)), Interpolator.constant(0.0));
         SimplePath second = new SimplePath(
                 new Line(Vector2D.cartesian(10.0, 0.0), Vector2D.cartesian(20.0, 0.0)),
                 Interpolator.constant(Math.PI / 2));
@@ -61,12 +63,9 @@ public class PiecewiseAndPathTest {
         assertEquals(0.0, compound.segments().get(0).startT(), 1e-9);
         assertEquals(0.5, compound.segments().get(1).startT(), 1e-9);
 
-        CompoundPath overridden = new CompoundPath(
-                Interpolator.constant(Math.PI),
-                new Modifier[0],
-                new Path[] {first, second});
+        CompoundPath overridden =
+                new CompoundPath(Interpolator.constant(Math.PI), new Modifier[0], new Path[] {first, second});
         assertEquals(Math.PI, overridden.heading(0.1), 1e-9);
         assertEquals(Math.PI, overridden.heading(0.9), 1e-9);
     }
 }
-

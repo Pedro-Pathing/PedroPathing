@@ -1,4 +1,10 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.algorithm;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.pedropathing.controllers.Controller;
 import com.pedropathing.drivetrain.DrivePowers;
@@ -13,49 +19,41 @@ import com.pedropathing.paths.curves.Line;
 import com.pedropathing.paths.interpolator.Interpolator;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 public class ForesightTest {
-    static ForesightConfig foresightConfig = new ForesightConfig(
-            c -> {
-                c.translationalController.set(Controller.pid(0.16,0,0.01));
-                c.headingController.set(Controller.pid(2.0,0,0.1));
-                c.linearBrakeCoefficients.set(Matrix.diag(0.139333365, 0.139333365));
-                c.quadraticBrakeCoefficients.set(Matrix.diag(0.000210842, 0.000210842));
-                c.maxAchievableForwardVelocity.set(88.036);
-                c.maxAchievableStrafeVelocity.set(71.881);
-                c.maxAchievableForwardDeceleration.set(30.3333);
-                c.maxAchievableStrafeDeceleration.set(62.58098);
-            }
-    );
+    static ForesightConfig foresightConfig = new ForesightConfig(c -> {
+        c.translationalController.set(Controller.pid(0.16, 0, 0.01));
+        c.headingController.set(Controller.pid(2.0, 0, 0.1));
+        c.linearBrakeCoefficients.set(Matrix.diag(0.139333365, 0.139333365));
+        c.quadraticBrakeCoefficients.set(Matrix.diag(0.000210842, 0.000210842));
+        c.maxAchievableForwardVelocity.set(88.036);
+        c.maxAchievableStrafeVelocity.set(71.881);
+        c.maxAchievableForwardDeceleration.set(30.3333);
+        c.maxAchievableStrafeDeceleration.set(62.58098);
+    });
 
     // Asymmetric braking config for testing theta-dependent behavior
-    static ForesightConfig asymmetricBrakingConfig = new ForesightConfig(
-            c -> {
-                c.translationalController.set(Controller.pid(0.16,0,0.01));
-                c.headingController.set(Controller.pid(2.0,0,0.1));
-                // Asymmetric: forward brake is stronger than strafe
-                c.linearBrakeCoefficients.set(Matrix.diag(0.2, 0.1));
-                c.quadraticBrakeCoefficients.set(Matrix.diag(0.01, 0.02));
-                c.maxAchievableForwardVelocity.set(88.036);
-                c.maxAchievableStrafeVelocity.set(71.881);
-                c.maxAchievableForwardDeceleration.set(30.3333);
-                c.maxAchievableStrafeDeceleration.set(62.58098);
-            }
-    );
+    static ForesightConfig asymmetricBrakingConfig = new ForesightConfig(c -> {
+        c.translationalController.set(Controller.pid(0.16, 0, 0.01));
+        c.headingController.set(Controller.pid(2.0, 0, 0.1));
+        // Asymmetric: forward brake is stronger than strafe
+        c.linearBrakeCoefficients.set(Matrix.diag(0.2, 0.1));
+        c.quadraticBrakeCoefficients.set(Matrix.diag(0.01, 0.02));
+        c.maxAchievableForwardVelocity.set(88.036);
+        c.maxAchievableStrafeVelocity.set(71.881);
+        c.maxAchievableForwardDeceleration.set(30.3333);
+        c.maxAchievableStrafeDeceleration.set(62.58098);
+    });
 
-    static ForesightConfig brakeConfig = new ForesightConfig(
-            c -> {
-                c.translationalController.set(Controller.pid(0.16,0,0));
-                c.headingController.set(Controller.pid(2.0,0,0.1));
-                c.linearBrakeCoefficients.set(Matrix.diag(0.015, 0.02));
-                c.quadraticBrakeCoefficients.set(Matrix.diag(0.001, 0.0015));
-                c.maxAchievableForwardVelocity.set(88.036);
-                c.maxAchievableStrafeVelocity.set(71.881);
-                c.maxAchievableForwardDeceleration.set(30.3333);
-                c.maxAchievableStrafeDeceleration.set(62.58098);
-            }
-    );
+    static ForesightConfig brakeConfig = new ForesightConfig(c -> {
+        c.translationalController.set(Controller.pid(0.16, 0, 0));
+        c.headingController.set(Controller.pid(2.0, 0, 0.1));
+        c.linearBrakeCoefficients.set(Matrix.diag(0.015, 0.02));
+        c.quadraticBrakeCoefficients.set(Matrix.diag(0.001, 0.0015));
+        c.maxAchievableForwardVelocity.set(88.036);
+        c.maxAchievableStrafeVelocity.set(71.881);
+        c.maxAchievableForwardDeceleration.set(30.3333);
+        c.maxAchievableStrafeDeceleration.set(62.58098);
+    });
 
     @Test
     public void hold_atTargetProducesZeroDrive() {
@@ -63,7 +61,13 @@ public class ForesightTest {
         Pose pose = Pose.zero();
         MotionState ms = MotionState.ofVelocity(pose, Velocity.zero());
         // use a very short non-zero line to avoid Line normalizing a zero vector
-        DrivePowers dp = f.calculateHold(pose, new FollowState(ms, new PathTracker(new SimplePath(new Line(Pose.zero(), new Pose(0.01, 0, 0)), Interpolator.tangent)), 0.02));
+        DrivePowers dp = f.calculateHold(
+                pose,
+                new FollowState(
+                        ms,
+                        new PathTracker(
+                                new SimplePath(new Line(Pose.zero(), new Pose(0.01, 0, 0)), Interpolator.tangent)),
+                        0.02));
         assertNotNull(dp);
         assertEquals(0.0, dp.forward(), 1e-6);
         assertEquals(0.0, dp.strafe(), 1e-6);
@@ -75,7 +79,12 @@ public class ForesightTest {
         Foresight f = new Foresight(foresightConfig);
         Pose target = new Pose(1.0, 0.0, 0.0);
         MotionState ms = MotionState.ofVelocity(Pose.zero(), Velocity.zero());
-        DrivePowers dp = f.hold(target, new FollowState(ms, new PathTracker(new SimplePath(new Line(Pose.zero(), target), Interpolator.tangent)), 0.02));
+        DrivePowers dp = f.hold(
+                target,
+                new FollowState(
+                        ms,
+                        new PathTracker(new SimplePath(new Line(Pose.zero(), target), Interpolator.tangent)),
+                        0.02));
         assertNotNull(dp);
         // Expect some forward power to correct the 1.0 unit translational error.
         assertTrue(Math.abs(dp.forward()) > 1e-6 || Math.abs(dp.strafe()) > 1e-6);
@@ -175,7 +184,7 @@ public class ForesightTest {
     public void getVelocityToBrakeInTimeVariesWithThetaAsymmetric() {
         Foresight f = new Foresight(asymmetricBrakingConfig);
         // With asymmetric braking coefficients, velocity needed to brake should vary with theta
-        double v0 = f.getVelocityToBrakeInTime(10.0, 0.0);        // forward direction
+        double v0 = f.getVelocityToBrakeInTime(10.0, 0.0); // forward direction
         double v90 = f.getVelocityToBrakeInTime(10.0, Math.PI / 2); // lateral direction
         assertTrue(Double.isFinite(v0) && v0 > 0.0);
         assertTrue(Double.isFinite(v90) && v90 > 0.0);
@@ -198,14 +207,22 @@ public class ForesightTest {
     @Test
     public void brakeDisplacement() {
         Foresight f = new Foresight(brakeConfig);
-        assertEquals(Vector2D.cartesian(2.2, 0), f.getBrakeDisplacement(new Twist(40, 0, 0) ,0));
-        assertEquals(Vector2D.cartesian(-2.2, 0), f.getBrakeDisplacement(new Twist(-40, 0, 0),0));
-        assertEquals(Vector2D.cartesian(1.35, 0), f.getBrakeDisplacement(new Twist(30, 0, 0),0));
+        assertEquals(Vector2D.cartesian(2.2, 0), f.getBrakeDisplacement(new Twist(40, 0, 0), 0));
+        assertEquals(Vector2D.cartesian(-2.2, 0), f.getBrakeDisplacement(new Twist(-40, 0, 0), 0));
+        assertEquals(Vector2D.cartesian(1.35, 0), f.getBrakeDisplacement(new Twist(30, 0, 0), 0));
 
-        assertEquals(Vector2D.cartesian(3.2, -1.592040838891559E-16), f.getBrakeDisplacement(new Velocity(40, 0, 0).toTwist(Math.PI/2),Math.PI/2));
+        assertEquals(
+                Vector2D.cartesian(3.2, -1.592040838891559E-16),
+                f.getBrakeDisplacement(new Velocity(40, 0, 0).toTwist(Math.PI / 2), Math.PI / 2));
 
-        assertEquals(0, f.excessVelocityAfterBraking(10, f.getBrakeDisplacement(new Twist(30, 0, 0),0).x(),0));
+        assertEquals(
+                0,
+                f.excessVelocityAfterBraking(
+                        10, f.getBrakeDisplacement(new Twist(30, 0, 0), 0).x(), 0));
 
-        assertEquals(24.2214438511238, f.excessVelocityAfterBraking(5, f.getBrakeDisplacement(new Twist(70, 0, 0),0).x(),0));
+        assertEquals(
+                24.2214438511238,
+                f.excessVelocityAfterBraking(
+                        5, f.getBrakeDisplacement(new Twist(70, 0, 0), 0).x(), 0));
     }
 }

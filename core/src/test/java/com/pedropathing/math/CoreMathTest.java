@@ -1,8 +1,12 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.math;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
 
 public class CoreMathTest {
     @Test
@@ -71,4 +75,3 @@ public class CoreMathTest {
         assertEquals(new Pose(1.0, 3.0, 5.0), math.minus(new Pose(1.0, 1.0, 1.0)));
     }
 }
-

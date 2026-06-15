@@ -1,12 +1,15 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.config;
-
-import org.junit.jupiter.api.Test;
-
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
+import org.junit.jupiter.api.Test;
 
 public class MemoizeTest {
     @Test
@@ -48,4 +51,3 @@ public class MemoizeTest {
         assertThrows(IllegalArgumentException.class, () -> Memoize.memo(() -> "value"));
     }
 }
-

@@ -80,10 +80,10 @@ public class Matrix {
     public static Matrix rotationTransform(double theta) {
         double sin = Math.sin(theta);
         double cos = Math.cos(theta);
-        return new Matrix(new double[][]{
-                {cos, -sin, 0.0},
-                {sin,  cos, 0.0},
-                {0.0,  0.0, 1.0}
+        return new Matrix(new double[][] {
+            {cos, -sin, 0.0},
+            {sin, cos, 0.0},
+            {0.0, 0.0, 1.0}
         });
     }
 
@@ -93,11 +93,11 @@ public class Matrix {
      * @param y y translation
      * @return Matrix of 3x3 size
      */
-    public static Matrix translationTransform(double x, double y){
-        return new Matrix(new double[][]{
-                {1, 0, x},
-                {0, 1, y},
-                {0, 0, 1}
+    public static Matrix translationTransform(double x, double y) {
+        return new Matrix(new double[][] {
+            {1, 0, x},
+            {0, 1, y},
+            {0, 0, 1}
         });
     }
 
@@ -108,13 +108,13 @@ public class Matrix {
      * @param angle radians; + = CCW, - = CW
      * @return 3x3 transformation matrix
      */
-    public static Matrix createTransformation(double x, double y, double angle){
+    public static Matrix createTransformation(double x, double y, double angle) {
         double sin = Math.sin(angle);
         double cos = Math.cos(angle);
-        return new Matrix(new double[][]{
-                {cos, -sin,   x},
-                {sin,  cos,   y},
-                {0.0,  0.0, 1.0}
+        return new Matrix(new double[][] {
+            {cos, -sin, x},
+            {sin, cos, y},
+            {0.0, 0.0, 1.0}
         });
     }
 

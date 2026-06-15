@@ -4,22 +4,79 @@
  */
 package com.pedropathing.paths;
 
+import static com.pedropathing.utils.Utils.*;
+
 import com.pedropathing.config.Modifier;
+import com.pedropathing.math.Pose;
+import com.pedropathing.math.Vector2D;
 import com.pedropathing.paths.curves.Curve;
+import com.pedropathing.paths.interpolator.Interpolator;
 import com.pedropathing.paths.tvalue.TValue;
 import java.util.List;
 
 public abstract class Path {
     public final Curve curve;
 
-    public final Modifier[] modifiers;
+    public final List<Modifier> modifiers;
 
-    public Path(Curve curve, Modifier[] modifiers) {
+    public Path(Curve curve, List<Modifier> modifiers) {
         this.curve = curve;
-        this.modifiers = modifiers;
+        this.modifiers = copyOf(modifiers);
     }
 
     public abstract double heading(@TValue double t);
 
-    public abstract List<AtomicPath> getPaths();
+    protected abstract boolean hasHeading();
+
+    public final List<PathSegment> getSegments() {
+        if (!hasHeading()) throw new IllegalStateException("Cannot resolve segments: path has no heading.");
+        return getSegments(this::heading, listOf());
+    }
+
+    protected abstract List<PathSegment> getSegments(
+            PathSegment.HeadingProvider parentHeading, List<Modifier> modifiers);
+
+    public Path heading(Interpolator interpolator) {
+        return withHeading(interpolator);
+    }
+
+    protected abstract Path withHeading(Interpolator interpolator);
+
+    public Path with(List<Modifier> modifiers) {
+        return withModifiers(concat(this.modifiers, modifiers));
+    }
+
+    public Path with(Modifier... modifiers) {
+        return with(listOf(modifiers));
+    }
+
+    protected abstract Path withModifiers(List<Modifier> modifiers);
+
+    public Path constant(double heading) {
+        return heading(Interpolator.constant(heading));
+    }
+
+    public Path constant(Pose pose) {
+        return constant(pose.heading());
+    }
+
+    public Path linear(double start, double end) {
+        return heading(Interpolator.linear(start, end));
+    }
+
+    public Path linear(Pose start, Pose end) {
+        return linear(start.heading(), end.heading());
+    }
+
+    public Path tangent() {
+        return heading(Interpolator.tangent);
+    }
+
+    public Path facingPoint(Vector2D point) {
+        return heading(Interpolator.facingPoint(point));
+    }
+
+    public Path facingPoint(Pose pose) {
+        return facingPoint(pose.toVector2D());
+    }
 }

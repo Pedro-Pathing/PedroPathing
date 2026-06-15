@@ -20,7 +20,9 @@ public interface Curve {
         return remainingDistance(t) / length();
     }
 
-    /** Normalized */
+    /**
+     * Normalized
+     */
     Vector2D tangent(@TValue double t);
 
     double curvature(@TValue double t);

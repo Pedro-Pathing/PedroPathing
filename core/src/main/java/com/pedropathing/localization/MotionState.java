@@ -13,6 +13,7 @@ public class MotionState {
     private final Pose pose;
     private final Velocity velocity;
     private final Twist twist;
+
     private MotionState(Pose pose, Velocity velocity, Twist twist) {
         this.pose = pose;
         this.velocity = velocity;

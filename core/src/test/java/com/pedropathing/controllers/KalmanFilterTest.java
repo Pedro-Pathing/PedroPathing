@@ -1,9 +1,13 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.controllers;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.pedropathing.controllers.filters.KalmanFilter;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class KalmanFilterTest {
     @Test
@@ -19,7 +23,6 @@ public class KalmanFilterTest {
         assertTrue(out[2].contains("Kalman Gain:"));
 
         // Known expected values for this configuration
-        assertEquals(20.0/3.0, state, 1e-9); // computed as 6.666...
+        assertEquals(20.0 / 3.0, state, 1e-9); // computed as 6.666...
     }
 }
-

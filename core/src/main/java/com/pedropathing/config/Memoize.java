@@ -4,7 +4,8 @@
  */
 package com.pedropathing.config;
 
-import java.util.Arrays;
+import static com.pedropathing.utils.Utils.listOf;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
@@ -27,7 +28,7 @@ public final class Memoize<T> implements Supplier<T> {
     }
 
     public static <T> Memoize<T> memo(Supplier<T> supplier, Supplier<?>... dependencies) {
-        return memo(supplier, Collections.unmodifiableList(Arrays.asList(dependencies)));
+        return memo(supplier, listOf(dependencies));
     }
 
     @Override
