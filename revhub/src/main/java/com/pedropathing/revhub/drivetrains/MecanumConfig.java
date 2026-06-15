@@ -11,10 +11,10 @@ public class MecanumConfig {
     public final ConfigVar<String> backLeftName = ConfigVar.required();
     public final ConfigVar<String> frontRightName = ConfigVar.required();
     public final ConfigVar<String> backRightName = ConfigVar.required();
-    public final ConfigVar<DcMotorSimple.Direction> leftFrontDirection = ConfigVar.required();
-    public final ConfigVar<DcMotorSimple.Direction> leftRearDirection = ConfigVar.required();
-    public final ConfigVar<DcMotorSimple.Direction> rightFrontDirection = ConfigVar.required();
-    public final ConfigVar<DcMotorSimple.Direction> rightRearDirection = ConfigVar.required();
+    public final ConfigVar<DcMotorSimple.Direction> frontLeftDirection = ConfigVar.required();
+    public final ConfigVar<DcMotorSimple.Direction> backLeftDirection = ConfigVar.required();
+    public final ConfigVar<DcMotorSimple.Direction> frontRightDirection = ConfigVar.required();
+    public final ConfigVar<DcMotorSimple.Direction> backRightDirection = ConfigVar.required();
 
     /** Whether ZeroPowerBrake mode is enabled in manual mode. */
     public final ConfigVar<Boolean> manualBrakeMode = ConfigVar.of(false);

@@ -30,10 +30,10 @@ public class Mecanum implements Drivetrain {
                 new CachedMotor(map.get(DcMotorEx.class, config.backRightName.get()), powerDeadband)
         };
 
-        motors[FL].setDirection(config.leftFrontDirection.get());
-        motors[FR].setDirection(config.leftRearDirection.get());
-        motors[BL].setDirection(config.rightFrontDirection.get());
-        motors[BR].setDirection(config.rightRearDirection.get());
+        motors[FL].setDirection(config.frontLeftDirection.get());
+        motors[FR].setDirection(config.frontRightDirection.get());
+        motors[BL].setDirection(config.backLeftDirection.get());
+        motors[BR].setDirection(config.backRightDirection.get());
 
         setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
@@ -51,8 +51,6 @@ public class Mecanum implements Drivetrain {
         double bl = forward - strafe + turn;
         double br = forward + strafe - turn;
 
-        // Normalize by the largest absolute value (or 1) so we preserve ratios but
-        // guarantee outputs stay in [-1, 1]. This is preferable to summing abs inputs.
         double max = Math.max(1.0, Math.max(Math.abs(fl), Math.max(Math.abs(bl), Math.max(Math.abs(fr), Math.abs(br)))));
 
         double scale = 1 / max;
