@@ -5,7 +5,6 @@
 package com.pedropathing.math;
 
 import com.pedropathing.utils.Pair;
-
 import java.util.Arrays;
 import java.util.Locale;
 
@@ -231,8 +230,7 @@ public class Matrix {
         if (i >= rows) throw new IllegalArgumentException("Row index out of bounds");
         double[] vals = new double[cols];
 
-        for (int j = 0; j < cols; j++)
-            vals[j] = get(i, j);
+        for (int j = 0; j < cols; j++) vals[j] = get(i, j);
 
         return vals;
     }
@@ -241,8 +239,7 @@ public class Matrix {
         if (i >= cols) throw new IllegalArgumentException("Col index out of bounds");
         double[] vals = new double[rows];
 
-        for (int j = 0; j < rows; j++)
-            vals[j] = get(j, i);
+        for (int j = 0; j < rows; j++) vals[j] = get(j, i);
 
         return vals;
     }
@@ -258,8 +255,7 @@ public class Matrix {
     public Vector[] getRows() {
         Vector[] rows = new Vector[this.rows];
 
-        for (int j = 0; j < rows.length; j++)
-            rows[j] = new Vector(getCol(j));
+        for (int j = 0; j < rows.length; j++) rows[j] = new Vector(getCol(j));
 
         return rows;
     }
@@ -267,8 +263,7 @@ public class Matrix {
     public Vector[] getCols() {
         Vector[] cols = new Vector[this.cols];
 
-        for (int j = 0; j < cols.length; j++)
-            cols[j] = new Vector(getCol(j));
+        for (int j = 0; j < cols.length; j++) cols[j] = new Vector(getCol(j));
 
         return cols;
     }
@@ -319,8 +314,7 @@ public class Matrix {
         for (int i = 0; i < rows; i++) {
             if (i != row) data[i] = getRow(i);
             else {
-                for (int j = 0; j < cols; j++)
-                    data[i][j] = get(i, j) * scalar;
+                for (int j = 0; j < cols; j++) data[i][j] = get(i, j) * scalar;
             }
         }
 
@@ -333,8 +327,7 @@ public class Matrix {
         for (int i = 0; i < rows; i++) {
             if (i != srcRow) data[i] = getRow(i);
             else {
-                for (int j = 0; j < cols; j++)
-                    data[i][j] = get(i, j) + get(destRow, j) * scalar;
+                for (int j = 0; j < cols; j++) data[i][j] = get(i, j) + get(destRow, j) * scalar;
             }
         }
 
@@ -440,13 +433,15 @@ public class Matrix {
      * @return the determinant of the matrix
      */
     public double determinant() {
-        if (rows != cols)
-            throw new IllegalStateException("Determinant only defined for square matrices");
+        if (rows != cols) throw new IllegalStateException("Determinant only defined for square matrices");
 
         switch (rows) {
-            case 0: return 1;
-            case 1: return get(0, 0);
-            case 2: return get(0, 0) * get(1, 1) - get(0, 1) * get(1, 0);
+            case 0:
+                return 1;
+            case 1:
+                return get(0, 0);
+            case 2:
+                return get(0, 0) * get(1, 1) - get(0, 1) * get(1, 0);
         }
 
         double det = 0;
@@ -461,19 +456,17 @@ public class Matrix {
      * @return the inverse of the given matrix
      */
     public static Matrix inverse2x2(Matrix matrix) {
-        if (matrix.rows != 2 || matrix.cols != 2)
-            throw new IllegalArgumentException("Matrix is not 2x2");
+        if (matrix.rows != 2 || matrix.cols != 2) throw new IllegalArgumentException("Matrix is not 2x2");
 
         double det = matrix.determinant();
-        if (det == 0.0)
-            throw new IllegalArgumentException("Matrix is singular");
+        if (det == 0.0) throw new IllegalArgumentException("Matrix is singular");
 
         double[][] inv = new double[2][2];
 
-        inv[0][0] =  matrix.get(1,1) / det;
-        inv[0][1] = -matrix.get(0,1) / det;
-        inv[1][0] = -matrix.get(1,0) / det;
-        inv[1][1] =  matrix.get(0,0) / det;
+        inv[0][0] = matrix.get(1, 1) / det;
+        inv[0][1] = -matrix.get(0, 1) / det;
+        inv[1][0] = -matrix.get(1, 0) / det;
+        inv[1][1] = matrix.get(0, 0) / det;
 
         return new Matrix(inv);
     }
@@ -484,26 +477,24 @@ public class Matrix {
      * @return the inverse of the given matrix
      */
     public static Matrix inverse3x3(Matrix matrix) {
-        if (matrix.rows != 3 || matrix.cols != 3)
-            throw new IllegalArgumentException("Matrix is not 3x3");
+        if (matrix.rows != 3 || matrix.cols != 3) throw new IllegalArgumentException("Matrix is not 3x3");
 
         double det = matrix.determinant();
-        if (det == 0.0)
-            throw new IllegalArgumentException("Matrix is singular");
+        if (det == 0.0) throw new IllegalArgumentException("Matrix is singular");
 
         double[][] inv = new double[3][3];
 
-        inv[0][0] =  (matrix.get(1,1)*matrix.get(2,2) - matrix.get(1,2)*matrix.get(2,1)) / det;
-        inv[0][1] = -(matrix.get(0,1)*matrix.get(2,2) - matrix.get(0,2)*matrix.get(2,1)) / det;
-        inv[0][2] =  (matrix.get(0,1)*matrix.get(1,2) - matrix.get(0,2)*matrix.get(1,1)) / det;
+        inv[0][0] = (matrix.get(1, 1) * matrix.get(2, 2) - matrix.get(1, 2) * matrix.get(2, 1)) / det;
+        inv[0][1] = -(matrix.get(0, 1) * matrix.get(2, 2) - matrix.get(0, 2) * matrix.get(2, 1)) / det;
+        inv[0][2] = (matrix.get(0, 1) * matrix.get(1, 2) - matrix.get(0, 2) * matrix.get(1, 1)) / det;
 
-        inv[1][0] = -(matrix.get(1,0)*matrix.get(2,2) - matrix.get(1,2)*matrix.get(2,0)) / det;
-        inv[1][1] =  (matrix.get(0,0)*matrix.get(2,2) - matrix.get(0,2)*matrix.get(2,0)) / det;
-        inv[1][2] = -(matrix.get(0,0)*matrix.get(1,2) - matrix.get(0,2)*matrix.get(1,0)) / det;
+        inv[1][0] = -(matrix.get(1, 0) * matrix.get(2, 2) - matrix.get(1, 2) * matrix.get(2, 0)) / det;
+        inv[1][1] = (matrix.get(0, 0) * matrix.get(2, 2) - matrix.get(0, 2) * matrix.get(2, 0)) / det;
+        inv[1][2] = -(matrix.get(0, 0) * matrix.get(1, 2) - matrix.get(0, 2) * matrix.get(1, 0)) / det;
 
-        inv[2][0] =  (matrix.get(1,0)*matrix.get(2,1) - matrix.get(1,1)*matrix.get(2,0)) / det;
-        inv[2][1] = -(matrix.get(0,0)*matrix.get(2,1) - matrix.get(0,1)*matrix.get(2,0)) / det;
-        inv[2][2] =  (matrix.get(0,0)*matrix.get(1,1) - matrix.get(0,1)*matrix.get(1,0)) / det;
+        inv[2][0] = (matrix.get(1, 0) * matrix.get(2, 1) - matrix.get(1, 1) * matrix.get(2, 0)) / det;
+        inv[2][1] = -(matrix.get(0, 0) * matrix.get(2, 1) - matrix.get(0, 1) * matrix.get(2, 0)) / det;
+        inv[2][2] = (matrix.get(0, 0) * matrix.get(1, 1) - matrix.get(0, 1) * matrix.get(1, 0)) / det;
 
         return new Matrix(inv);
     }
@@ -513,7 +504,7 @@ public class Matrix {
 
         if (rows == 1) {
             if (get(0, 0) == 0.0) throw new IllegalArgumentException("Matrix is singular");
-            else return new Matrix(new double[][]{{1 / get(0, 0)}});
+            else return new Matrix(new double[][] {{1 / get(0, 0)}});
         }
         if (rows == 2) return Matrix.inverse2x2(this);
         if (rows == 3) return Matrix.inverse3x3(this);
@@ -645,12 +636,12 @@ public class Matrix {
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < rows; j++) {
                 double sum = get(i, j);
-                for (int k = 0; k < j; k++)
-                    sum -= L_vals[i][k] * L_vals[j][k];
+                for (int k = 0; k < j; k++) sum -= L_vals[i][k] * L_vals[j][k];
 
                 if (i == j) {
                     if (sum <= 0)
-                        throw new IllegalArgumentException("Cannot use Cholesky decomposition on matrix that isn't positive-definite.");
+                        throw new IllegalArgumentException(
+                                "Cannot use Cholesky decomposition on matrix that isn't positive-definite.");
 
                     L_vals[i][j] = Math.sqrt(sum);
                 } else {
@@ -704,8 +695,7 @@ public class Matrix {
             }
         }
 
-        for (int i = 0; i < rows; i++)
-            L_vals[i][i] = 1.0;
+        for (int i = 0; i < rows; i++) L_vals[i][i] = 1.0;
         Matrix L = new Matrix(L_vals);
 
         return new Matrix[] {P, L, U};
@@ -716,7 +706,7 @@ public class Matrix {
      * @return String obj
      */
     @Override
-    public String toString(){
+    public String toString() {
         StringBuilder builder = new StringBuilder("[");
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
@@ -738,13 +728,11 @@ public class Matrix {
      */
     public boolean equals(Matrix other, double eps) {
         if (other == null) return false;
-        if (this.rows != other.rows || this.cols != other.cols)
-            return false;
+        if (this.rows != other.rows || this.cols != other.cols) return false;
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                if (Math.abs(get(i, j) - other.get(i, j)) > eps)
-                    return false;
+                if (Math.abs(get(i, j) - other.get(i, j)) > eps) return false;
             }
         }
         return true;

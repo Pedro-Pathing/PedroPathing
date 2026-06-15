@@ -71,9 +71,7 @@ public class Pinpoint implements Localizer {
                 odometry.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS)
         );
 
-        Twist twist = velocity.toTwist(pose.heading());
-
-        motionState = new MotionState(pose, velocity, twist);
+        motionState = MotionState.ofVelocity(pose, velocity);
     }
 
     @Override

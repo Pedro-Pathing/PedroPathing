@@ -19,7 +19,6 @@ public class Mecanum implements Drivetrain {
     private static final int BL = 1;
     private static final int FR = 2;
     private static final int BR = 3;
-    private boolean manual;
 
     public Mecanum(HardwareMap map, MecanumConfig config) {
         double powerDeadband = config.powerThreshold.get();
@@ -78,19 +77,9 @@ public class Mecanum implements Drivetrain {
     public void drive(DrivePowers powers, boolean manual) {
         if (manual) {
             if (manualBrakeMode)
-                setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-            manual = false;
-        }
-        applyDrive(powers);
-    }
-
-    @Override
-    public void manual(DrivePowers powers) {
-        if (!manual) {
-            if (manualBrakeMode)
                 setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            manual = true;
         }
+        setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         applyDrive(powers);
     }
 
