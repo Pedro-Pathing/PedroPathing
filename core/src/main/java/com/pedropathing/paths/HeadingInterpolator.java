@@ -113,6 +113,11 @@ public interface HeadingInterpolator {
                 inner = generator.get();
                 inner.init();
             }
+
+            @Override
+            public HeadingInterpolator mirror() {
+                return lazy(() -> generator.get().mirror());
+            }
         };
     }
 
@@ -131,6 +136,11 @@ public interface HeadingInterpolator {
             public void init() {
                 outer.init();
             }
+
+            @Override
+            public HeadingInterpolator mirror() {
+                return outer.mirror().offset(-offsetRad);
+            }
         };
     }
     
@@ -145,6 +155,29 @@ public interface HeadingInterpolator {
             @Override
             public double interpolate(PathPoint closestPoint) {
                 return MathFunctions.normalizeAngle(outer.interpolate(closestPoint) + Math.PI);
+            }
+
+            @Override
+            public void init() {
+                outer.init();
+            }
+
+            @Override
+            public HeadingInterpolator mirror() {
+                return outer.mirror().reverse();
+            }
+        };
+    }
+
+    /**
+     * Mirrors the heading produced by this interpolator.
+     */
+    default HeadingInterpolator mirror() {
+        HeadingInterpolator outer = this;
+        return new HeadingInterpolator() {
+            @Override
+            public double interpolate(PathPoint closestPoint) {
+                return MathFunctions.normalizeAngle(Math.PI - outer.interpolate(closestPoint));
             }
 
             @Override
@@ -218,10 +251,21 @@ public interface HeadingInterpolator {
      * The robot will always be facing the given point while following the path.
      */
     static HeadingInterpolator facingPoint(double x, double y) {
-        return closestPoint -> MathFunctions.normalizeAngle(Math.atan2(
-            y - closestPoint.pose.getY(),
-            x - closestPoint.pose.getX()
-        ));
+        return new HeadingInterpolator() {
+            @Override
+            public double interpolate(PathPoint closestPoint) {
+                return MathFunctions.normalizeAngle(Math.atan2(
+                        y - closestPoint.pose.getY(),
+                        x - closestPoint.pose.getX()
+                ));
+            }
+
+            @Override
+            public HeadingInterpolator mirror() {
+                Pose mirroredTarget = new Pose(x, y).mirror();
+                return facingPoint(mirroredTarget.getX(), mirroredTarget.getY());
+            }
+        };
     }
 
     /**
@@ -262,6 +306,19 @@ public interface HeadingInterpolator {
             @Override
             public void init() {
                 for (PiecewiseNode node : nodes) node.interpolator.init();
+            }
+
+            @Override
+            public HeadingInterpolator mirror() {
+                PiecewiseNode[] mirroredNodes = new PiecewiseNode[nodes.length];
+                for (int i = 0; i < nodes.length; i++) {
+                    mirroredNodes[i] = new PiecewiseNode(
+                            nodes[i].getInitialTValue(),
+                            nodes[i].getFinalTValue(),
+                            nodes[i].getInterpolator().mirror()
+                    );
+                }
+                return piecewise(mirroredNodes);
             }
         };
     }

@@ -453,4 +453,32 @@ public class PathChain {
 
         return nextCallbacks;
     }
+
+    /**
+     * Returns a new PathChain mirrored across the field (default length of 141.5 inches) in Pedro coordinates.
+     */
+    public PathChain mirror() {
+        return mirror(141.5);
+    }
+
+    /**
+     * Returns a new PathChain mirrored across the field in Pedro coordinates.
+     *
+     * @param fieldLength distance from one end of the field to the other along the x-axis.
+     */
+    public PathChain mirror(double fieldLength) {
+        Path[] mirroredPaths = new Path[pathChain.size()];
+        for (int i = 0; i < pathChain.size(); i++) {
+            mirroredPaths[i] = pathChain.get(i).mirror(fieldLength);
+        }
+
+        PathChain mirrored = new PathChain(mirroredPaths);
+        mirrored.setDecelerationType(decelerationType);
+
+        if (headingInterpolator != null) {
+            mirrored.setHeadingInterpolator(headingInterpolator.mirror());
+        }
+
+        return mirrored;
+    }
 }

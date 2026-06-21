@@ -1,6 +1,7 @@
 package com.pedropathing.paths;
 
 import com.pedropathing.geometry.BezierCurve;
+import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Curve;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.Vector;
@@ -685,5 +686,33 @@ public class Path {
     
     public Vector getClosestLeftGradientVector() {
         return curve.leftGradient(closestPointTValue).normalize();
+    }
+
+    /**
+     * Returns a new Path mirrored across the field (default length of 141.5 inches) in Pedro coordinates.
+     */
+    public Path mirror() {
+        return mirror(141.5);
+    }
+
+    /**
+     * Returns a new Path mirrored across the field in Pedro coordinates.
+     *
+     * @param fieldLength distance from one end of the field to the other along the x-axis.
+     */
+    public Path mirror(double fieldLength) {
+        ArrayList<Pose> original = getControlPoints();
+        Pose[] mirrored = new Pose[original.size()];
+        for (int i = 0; i < original.size(); i++) {
+            mirrored[i] = original.get(i).mirror(fieldLength);
+        }
+
+        Curve mirroredCurve = mirrored.length == 2
+                ? new BezierLine(mirrored[0], mirrored[1])
+                : new BezierCurve(mirrored);
+
+        Path result = new Path(mirroredCurve, constraints.copy());
+        result.setHeadingInterpolation(headingInterpolator.mirror());
+        return result;
     }
 }
