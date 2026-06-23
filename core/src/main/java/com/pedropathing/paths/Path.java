@@ -68,6 +68,16 @@ public abstract class Path {
         return linear(start.heading(), end.heading());
     }
 
+    public Path linear(double start, double end, double endT) {
+        if (endT == 1)
+            return linear(start, end);
+        return heading(Interpolator.piecewise().until(endT, Interpolator.linear(start, end)).until(1, Interpolator.constant(end)));
+    }
+
+    public Path linear(Pose start, Pose end, double endT) {
+        return linear(start.heading(), end.heading(), endT);
+    }
+
     public Path tangent() {
         return heading(Interpolator.tangent);
     }

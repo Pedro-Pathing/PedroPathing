@@ -37,7 +37,7 @@ public final class PoseFactory {
     }
 
     public PoseFactory mirrorY(double axis) {
-        return map(pose -> pose.withY(2 * axis - pose.y()).withHeading(-pose.heading()));
+        return map(pose -> pose.withY(2 * axis - pose.y()).withHeading(pose.heading()));
     }
 
     public PoseFactory mapX(DoubleUnaryOperator operator) {
