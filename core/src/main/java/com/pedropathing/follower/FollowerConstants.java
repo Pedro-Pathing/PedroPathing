@@ -249,6 +249,18 @@ public class FollowerConstants {
      */
     public double stuckTimeout = 500.0;
 
+    /** The velocity threshold for TeleOp auto-hold. If the driver is not giving
+     * any input and the robot's velocity drops below this value, the auto-hold feature will engage (if enabled).
+     * Default Value: 0.2
+     */
+    public double holdVelocityThreshold = 0.2;
+
+    /** The input threshold for TeleOp auto-hold. If the magnitude of the driver's
+     * joystick input drops below this value, the robot will consider itself to have "no input".
+     * Default Value: 0.1
+     */
+    public double holdInputThreshold = 0.1;
+
     public FollowerConstants() {
         defaults();
     }

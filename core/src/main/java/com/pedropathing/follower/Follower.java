@@ -65,6 +65,11 @@ public class Follower {
     private Timer zeroVelocityDetectedTimer = null;
     private Runnable resetFollowing = null;
     private Queue<PathCallback> currentCallbacks;
+    private boolean teleOpAutoHoldEnabled = false;
+    private boolean teleOpBrakeMode = true;
+    private double teleOpRawForward = 0;
+    private double teleOpRawStrafe = 0;
+    private double teleOpRawTurn = 0;
 
     /**
      * This creates a new Follower given a HardwareMap.
@@ -389,6 +394,22 @@ public class Follower {
         drivetrain.startTeleopDrive(useBrakeMode);
     }
 
+    /**
+     * This starts teleop drive control.
+     */
+    public void startTeleopDrive(boolean useBrakeMode, boolean holdPosition) {
+        breakFollowing();
+        manualDrive = true;
+        teleOpAutoHoldEnabled = holdPosition;
+        teleOpBrakeMode = useBrakeMode;
+        update();
+        drivetrain.startTeleopDrive(useBrakeMode);
+    }
+
+    public void startTeleOpDrive(boolean useBrakeMode, boolean holdPosition) {
+        startTeleopDrive(useBrakeMode, holdPosition);
+    }
+
     public void startTeleOpDrive(boolean useBrakeMode) {
         startTeleopDrive(useBrakeMode);
     }
@@ -407,6 +428,9 @@ public class Follower {
      * @param offsetHeading the offset heading for field centric control, will face the direction of such heading in radians in the field coordinate system when driving forward
      */
     public void setTeleOpDrive(double forward, double strafe, double turn, boolean isRobotCentric, double offsetHeading) {
+        teleOpRawForward = forward;
+        teleOpRawStrafe = strafe;
+        teleOpRawTurn = turn;
         vectorCalculator.setTeleOpMovementVectors(forward, strafe, turn, isRobotCentric, offsetHeading);
     }
 
@@ -419,6 +443,9 @@ public class Follower {
      * @param offsetHeading the offset heading for field centric control, will face the direction of such heading in radians in the field coordinate system when driving forward
      */
     public void setTeleOpDrive(double forward, double strafe, double turn, double offsetHeading) {
+        teleOpRawForward = forward;
+        teleOpRawStrafe = strafe;
+        teleOpRawTurn = turn;
         vectorCalculator.setTeleOpMovementVectors(forward, strafe, turn, true, offsetHeading);
     }
 
@@ -431,6 +458,9 @@ public class Follower {
      * @param isRobotCentric true if robot centric control, false if field centric
      */
     public void setTeleOpDrive(double forward, double strafe, double turn, boolean isRobotCentric) {
+        teleOpRawForward = forward;
+        teleOpRawStrafe = strafe;
+        teleOpRawTurn = turn;
         vectorCalculator.setTeleOpMovementVectors(forward, strafe, turn, isRobotCentric);
     }
 
@@ -443,6 +473,9 @@ public class Follower {
      * @param turn the turn movement
      */
     public void setTeleOpDrive(double forward, double strafe, double turn) {
+        teleOpRawForward = forward;
+        teleOpRawStrafe = strafe;
+        teleOpRawTurn = turn;
         vectorCalculator.setTeleOpMovementVectors(forward, strafe, turn);
     }
 
@@ -489,8 +522,44 @@ public class Follower {
         updatePose();
         updateDrivetrain();
 
+        if (teleOpAutoHoldEnabled && holdingPosition) {
+            boolean hasInput = Math.abs(teleOpRawForward) > constants.holdInputThreshold
+                    || Math.abs(teleOpRawStrafe) > constants.holdInputThreshold
+                    || Math.abs(teleOpRawTurn) > constants.holdInputThreshold;
+
+            if (hasInput) {
+                boolean savedBrakeMode = teleOpBrakeMode;
+
+                breakFollowing();
+                manualDrive = true;
+                drivetrain.startTeleopDrive(savedBrakeMode);
+
+                teleOpAutoHoldEnabled = true;
+                teleOpBrakeMode = savedBrakeMode;
+
+                // Re-populate vectors wiped by breakFollowing() so motors respond this frame
+                vectorCalculator.setTeleOpMovementVectors(teleOpRawForward, teleOpRawStrafe, teleOpRawTurn);
+            }
+        }
 
         if (manualDrive) {
+            if (teleOpAutoHoldEnabled) {
+                boolean hasInput = Math.abs(teleOpRawForward) > constants.holdInputThreshold
+                        || Math.abs(teleOpRawStrafe) > constants.holdInputThreshold
+                        || Math.abs(teleOpRawTurn) > constants.holdInputThreshold;
+
+                if (!hasInput && getVelocity().getMagnitude() < constants.holdVelocityThreshold) {
+                    boolean savedBrakeMode = teleOpBrakeMode;
+
+                    holdPoint(getPose());
+
+                    teleOpAutoHoldEnabled = true;
+                    teleOpBrakeMode = savedBrakeMode;
+                    manualDrive = false;
+                    return;
+                }
+            }
+
             previousClosestPose = closestPose;
             closestPose = new PathPoint();
             updateErrorAndVectors();
@@ -616,6 +685,7 @@ public class Follower {
         isTurning = false;
         reachedParametricPathEnd = false;
         zeroVelocityDetectedTimer = null;
+        teleOpAutoHoldEnabled = false;
     }
 
     /**
