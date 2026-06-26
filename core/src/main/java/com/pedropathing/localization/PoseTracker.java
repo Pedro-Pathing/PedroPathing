@@ -41,14 +41,17 @@ public class PoseTracker {
      * Creates a new PoseTracker from a Localizer.
      *
      * @param localizer the Localizer
+     * @param resetIMU whether to reset the IMU or not (if applicable)
      */
-    public PoseTracker(Localizer localizer) {
+    public PoseTracker(Localizer localizer, boolean resetIMU) {
         this.localizer = localizer;
 
-        try {
-            localizer.resetIMU();
-        } catch (InterruptedException ignored) {
-            System.out.println("PoseTracker: resetIMU() interrupted");
+        if (resetIMU) {
+            try {
+                localizer.resetIMU();
+            } catch (InterruptedException ignored) {
+                System.out.println("PoseTracker: resetIMU() interrupted");
+            }
         }
     }
 

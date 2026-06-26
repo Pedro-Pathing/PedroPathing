@@ -44,7 +44,19 @@ public class PinpointLocalizer implements Localizer {
      *
      * @param map the HardwareMap
      */
-    public PinpointLocalizer(HardwareMap map, PinpointConstants constants){ this(map, constants, new Pose());}
+    public PinpointLocalizer(HardwareMap map, PinpointConstants constants) {
+        this(map, constants, true);
+    }
+
+    /**
+     * This creates a new PinpointLocalizer from a HardwareMap, with a starting Pose at (0,0)
+     * facing 0 heading.
+     *
+     * @param map the HardwareMap
+     */
+    public PinpointLocalizer(HardwareMap map, PinpointConstants constants, boolean resetIMU) {
+        this(map, constants, new Pose(), resetIMU);
+    }
 
     /**
      * This creates a new PinpointLocalizer from a HardwareMap and a Pose, with the Pose
@@ -54,7 +66,7 @@ public class PinpointLocalizer implements Localizer {
      * @param setStartPose the Pose to start from
      */
     @SuppressLint("NewApi")
-    public PinpointLocalizer(HardwareMap map, PinpointConstants constants, Pose setStartPose){
+    public PinpointLocalizer(HardwareMap map, PinpointConstants constants, Pose setStartPose, boolean resetIMU) {
 
         odo = map.get(GoBildaPinpointDriver.class,constants.hardwareMapName);
         setOffsets(constants.forwardPodY, constants.strafePodX, constants.distanceUnit);
@@ -71,11 +83,19 @@ public class PinpointLocalizer implements Localizer {
 
         odo.setEncoderDirections(constants.forwardEncoderDirection, constants.strafeEncoderDirection);
 
-        setStartPose(setStartPose);
+        if (resetIMU) {
+            setStartPose(setStartPose);
+            pinpointPose = startPose;
+            previousHeading = setStartPose.getHeading();
+        } else {
+            odo.update();
+            pinpointPose = PoseConverter.pose2DToPose(odo.getPosition(), PedroCoordinates.INSTANCE);
+            startPose = pinpointPose;
+            previousHeading = pinpointPose.getHeading();
+        }
+
         totalHeading = 0;
-        pinpointPose = startPose;
         currentVelocity = new Pose();
-        previousHeading = setStartPose.getHeading();
         this.constants = constants;
     }
 

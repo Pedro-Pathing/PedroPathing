@@ -20,6 +20,7 @@ import com.pedropathing.ftc.localization.localizers.TwoWheelLocalizer;
 import com.pedropathing.localization.Localizer;
 import com.pedropathing.paths.PathConstraints;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import java.util.function.Supplier;
 
 /** This is the FollowerBuilder.
  * It is used to create Followers with a specific drivetrain + localizer without having to use a full constructor
@@ -30,8 +31,9 @@ public class FollowerBuilder {
     private final FollowerConstants constants;
     private PathConstraints constraints;
     private final HardwareMap hardwareMap;
-    private Localizer localizer;
+    private Supplier<Localizer> localizerSupplier;
     private Drivetrain drivetrain;
+    private boolean resetIMU = true;
 
     public FollowerBuilder(FollowerConstants constants, HardwareMap hardwareMap) {
         this.constants = constants;
@@ -40,36 +42,43 @@ public class FollowerBuilder {
     }
 
     public FollowerBuilder setLocalizer(Localizer localizer) {
-        this.localizer = localizer;
+        this.localizerSupplier = () -> localizer;
         return this;
     }
 
     public FollowerBuilder driveEncoderLocalizer(DriveEncoderConstants lConstants) {
-        return setLocalizer(new DriveEncoderLocalizer(hardwareMap, lConstants));
+        this.localizerSupplier = () -> new DriveEncoderLocalizer(hardwareMap, lConstants);
+        return this;
     }
 
     public FollowerBuilder octoQuadLocalizer(OctoQuadConstants lConstants, OctoQuadLocalizer.InitMode initMode) {
-        return setLocalizer(new OctoQuadLocalizer(hardwareMap, lConstants, initMode));
+        this.localizerSupplier = () -> new OctoQuadLocalizer(hardwareMap, lConstants, initMode);
+        return this;
     }
 
     public FollowerBuilder OTOSLocalizer(OTOSConstants lConstants) {
-        return setLocalizer(new OTOSLocalizer(hardwareMap, lConstants));
+        this.localizerSupplier = () -> new OTOSLocalizer(hardwareMap, lConstants);
+        return this;
     }
 
     public FollowerBuilder pinpointLocalizer(PinpointConstants lConstants) {
-        return setLocalizer(new PinpointLocalizer(hardwareMap, lConstants));
+        this.localizerSupplier = () -> new PinpointLocalizer(hardwareMap, lConstants, resetIMU);
+        return this;
     }
 
     public FollowerBuilder threeWheelIMULocalizer(ThreeWheelIMUConstants lConstants) {
-        return setLocalizer(new ThreeWheelIMULocalizer(hardwareMap, lConstants));
+        this.localizerSupplier = () -> new ThreeWheelIMULocalizer(hardwareMap, lConstants);
+        return this;
     }
 
     public FollowerBuilder threeWheelLocalizer(ThreeWheelConstants lConstants) {
-        return setLocalizer(new ThreeWheelLocalizer(hardwareMap, lConstants));
+        this.localizerSupplier = () -> new ThreeWheelLocalizer(hardwareMap, lConstants);
+        return this;
     }
 
     public FollowerBuilder twoWheelLocalizer(TwoWheelConstants lConstants) {
-        return setLocalizer(new TwoWheelLocalizer(hardwareMap, lConstants));
+        this.localizerSupplier = () -> new TwoWheelLocalizer(hardwareMap, lConstants);
+        return this;
     }
 
     public FollowerBuilder setDrivetrain(Drivetrain drivetrain) {
@@ -96,7 +105,12 @@ public class FollowerBuilder {
         return this;
     }
 
+    public FollowerBuilder resetIMU(boolean resetIMU) {
+        this.resetIMU = resetIMU;
+        return this;
+    }
+
     public Follower build() {
-        return new Follower(constants, localizer, drivetrain, constraints);
+        return new Follower(constants, localizerSupplier.get(), drivetrain, constraints, resetIMU);
     }
 }

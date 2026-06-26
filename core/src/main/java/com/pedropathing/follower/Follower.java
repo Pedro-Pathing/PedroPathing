@@ -72,12 +72,13 @@ public class Follower {
      * @param localizer Localizer to use
      * @param drivetrain Drivetrain to use
      * @param pathConstraints PathConstraints to use
+     * @param resetIMU whether to reset the IMU or not (if applicable)
      */
-    public Follower(FollowerConstants constants, Localizer localizer, Drivetrain drivetrain, PathConstraints pathConstraints) {
+    public Follower(FollowerConstants constants, Localizer localizer, Drivetrain drivetrain, PathConstraints pathConstraints, boolean resetIMU) {
         this.constants = constants;
         this.pathConstraints = pathConstraints;
 
-        poseTracker = new PoseTracker(localizer);
+        poseTracker = new PoseTracker(localizer, resetIMU);
         errorCalculator = new ErrorCalculator(constants);
         vectorCalculator = new VectorCalculator(constants);
         this.drivetrain = drivetrain;
@@ -112,7 +113,7 @@ public class Follower {
      * @param drivetrain Drivetrain to use
      */
     public Follower(FollowerConstants constants, Localizer localizer, Drivetrain drivetrain) {
-        this(constants, localizer, drivetrain, PathConstraints.defaultConstraints);
+        this(constants, localizer, drivetrain, PathConstraints.defaultConstraints, true);
     }
 
     public void setCentripetalScaling(double set) {
