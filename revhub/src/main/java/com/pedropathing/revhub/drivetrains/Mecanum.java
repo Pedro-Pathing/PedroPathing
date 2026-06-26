@@ -13,7 +13,7 @@ public class Mecanum implements Drivetrain {
     private final boolean manualBrakeMode;
 
     private final CachedMotor[] motors;
-    private final double[] wheelPowers = new double[4];
+    public final double[] wheelPowers = new double[4];
 
     private static final int FL = 0;
     private static final int FR = 1;
@@ -63,23 +63,15 @@ public class Mecanum implements Drivetrain {
         for (int i = 0; i < wheelPowers.length; i++) {
             motors[i].setPower(wheelPowers[i]);
         }
-
-        boolean normalized = max > 1.0;
-        RobotLog.i("Mecanum", String.format(
-                "Mecanum drive raw: fl=%.3f bl=%.3f fr=%.3f br=%.3f | normMax=%.3f | normalized=%b | out: fl=%.3f bl=%.3f fr=%.3f br=%.3f",
-                fl, bl, fr, br, max, normalized,
-                wheelPowers[FL], wheelPowers[FR], wheelPowers[BL], wheelPowers[BR]
-        ));
     }
 
 
     @Override
     public void drive(DrivePowers powers, boolean manual) {
-        if (manual) {
-            if (manualBrakeMode)
-                setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        }
-        setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        if (manual && manualBrakeMode)
+            setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        else
+            setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         applyDrive(powers);
     }
 

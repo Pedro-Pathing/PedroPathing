@@ -20,7 +20,7 @@ public class Follower {
     private Algorithm algorithm;
     private PathTracker pathTracker = null;
     private Pose holdPose = null;
-    private DrivePowers manualPowers = null;
+    public DrivePowers manualPowers = null; // TODO: remove public (just for testing)
     private Mode mode = Mode.IDLE;
     private long previousNanoTime = 0L;
 

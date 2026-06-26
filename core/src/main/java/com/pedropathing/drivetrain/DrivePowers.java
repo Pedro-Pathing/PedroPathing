@@ -31,4 +31,13 @@ public class DrivePowers {
     public double turn() {
         return turn;
     }
+
+    @Override
+    public String toString() {
+        return "DrivePowers{" +
+                "forward=" + forward +
+                ", strafe=" + strafe +
+                ", turn=" + turn +
+                '}';
+    }
 }

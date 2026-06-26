@@ -1,5 +1,6 @@
 package com.pedropathing.revhub.drivetrains;
 
+import com.pedropathing.utils.Utils;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -20,9 +21,12 @@ public class CachedMotor {
     public void setPower(double power) {
         if (Double.isNaN(power) || Double.isInfinite(power)) return;
 
-        double desired = Math.max(-1.0, Math.min(1.0, power));
+        double desired = Utils.clamp(power, -1, 1);
 
-        if (Math.abs(this.power - desired) >= powerThreshold) {
+        boolean exceedsThreshold = Math.abs(this.power - desired) >= powerThreshold;
+        boolean switchesSigns = Math.signum(this.power) != Math.signum(desired);
+
+        if (exceedsThreshold || switchesSigns) {
             this.power = desired;
             motor.setPower(desired);
         }
