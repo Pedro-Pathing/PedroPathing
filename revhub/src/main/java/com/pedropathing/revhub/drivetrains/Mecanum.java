@@ -56,8 +56,8 @@ public class Mecanum implements Drivetrain {
         double scale = 1 / max;
 
         wheelPowers[FL] = fl * scale;
-        wheelPowers[FR] = bl * scale;
-        wheelPowers[BL] = fr * scale;
+        wheelPowers[FR] = fr * scale;
+        wheelPowers[BL] = bl * scale;
         wheelPowers[BR] = br * scale;
 
         for (int i = 0; i < wheelPowers.length; i++) {

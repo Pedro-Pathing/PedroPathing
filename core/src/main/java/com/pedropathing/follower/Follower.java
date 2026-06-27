@@ -72,9 +72,11 @@ public class Follower {
             }
             case MANUAL: {
                 drivetrain.drive(manualPowers, true);
+                break;
             }
             case IDLE: {
                 drivetrain.stop();
+                break;
             }
         }
     }
