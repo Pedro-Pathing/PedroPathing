@@ -21,4 +21,5 @@ public interface Algorithm {
     double curvature();
     double remainingDistance();
     double pathCompletion();
+    boolean atParametricEnd(double t);
 }

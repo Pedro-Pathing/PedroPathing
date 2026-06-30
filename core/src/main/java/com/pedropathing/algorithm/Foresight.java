@@ -180,6 +180,11 @@ public class Foresight implements Algorithm {
         return curveCompletion;
     }
 
+    @Override
+    public boolean atParametricEnd(double t) {
+        return t >= config.parametricTConstraint.get();
+    }
+
     /**
      * Compute heading correction power for the given state and target heading.
      */

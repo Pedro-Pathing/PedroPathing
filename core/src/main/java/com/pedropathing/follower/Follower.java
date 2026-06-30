@@ -14,7 +14,9 @@ import com.pedropathing.math.Twist;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.math.Velocity;
 import com.pedropathing.paths.Path;
+import com.pedropathing.paths.PathSegment;
 import com.pedropathing.paths.PathTracker;
+import com.pedropathing.paths.curves.Curve;
 
 import lombok.Setter;
 
@@ -109,6 +111,10 @@ public class Follower {
         useHoldScaling = useScaling;
     }
 
+    public void turn(double heading) {
+        hold(pose().withHeading(heading));
+    }
+
     public void manual(DrivePowers powers) {
         clearState();
         mode = Mode.MANUAL;
@@ -175,6 +181,10 @@ public class Follower {
         IDLE
     }
 
+    public boolean atParametricEnd() {
+        return !mode.equals(Mode.FOLLOW) || algorithm.atParametricEnd(closestT());
+    }
+
     public double closestT() {
         return algorithm.closestT();
     }
@@ -201,5 +211,25 @@ public class Follower {
 
     public double remainingDistance() {
         return algorithm.remainingDistance();
+    }
+
+    public int pathIndex() {
+        return pathTracker.currentIndex();
+    }
+
+    public PathSegment currentSegment() {
+        return pathTracker.current();
+    }
+
+    public Curve currentCurve() {
+        return currentSegment().curve;
+    }
+
+    public Path currentPath() {
+        return pathTracker.path();
+    }
+
+    public double getTangentialVelocity() {
+        return velocity().toVector2D().dot(closestTangent());
     }
 }
