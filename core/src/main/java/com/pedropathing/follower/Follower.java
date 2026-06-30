@@ -111,10 +111,6 @@ public class Follower {
         useHoldScaling = useScaling;
     }
 
-    public void turn(double heading) {
-        hold(pose().withHeading(heading));
-    }
-
     public void manual(DrivePowers powers) {
         clearState();
         mode = Mode.MANUAL;
