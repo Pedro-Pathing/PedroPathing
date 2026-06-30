@@ -25,6 +25,10 @@ public class Foresight implements Algorithm {
     private static final int DRIVE = 2;
     private final ForesightConfig config;
     private final Supplier<Ellipse2D> maxAchievableVelocity, maxAchievableDeceleration;
+    private double closestT, curvature;
+    private double pathCompletion, remainingDistance;
+    private Pose closestPose;
+    private Vector2D closestTangent, closestNormal;
 
     public Foresight(ForesightConfig config) {
         this.config = config;
@@ -44,10 +48,12 @@ public class Foresight implements Algorithm {
 
     @Override
     public DrivePowers calculatePath(PathTracker pathTracker, MotionState state, double deltaTime) {
-        double t = pathTracker.current().curve.closestT(state.pose().toVector2D());
-        double targetHeading = pathTracker.current().heading(t);
+        closestT = pathTracker.current().curve.closestT(state.pose().toVector2D());
+        double targetHeading = pathTracker.current().heading(closestT);
+        closestPose = pathTracker.current().curve.get(closestT).toPose(targetHeading);
+        curvature = pathTracker.current().curve.curvature(closestT);
 
-        if (t >= (1 - config.parametricTConstraint.get())) { // End Constraint
+        if (closestT >= (1 - config.parametricTConstraint.get())) { // End Constraint
             if (pathTracker.remainingPaths() > 1) { // advance if constraints met
                 pathTracker.advance();
                 return calculatePath(pathTracker, state, deltaTime);
@@ -59,16 +65,16 @@ public class Foresight implements Algorithm {
 
         double headingError = headingError(state.pose().heading(), targetHeading);
         double headingPower = headingPower(state, targetHeading);
-        double remainingDistance = pathTracker.current().curve.remainingDistance(t);
+        remainingDistance = pathTracker.current().curve.remainingDistance(closestT);
+        pathCompletion = 1 - remainingDistance / pathTracker.current().curve.length();
 
         // Compute tangent and normal first so braking can consider the angle between
         // the path tangent and the robot heading (theta) instead of using heading alone.
-        Vector2D closestTangentVector = pathTracker.current().curve.tangent(t);
-        Vector2D closestNormalVector = pathTracker.current().curve.leftNormal(t);
-        double thetaForBraking =
-                closestTangentVector.angleTo(Vector2D.unit(state.pose().heading()));
+        closestTangent = pathTracker.current().curve.tangent(closestT);
+        closestNormal = pathTracker.current().curve.leftNormal(closestT);
+        double thetaForBraking = closestTangent.angleTo(Vector2D.unit(state.pose().heading()));
         double velocityToBrakeInTime = getVelocityToBrakeInTime(remainingDistance, thetaForBraking);
-        double tangentialSpeed = closestTangentVector.dot(state.velocity().toVector2D());
+        double tangentialSpeed = closestTangent.dot(state.velocity().toVector2D());
         boolean isBraking = tangentialSpeed >= velocityToBrakeInTime;
         // may want hard switch? or maybe add some hysteresis?
         // or hard switch until velocity is going to change directions if it continues to brake?
@@ -83,34 +89,32 @@ public class Foresight implements Algorithm {
         Vector2D brakingDisplacement =
                 getBrakeDisplacement(state.twist(), state.pose().heading());
 
-        Vector2D driveVector = closestTangentVector.times(drive(
+        Vector2D driveVector = closestTangent.times(drive(
                 tangentialSpeed,
-                closestTangentVector,
+                closestTangent,
                 state.pose().heading(),
                 deltaTime,
                 velocityToBrakeInTime,
                 isBraking,
                 remainingDistance,
-                brakingDisplacement.dot(closestTangentVector)));
+                brakingDisplacement.dot(closestTangent)));
 
-        Vector2D displacementToPath =
-                pathTracker.current().curve.get(t).minus(state.pose().toVector2D());
+        Vector2D displacementToPath = closestPose.minus(state.pose()).toVector2D();
         double translationalError = displacementToPath.magnitude();
         Vector2D translationalVector = computeTranslationalCorrection(displacementToPath, brakingDisplacement);
 
-        boolean atParametricStart = t <= config.parametricTConstraint.get();
+        boolean atParametricStart = closestT <= config.parametricTConstraint.get();
         if (atParametricStart) {
             Vector2D displacementToStart =
                     pathTracker.current().curve.startPoint().minus(state.pose().toVector2D());
-            double tangentDisplacementToStart = displacementToStart.dot(closestTangentVector);
+            double tangentDisplacementToStart = displacementToStart.dot(closestTangent);
             boolean isBeforePath = tangentDisplacementToStart > 0;
             if (isBeforePath) {
                 driveVector = driveVector.times(tangentDisplacementToStart / translationalError);
             }
         } else {
-            double centripetal =
-                    centripetal(tangentialSpeed, pathTracker.current().curve.curvature(t));
-            translationalVector = translationalVector.plus(closestNormalVector.times(centripetal));
+            double centripetal = centripetal(tangentialSpeed, curvature);
+            translationalVector = translationalVector.plus(closestNormal.times(centripetal));
 
             if ((Math.abs(headingError) > 2 * config.headingDeviationTolerance.get())
                     || (Math.abs(translationalError) > 2 * config.translationalDeviationTolerance.get()))
@@ -135,6 +139,31 @@ public class Foresight implements Algorithm {
         translational = translational.times(translationalScale);
         headingPower *= headingScale;
         return getDrivePowers(translational, state, headingPower);
+    }
+
+    @Override
+    public double closestT() {
+        return closestT;
+    }
+
+    @Override
+    public Pose closestPose() {
+        return closestPose;
+    }
+
+    @Override
+    public Vector2D closestTangent() {
+        return closestTangent;
+    }
+
+    @Override
+    public Vector2D closestNormal() {
+        return closestNormal;
+    }
+
+    @Override
+    public double curvature() {
+        return curvature;
     }
 
     /**

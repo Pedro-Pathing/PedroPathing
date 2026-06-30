@@ -10,13 +10,17 @@ import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.drivetrain.Drivetrain;
 import com.pedropathing.localization.Localizer;
 import com.pedropathing.math.Pose;
+import com.pedropathing.math.Vector2D;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathTracker;
+
+import lombok.Setter;
 
 public class Follower {
     public final Localizer localizer;
     public final Drivetrain drivetrain;
     public final ConfigVar<Boolean> holdEnd = ConfigVar.of(true);
+    @Setter
     private Algorithm algorithm;
     private PathTracker pathTracker = null;
     private Pose holdPose = null;
@@ -32,10 +36,6 @@ public class Follower {
 
     public Mode mode() {
         return mode;
-    }
-
-    public void setAlgorithm(Algorithm algorithm) {
-        this.algorithm = algorithm;
     }
 
     public void update() {
@@ -144,5 +144,25 @@ public class Follower {
         HOLD,
         MANUAL,
         IDLE
+    }
+
+    public double closestT() {
+        return algorithm.closestT();
+    }
+
+    public Vector2D closestTangent() {
+        return algorithm.closestTangent();
+    }
+
+    public Vector2D closestNormal() {
+        return algorithm.closestNormal();
+    }
+
+    public double curvature() {
+        return algorithm.curvature();
+    }
+
+    public Pose closestPose() {
+        return algorithm.closestPose();
     }
 }

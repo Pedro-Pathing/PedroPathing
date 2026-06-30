@@ -7,10 +7,18 @@ package com.pedropathing.algorithm;
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.localization.MotionState;
 import com.pedropathing.math.Pose;
+import com.pedropathing.math.Vector;
+import com.pedropathing.math.Vector2D;
 import com.pedropathing.paths.PathTracker;
 
 public interface Algorithm {
     DrivePowers calculatePath(PathTracker pathTracker, MotionState state, double deltaTime);
-
     DrivePowers calculateHold(Pose target, MotionState state, double deltaTime);
+    double closestT();
+    Pose closestPose();
+    Vector2D closestTangent();
+    Vector2D closestNormal();
+    double curvature();
+    double remainingDistance();
+    double pathCompletion();
 }
