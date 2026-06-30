@@ -165,4 +165,12 @@ public class Follower {
     public Pose closestPose() {
         return algorithm.closestPose();
     }
+
+    public double curveCompletion() {
+        return algorithm.pathCompletion();
+    }
+
+    public double remainingDistance() {
+        return algorithm.remainingDistance();
+    }
 }

@@ -26,7 +26,7 @@ public class Foresight implements Algorithm {
     private final ForesightConfig config;
     private final Supplier<Ellipse2D> maxAchievableVelocity, maxAchievableDeceleration;
     private double closestT, curvature;
-    private double pathCompletion, remainingDistance;
+    private double curveCompletion, remainingDistance;
     private Pose closestPose;
     private Vector2D closestTangent, closestNormal;
 
@@ -66,7 +66,7 @@ public class Foresight implements Algorithm {
         double headingError = headingError(state.pose().heading(), targetHeading);
         double headingPower = headingPower(state, targetHeading);
         remainingDistance = pathTracker.current().curve.remainingDistance(closestT);
-        pathCompletion = 1 - remainingDistance / pathTracker.current().curve.length();
+        curveCompletion = 1 - remainingDistance / pathTracker.current().curve.length();
 
         // Compute tangent and normal first so braking can consider the angle between
         // the path tangent and the robot heading (theta) instead of using heading alone.
@@ -164,6 +164,16 @@ public class Foresight implements Algorithm {
     @Override
     public double curvature() {
         return curvature;
+    }
+
+    @Override
+    public double remainingDistance() {
+        return remainingDistance;
+    }
+
+    @Override
+    public double pathCompletion() {
+        return curveCompletion;
     }
 
     /**
