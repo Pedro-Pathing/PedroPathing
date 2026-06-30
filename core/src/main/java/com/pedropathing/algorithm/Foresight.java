@@ -125,7 +125,7 @@ public class Foresight implements Algorithm {
     }
 
     @Override
-    public DrivePowers calculateHold(Pose target, MotionState state, double deltaTime) {
+    public DrivePowers calculateHold(Pose target, MotionState state, boolean useScaling, double deltaTime) {
         Vector2D translationalError = target.minus(state.pose()).toVector2D();
         Vector2D translational = computeTranslationalCorrection(
                 translationalError,
@@ -133,11 +133,15 @@ public class Foresight implements Algorithm {
         double headingPower = headingPower(state, target.heading());
         // Apply hold-point scalers. Clamp the scaler values to [0, 1] at runtime to
         // avoid accidental amplification if the configuration is set incorrectly.
-        double translationalScale = config.holdPointTranslationalScaling.get();
-        double headingScale = config.holdPointHeadingScaling.get();
 
-        translational = translational.times(translationalScale);
-        headingPower *= headingScale;
+        if (useScaling) {
+            double translationalScale = config.holdPointTranslationalScaling.get();
+            double headingScale = config.holdPointHeadingScaling.get();
+
+            translational = translational.times(translationalScale);
+            headingPower *= headingScale;
+        }
+
         return getDrivePowers(translational, state, headingPower);
     }
 

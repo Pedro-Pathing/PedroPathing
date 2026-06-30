@@ -10,7 +10,9 @@ import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.drivetrain.Drivetrain;
 import com.pedropathing.localization.Localizer;
 import com.pedropathing.math.Pose;
+import com.pedropathing.math.Twist;
 import com.pedropathing.math.Vector2D;
+import com.pedropathing.math.Velocity;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathTracker;
 
@@ -27,6 +29,7 @@ public class Follower {
     public DrivePowers manualPowers = null; // TODO: remove public (just for testing)
     private Mode mode = Mode.IDLE;
     private long previousNanoTime = 0L;
+    private boolean useHoldScaling;
 
     public Follower(Localizer localizer, Drivetrain drivetrain, Algorithm algorithm) {
         this.localizer = localizer;
@@ -66,7 +69,7 @@ public class Follower {
                 break;
             }
             case HOLD: {
-                DrivePowers powers = algorithm.calculateHold(holdPose, localizer.state(), deltaTime);
+                DrivePowers powers = algorithm.calculateHold(holdPose, localizer.state(), useHoldScaling, deltaTime);
                 drivetrain.drive(powers, false);
                 break;
             }
@@ -86,6 +89,7 @@ public class Follower {
         pathTracker = null;
         holdPose = null;
         manualPowers = null;
+        useHoldScaling = true;
     }
 
     public void follow(Path path) {
@@ -98,6 +102,11 @@ public class Follower {
         clearState();
         mode = Mode.HOLD;
         holdPose = pose;
+    }
+
+    public void hold(Pose pose, boolean useScaling) {
+        hold(pose);
+        useHoldScaling = useScaling;
     }
 
     public void manual(DrivePowers powers) {
@@ -119,8 +128,28 @@ public class Follower {
         localizer.setPose(pose);
     }
 
+    public void setX(double x) {
+        localizer.setX(x);
+    }
+
+    public void setY(double y) {
+        localizer.setY(y);
+    }
+
+    public void setHeading(double heading) {
+        localizer.setHeading(heading);
+    }
+
     public Pose pose() {
         return localizer.pose();
+    }
+
+    public Velocity velocity() {
+        return localizer.velocity();
+    }
+
+    public Twist twist() {
+        return localizer.twist();
     }
 
     public boolean following() {

@@ -4,6 +4,9 @@
  */
 package com.pedropathing.utils;
 
+import com.pedropathing.drivetrain.DrivePowers;
+import com.pedropathing.follower.Follower;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;

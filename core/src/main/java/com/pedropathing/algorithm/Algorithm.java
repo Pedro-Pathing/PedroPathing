@@ -13,7 +13,7 @@ import com.pedropathing.paths.PathTracker;
 
 public interface Algorithm {
     DrivePowers calculatePath(PathTracker pathTracker, MotionState state, double deltaTime);
-    DrivePowers calculateHold(Pose target, MotionState state, double deltaTime);
+    DrivePowers calculateHold(Pose target, MotionState state, boolean useScaling, double deltaTime);
     double closestT();
     Pose closestPose();
     Vector2D closestTangent();
