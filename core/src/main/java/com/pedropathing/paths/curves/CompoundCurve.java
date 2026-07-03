@@ -53,6 +53,11 @@ public class CompoundCurve implements Curve {
         return curves.length() - distanceAt(t);
     }
 
+    @Override
+    public double getT(double pathCompletion) {
+        return getTFromDistance(pathCompletion * length());
+    }
+
     private double distanceAt(double t) { // TODO: verify
         double distanceTraveled = 0.0;
         double currentT = 0.0;
@@ -79,6 +84,27 @@ public class CompoundCurve implements Curve {
         }
 
         return distanceTraveled;
+    }
+
+    public double getTFromDistance(double distance) {
+        if (distance <= 0) return 0;
+        if (distance >= length()) return 1;
+
+        double remaining = distance;
+
+        for (Piecewise.Segment<Curve> segment : curves.segments()) {
+            Curve curve = segment.value();
+            double curveLength = curve.length();
+
+            if (remaining <= curveLength) {
+                double localT = curve.getT(remaining);
+                return curves.globalT(segment, localT);
+            }
+
+            remaining -= curveLength;
+        }
+
+        return 1;
     }
 
     @Override
