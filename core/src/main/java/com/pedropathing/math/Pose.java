@@ -142,4 +142,9 @@ public class Pose {
 
         return new Twist(vx, vy, heading);
     }
+
+    @Override
+    public String toString() {
+        return "(" + x + ", " + y + ", " + heading + ")";
+    }
 }

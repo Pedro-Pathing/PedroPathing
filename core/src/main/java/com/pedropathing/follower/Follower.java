@@ -18,13 +18,10 @@ import com.pedropathing.paths.PathSegment;
 import com.pedropathing.paths.PathTracker;
 import com.pedropathing.paths.curves.Curve;
 
-import lombok.Setter;
-
 public class Follower {
     public final Localizer localizer;
     public final Drivetrain drivetrain;
     public final ConfigVar<Boolean> holdEnd = ConfigVar.of(true);
-    @Setter
     private Algorithm algorithm;
     private PathTracker pathTracker = null;
     private Pose holdPose = null;
@@ -111,10 +108,6 @@ public class Follower {
         useHoldScaling = useScaling;
     }
 
-    public void turn(double heading) {
-        hold(pose().withHeading(heading));
-    }
-
     public void manual(DrivePowers powers) {
         clearState();
         mode = Mode.MANUAL;
@@ -181,6 +174,10 @@ public class Follower {
         IDLE
     }
 
+    public void setAlgorithm(Algorithm algorithm) {
+        this.algorithm = algorithm;
+    }
+
     public boolean atParametricEnd() {
         return !mode.equals(Mode.FOLLOW) || algorithm.atParametricEnd(closestT());
     }
@@ -232,4 +229,5 @@ public class Follower {
     public double getTangentialVelocity() {
         return velocity().toVector2D().dot(closestTangent());
     }
+
 }
