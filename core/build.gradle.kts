@@ -12,6 +12,7 @@ dependencies {
     aspect(libs.aspectj.tools)
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
     testImplementation("com.google.truth:truth:1.4.5")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.9.3")
 }
 
 java {

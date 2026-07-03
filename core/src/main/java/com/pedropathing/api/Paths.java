@@ -11,6 +11,7 @@ import com.pedropathing.paths.CompoundPath;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.paths.curves.Line;
+import com.pedropathing.paths.curves.bezier.BezierCurve;
 
 public final class Paths {
     private Paths() {}
@@ -29,5 +30,22 @@ public final class Paths {
 
     public static Path line(Pose start, Pose end) {
         return path(new Line(start, end));
+    }
+
+    /**
+     * Creates a Bézier curve.
+     * Requires at least 2 control poses.
+     * The first and last poses are the start and end of the curve, while the intermediate poses are control poses
+     */
+    public static Path curve(Pose... poses) {
+        return path(new BezierCurve(poses));
+    }
+
+    /**
+     * Generates a path with a Bézier curve through the input poses.
+     * Requires at least 2 control poses.
+     */
+    public static Path through(Pose... poses) {
+        return path(BezierCurve.through(poses));
     }
 }
