@@ -117,6 +117,28 @@ public class Matrix {
         });
     }
 
+    public static Matrix fromRows(Vector... rows) {
+        double[][] vals = new double[rows.length][rows[0].size()];
+
+        for (int i = 0; i < vals.length; i++) {
+            vals[i] = rows[i].elements();
+        }
+
+        return new Matrix(vals);
+    }
+
+    public static Matrix fromCols(Vector... cols) {
+        double[][] vals = new double[cols[0].size()][cols.length];
+
+        for (int i = 0; i < vals.length; i++) {
+            for (int j = 0; j < vals[0].length; j++) {
+                vals[i][j] = cols[j].get(i);
+            }
+        }
+
+        return new Matrix(vals);
+    }
+
     /**
      * Gets the value at a specific coordinate.
      * * @param r Row index (0-based).

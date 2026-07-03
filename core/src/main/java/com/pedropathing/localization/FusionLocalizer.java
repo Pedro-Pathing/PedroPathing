@@ -129,7 +129,7 @@ public class FusionLocalizer implements Localizer {
         Twist twist = velocity.toTwist(pose.heading());
         Vector dist = twist.toVector().abs().times(dt);
         Vector Q_diag = new Vector(Q.getDiagonal());
-        Matrix bodyQ = Matrix.diag(dist.hadamardProduct(Q_diag));
+        Matrix bodyQ = Matrix.diag(dist.hadamard(Q_diag));
         Matrix rotation = Matrix.rotationTransform(pose.heading());
         Matrix worldQ = rotation.times(bodyQ).times(rotation.transpose());
         P = P.plus(worldQ).clampDiagonals(EPSILON);

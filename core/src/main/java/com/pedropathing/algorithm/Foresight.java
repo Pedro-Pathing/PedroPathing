@@ -48,7 +48,7 @@ public class Foresight implements Algorithm {
 
     @Override
     public DrivePowers calculatePath(PathTracker pathTracker, MotionState state, double deltaTime) {
-        closestT = pathTracker.current().curve.closestT(state.pose().toVector2D());
+        closestT = pathTracker.current().curve.closestT(state.pose().toVector2D(), closestT);
         double targetHeading = pathTracker.current().heading(closestT);
         closestPose = pathTracker.current().curve.get(closestT).toPose(targetHeading);
         curvature = pathTracker.current().curve.curvature(closestT);

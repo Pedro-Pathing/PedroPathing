@@ -159,7 +159,7 @@ public class LineTest {
         Vector2D end = Vector2D.cartesian(10, 0);
         Line line = new Line(start, end);
         Vector2D point = Vector2D.cartesian(5, 0);
-        assertEquals(0.5, line.closestT(point), 1e-9);
+        assertEquals(0.5, line.closestT(point, 0.3), 1e-9);
     }
 
     @Test
@@ -168,7 +168,7 @@ public class LineTest {
         Vector2D end = Vector2D.cartesian(10, 0);
         Line line = new Line(start, end);
         Vector2D point = Vector2D.cartesian(-5, 0);
-        assertEquals(0, line.closestT(point), 1e-9);
+        assertEquals(0, line.closestT(point, 0.3), 1e-9);
     }
 
     @Test

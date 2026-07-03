@@ -126,6 +126,12 @@ public class Vector2D {
         return Math.hypot(x - other.x, y - other.y);
     }
 
+    public double distanceSquared(Vector2D other) {
+        double dx = x - other.x;
+        double dy = y - other.y;
+        return dx * dx + dy * dy;
+    }
+
     public Vector2D hadamardProduct(Vector2D other) {
         return new Vector2D(this.x * other.x, this.y * other.y);
     }

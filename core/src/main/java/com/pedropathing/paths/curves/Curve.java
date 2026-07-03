@@ -10,7 +10,11 @@ import com.pedropathing.paths.tvalue.TValue;
 public interface Curve {
     Vector2D get(@TValue double t);
 
-    double closestT(Vector2D position);
+    double closestT(Vector2D position, double initialGuess);
+
+    default double closestT(Vector2D position) {
+        return closestT(position, 0.5);
+    }
 
     double length();
 
@@ -19,6 +23,8 @@ public interface Curve {
     default double remainingDistanceNormalized(@TValue double t) {
         return remainingDistance(t) / length();
     }
+
+    double getT(double pathCompletion);
 
     /**
      * Normalized

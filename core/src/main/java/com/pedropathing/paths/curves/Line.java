@@ -52,7 +52,7 @@ public class Line implements Curve {
     }
 
     @Override
-    public double closestT(Vector2D position) {
+    public double closestT(Vector2D position, double initialGuess) {
         Vector2D BA = end.minus(start);
         Vector2D PA = position.minus(start);
 
@@ -67,5 +67,10 @@ public class Line implements Curve {
     @Override
     public double remainingDistance(@TValue double t) {
         return (1 - t) * length();
+    }
+
+    @Override
+    public double getT(double pathCompletion) {
+        return pathCompletion;
     }
 }

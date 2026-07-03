@@ -23,13 +23,13 @@ public class CompoundCurve implements Curve {
     }
 
     @Override
-    public double closestT(Vector2D position) {
+    public double closestT(Vector2D position, double initialGuess) {
         double bestT = 0.0;
         double bestDistance = Double.POSITIVE_INFINITY;
 
         for (Piecewise.Segment<Curve> segment : curves.segments()) {
             Curve curve = segment.value();
-            double localT = curve.closestT(position);
+            double localT = curve.closestT(position, initialGuess);
 
             Vector2D point = curve.get(localT);
             double distance = point.distance(position);
