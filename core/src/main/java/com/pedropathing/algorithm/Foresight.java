@@ -16,7 +16,10 @@ import com.pedropathing.math.Vector2D;
 import com.pedropathing.paths.PathTracker;
 import com.pedropathing.utils.Control;
 import com.pedropathing.utils.Pair;
+import com.pedropathing.utils.Timer;
 import com.pedropathing.utils.Utils;
+
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 public class Foresight implements Algorithm {
@@ -26,9 +29,13 @@ public class Foresight implements Algorithm {
     private final ForesightConfig config;
     private final Supplier<Ellipse2D> maxAchievableVelocity, maxAchievableDeceleration;
     private double closestT, curvature;
-    private double curveCompletion, remainingDistance;
+    private double curveCompletion, remainingDistance, tangentialSpeed;
     private Pose closestPose;
     private Vector2D closestTangent, closestNormal;
+    private final Timer timer = new Timer();
+    private boolean resetTimer = true;
+    private double headingError, translationalError;
+    private boolean busy = false;
 
     public Foresight(ForesightConfig config) {
         this.config = config;
@@ -48,36 +55,44 @@ public class Foresight implements Algorithm {
 
     @Override
     public DrivePowers calculatePath(PathTracker pathTracker, MotionState state, double deltaTime) {
-        closestT = pathTracker.current().curve.closestT(state.pose().toVector2D(), closestT);
-        double targetHeading = pathTracker.current().heading(closestT);
-        closestPose = pathTracker.current().curve.get(closestT).toPose(targetHeading);
-        curvature = pathTracker.current().curve.curvature(closestT);
+        double targetHeading;
 
         if (closestT >= (1 - config.parametricTConstraint.get())) { // End Constraint
+            closestT = 1.0;
+            targetHeading = pathTracker.current().heading(closestT);
+            closestPose = pathTracker.current().curve.get(closestT).toPose(targetHeading);
+
             if (pathTracker.remainingPaths() > 1) { // advance if constraints met
                 pathTracker.advance();
+                reset();
                 return calculatePath(pathTracker, state, deltaTime);
             }
 
             pathTracker.advance();
+            reset();
             return DrivePowers.zero();
+        } else {
+            closestT = pathTracker.current().curve.closestT(state.pose().toVector2D(), closestT);
+            targetHeading = pathTracker.current().heading(closestT);
+            closestPose = pathTracker.current().curve.get(closestT).toPose(targetHeading);
+            curvature = pathTracker.current().curve.curvature(closestT);
         }
 
-        double headingError = headingError(state.pose().heading(), targetHeading);
-        double headingPower = headingPower(state, targetHeading);
+        headingError = headingError(state.pose().heading(), targetHeading);
+        double headingPower = headingPower(headingError, state);
         remainingDistance = pathTracker.current().curve.remainingDistance(closestT);
         curveCompletion = 1 - remainingDistance / pathTracker.current().curve.length();
 
-        // Compute tangent and normal first so braking can consider the angle between
-        // the path tangent and the robot heading (theta) instead of using heading alone.
         closestTangent = pathTracker.current().curve.tangent(closestT);
         closestNormal = pathTracker.current().curve.leftNormal(closestT);
         double thetaForBraking = closestTangent.angleTo(Vector2D.unit(state.pose().heading()));
         double velocityToBrakeInTime = getVelocityToBrakeInTime(remainingDistance, thetaForBraking);
-        double tangentialSpeed = closestTangent.dot(state.velocity().toVector2D());
+        tangentialSpeed = closestTangent.dot(state.velocity().toVector2D());
         boolean isBraking = tangentialSpeed >= velocityToBrakeInTime;
-        // may want hard switch? or maybe add some hysteresis?
-        // or hard switch until velocity is going to change directions if it continues to brake?
+
+        double parametricVelocity = tangentialSpeed / pathTracker.current().curve.derivative(closestT).magnitude();
+        double headingDerivative = pathTracker.current().headingDerivative(closestT) * parametricVelocity;
+        double headingFeedforward = headingDerivative * config.headingFeedforward.get();
 
         boolean pathSkip = isBraking && (pathTracker.remainingPaths() > 1 || !config.brakeAtEnd.get());
 
@@ -100,8 +115,9 @@ public class Foresight implements Algorithm {
                 brakingDisplacement.dot(closestTangent)));
 
         Vector2D displacementToPath = closestPose.minus(state.pose()).toVector2D();
-        double translationalError = displacementToPath.magnitude();
+        translationalError = displacementToPath.magnitude();
         Vector2D translationalVector = computeTranslationalCorrection(displacementToPath, brakingDisplacement);
+        Vector2D normalFeedforward = Vector2D.zero();
 
         boolean atParametricStart = closestT <= config.parametricTConstraint.get();
         if (atParametricStart) {
@@ -109,28 +125,45 @@ public class Foresight implements Algorithm {
                     pathTracker.current().curve.startPoint().minus(state.pose().toVector2D());
             double tangentDisplacementToStart = displacementToStart.dot(closestTangent);
             boolean isBeforePath = tangentDisplacementToStart > 0;
+            boolean isHeadingBeforePath = headingError > config.headingConstraint.get();
+
             if (isBeforePath) {
                 driveVector = driveVector.times(tangentDisplacementToStart / translationalError);
             }
+
+            if (isHeadingBeforePath) driveVector = Vector2D.zero();
         } else {
-            double centripetal = centripetal(tangentialSpeed, curvature);
-            translationalVector = translationalVector.plus(closestNormal.times(centripetal));
+            double centripetal = centripetal(tangentialSpeed, curvature)
+                    + config.normalFeedforward.get() * tangentialSpeed * tangentialSpeed;
+            normalFeedforward = closestNormal.times(centripetal);
 
             if ((Math.abs(headingError) > 2 * config.headingDeviationTolerance.get())
                     || (Math.abs(translationalError) > 2 * config.translationalDeviationTolerance.get()))
                 driveVector = driveVector.times(getDriveScalar(translationalError, headingError));
         }
 
-        return allocatePowers(state, translationalVector, driveVector, headingPower, translationalError, headingError);
+        return allocatePowers(state, normalFeedforward, headingFeedforward, translationalVector, driveVector, headingPower, translationalError, headingError);
     }
 
     @Override
     public DrivePowers calculateHold(Pose target, MotionState state, boolean useScaling, double deltaTime) {
-        Vector2D translationalError = target.minus(state.pose()).toVector2D();
+        if (resetTimer) {
+            timer.reset();
+            resetTimer = false;
+        }
+
+        headingError = headingError(state.pose().heading(), target.heading());
+        Vector2D displacementToPath = closestPose.minus(state.pose()).toVector2D();
+        translationalError = displacementToPath.magnitude();
+        tangentialSpeed = closestTangent.dot(state.velocity().toVector2D());
+
+        if (busy && testTimeout() || (testHeading() && testTranslational() && testVelocity()))
+            busy = false;
+
         Vector2D translational = computeTranslationalCorrection(
-                translationalError,
+                displacementToPath,
                 getBrakeDisplacement(state.twist(), state.pose().heading()));
-        double headingPower = headingPower(state, target.heading());
+        double headingPower = headingPower(headingError, state);
         // Apply hold-point scalers. Clamp the scaler values to [0, 1] at runtime to
         // avoid accidental amplification if the configuration is set incorrectly.
 
@@ -185,13 +218,18 @@ public class Foresight implements Algorithm {
         return t >= config.parametricTConstraint.get();
     }
 
+    @Override
+    public void reset() {
+        timer.reset();
+        resetTimer = true;
+        busy = true;
+    }
+
     /**
      * Compute heading correction power for the given state and target heading.
      */
-    public double headingPower(MotionState state, double targetHeading) {
-        double current = state.pose().heading();
-        double error = -headingError(current, targetHeading);
-        return config.headingController.get().calculate(0, error);
+    public double headingPower(double headingError, MotionState state) {
+        return config.headingController.get().calculate(0, headingError, state.twist().omega());
     }
 
     /**
@@ -207,6 +245,8 @@ public class Foresight implements Algorithm {
 
     public DrivePowers allocatePowers(
             MotionState state,
+            Vector2D normalFeedforwardVector,
+            double headingFeedforward,
             Vector2D translationalVector,
             Vector2D driveVector,
             double headingPower,
@@ -216,19 +256,20 @@ public class Foresight implements Algorithm {
         boolean headingPriority = Math.abs(headingError) > config.headingDeviationTolerance.get();
         double translationalPower = translationalVector.magnitude();
         double drivePower = driveVector.magnitude();
+        double normalFeedforward = normalFeedforwardVector.magnitude();
 
         int[] prioritization;
         double[] powers;
 
         if (translationalPriority && headingPriority) {
             prioritization = new int[] {0, 1, 2};
-            powers = new double[] {translationalPower, headingPower, drivePower};
+            powers = new double[] {normalFeedforward, translationalPower, headingPower, drivePower};
         } else if (translationalPriority) {
             prioritization = new int[] {0, 2, 1};
-            powers = new double[] {translationalPower, drivePower, headingPower};
+            powers = new double[] {normalFeedforward, translationalPower, drivePower, headingPower};
         } else {
             prioritization = new int[] {1, 2, 0};
-            powers = new double[] {drivePower, translationalPower, headingPower};
+            powers = new double[] {normalFeedforward, drivePower, translationalPower, headingPower};
         }
 
         powers = clampPowers(powers);
@@ -236,6 +277,7 @@ public class Foresight implements Algorithm {
         Vector2D translationalDirection =
                 Math.abs(translationalPower) < 1e-6 ? Vector2D.zero() : translationalVector.div(translationalPower);
         Vector2D driveDirection = Math.abs(drivePower) < 1e-6 ? Vector2D.zero() : driveVector.div(drivePower);
+        Vector2D normalDirection = Math.abs(normalFeedforward) < 1e-6 ? Vector2D.zero() : normalFeedforwardVector.div(normalFeedforward);
 
         Vector2D fieldRelativeDrivePower = translationalDirection
                 .times(powers[prioritization[TRANSLATIONAL]])
@@ -359,7 +401,7 @@ public class Foresight implements Algorithm {
         return quadratic.plus(linear).rotate(heading);
     }
 
-    double excessVelocityAfterBraking(double availableDisplacement, double brakingDisplacement, double theta) {
+    private double excessVelocityAfterBraking(double availableDisplacement, double brakingDisplacement, double theta) {
         double overshootDisplacement = brakingDisplacement - availableDisplacement;
 
         boolean stopsBeforeTarget = Math.signum(overshootDisplacement) != Math.signum(availableDisplacement);
@@ -369,5 +411,38 @@ public class Foresight implements Algorithm {
         }
 
         return getVelocityToBrakeInTime(overshootDisplacement, theta);
+    }
+
+    public double getHeadingError() {
+        return headingError;
+    }
+
+    public double getTranslationalError() {
+        return translationalError;
+    }
+
+    public boolean testVelocity() {
+        return tangentialSpeed < config.velocityConstraint.get();
+    }
+
+    public boolean testTranslational() {
+        return translationalError < config.translationalConstraint.get();
+    }
+
+    public boolean testHeading() {
+        return headingError < config.headingConstraint.get();
+    }
+
+    public boolean testParametric() {
+        return closestT > config.parametricTConstraint.get();
+    }
+
+    public boolean testTimeout() {
+        return !resetTimer && timer.get(TimeUnit.MILLISECONDS) > config.timeoutConstraint.get();
+    }
+
+    @Override
+    public boolean isBusy() {
+        return busy;
     }
 }

@@ -12,7 +12,17 @@ import com.pedropathing.utils.Angle;
 
 @FunctionalInterface
 public interface Interpolator {
-    Interpolator tangent = (Curve curve, @TValue double t) -> curve.tangent(t).theta();
+    Interpolator tangent = new Interpolator() {
+        @Override
+        public double interpolate(Curve curve, double t) {
+            return curve.tangent(t).theta();
+        }
+
+        @Override
+        public double differentiate(Curve curve, double t) {
+            return curve.curvature(t) * curve.derivative(t).magnitude();
+        }
+    };
 
     static Interpolator constant(double heading) {
         double finalHeading = Angle.normalize(heading);
@@ -26,10 +36,19 @@ public interface Interpolator {
     static Interpolator linear(double start, double end) {
         double finalStart = Angle.normalize(start);
         double finalEnd = Angle.normalize(end);
-        return (Curve curve, @TValue double t) -> {
-            double deltaHeading =
-                    Angle.turnDirection(finalStart, finalEnd) * Angle.smallestDifference(finalStart, finalEnd);
-            return Angle.normalize(finalStart + deltaHeading * t);
+        double deltaHeading =
+                Angle.turnDirection(finalStart, finalEnd) * Angle.smallestDifference(finalStart, finalEnd);
+
+        return new Interpolator() {
+            @Override
+            public double interpolate(Curve curve, double t) {
+                return Angle.normalize(finalStart + deltaHeading * t);
+            }
+
+            @Override
+            public double differentiate(Curve curve, double t) {
+                return deltaHeading;
+            }
         };
     }
 
@@ -38,7 +57,19 @@ public interface Interpolator {
     }
 
     static Interpolator facingPoint(Vector2D point) {
-        return (Curve curve, @TValue double t) -> point.minus(curve.get(t)).theta();
+        return new Interpolator() {
+            @Override
+            public double interpolate(Curve curve, double t) {
+                return point.minus(curve.get(t)).theta();
+            }
+
+            @Override
+            public double differentiate(Curve curve, double t) {
+                Vector2D r = point.minus(curve.get(t));
+                if (r.isZero()) return 0;
+                return -r.det(curve.derivative(t)) / r.dot(r);
+            }
+        };
     }
 
     static Interpolator facingPoint(Pose pose) {
@@ -50,4 +81,9 @@ public interface Interpolator {
     }
 
     double interpolate(Curve curve, @TValue double t);
+
+    default double differentiate(Curve curve, @TValue double t) {
+        //TODO: It's only necessary to have this method in an Algorithm that uses it
+        return 0;
+    }
 }

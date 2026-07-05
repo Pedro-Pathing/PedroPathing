@@ -13,6 +13,7 @@ public class Line implements Curve {
     private final Vector2D start;
     private final Vector2D end;
     private final double length;
+    private final Vector2D displacement;
     private final Vector2D tangent;
 
     public Line(Pose start, Pose end) {
@@ -23,7 +24,8 @@ public class Line implements Curve {
         this.start = start;
         this.end = end;
         length = start.distance(end);
-        tangent = end.minus(start).normalized();
+        displacement = end.minus(start);
+        tangent = displacement.normalized();
     }
 
     @Override
@@ -38,7 +40,7 @@ public class Line implements Curve {
 
     @Override
     public Vector2D get(@TValue double t) {
-        return start.plus(end.minus(start).times(t));
+        return start.plus(displacement.times(t));
     }
 
     @Override
@@ -53,10 +55,8 @@ public class Line implements Curve {
 
     @Override
     public double closestT(Vector2D position, double initialGuess) {
-        Vector2D BA = end.minus(start);
         Vector2D PA = position.minus(start);
-
-        return Utils.clamp(BA.dot(PA) / Math.pow(BA.magnitude(), 2), 0, 1);
+        return Utils.clamp(displacement.dot(PA) / Math.pow(displacement.magnitude(), 2), 0, 1);
     }
 
     @Override
@@ -72,5 +72,10 @@ public class Line implements Curve {
     @Override
     public double getT(double pathCompletion) {
         return pathCompletion;
+    }
+
+    @Override
+    public Vector2D derivative(double t) {
+        return displacement;
     }
 }

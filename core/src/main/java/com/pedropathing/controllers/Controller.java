@@ -8,6 +8,10 @@ package com.pedropathing.controllers;
 public interface Controller {
     double calculate(double target, double error);
 
+    default double calculate(double target, double error, double velocity) {
+        return calculate(target, error);
+    }
+
     default void reset() {}
 
     static Controller staticFeedforward(double kStatic) {

@@ -10,7 +10,6 @@ import com.pedropathing.paths.tvalue.TValue;
 import com.pedropathing.utils.BijectiveMap;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -287,7 +286,7 @@ public class BezierCurve implements Curve {
      * @param t this is the t value of the parametric curve. t is clamped to be between 0 and 1 inclusive.
      * @return this returns the derivative requested.
      */
-    public Vector2D getDerivative(@TValue double t) {
+    public Vector2D derivative(@TValue double t) {
         return getDerivative(1, t);
     }
 
@@ -315,13 +314,8 @@ public class BezierCurve implements Curve {
     }
 
     @Override
-    public Vector2D tangent(double t) {
-        return getDerivative(t).normalized();
-    }
-
-    @Override
     public double curvature(double t) {
-        Vector2D derivative = getDerivative(t);
+        Vector2D derivative = derivative(t);
         Vector2D secondDerivative = getDerivative(2, t);
         double derivMag = derivative.magnitude();
 

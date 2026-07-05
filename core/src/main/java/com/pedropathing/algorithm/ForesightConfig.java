@@ -9,14 +9,17 @@ import static com.pedropathing.config.Validator.positive;
 
 import com.pedropathing.config.ConfigVar;
 import com.pedropathing.config.Configuration;
+import com.pedropathing.config.Validator;
 import com.pedropathing.controllers.Controller;
 import com.pedropathing.math.Matrix;
 
 public final class ForesightConfig {
     public final ConfigVar<Controller> headingController = ConfigVar.of(Controller.pid(1.5, 0, 0.1));
+    public final ConfigVar<Double> headingFeedforward = ConfigVar.of(1.0, nonnegative());
     // TODO test iZone, decay, and maxI to prevent integral wind-up and have zero-steady state error
 
-    public final ConfigVar<Controller> translationalController = ConfigVar.of(Controller.pid(0.3, 0, 0));
+    public final ConfigVar<Controller> translationalController = ConfigVar.of(Controller.pid(0.3, 0, 0)
+            .plus(Controller.staticFeedforward(0.015)));
 
     public final ConfigVar<Controller> brakeController = ConfigVar.of(Controller.pid(0.025, 0, 0)
             .plus(Controller.dynamicFeedforward(0.015))
@@ -39,6 +42,7 @@ public final class ForesightConfig {
      * Centripetal force to power scaling.
      */
     public final ConfigVar<Double> centripetalScaling = ConfigVar.of(0.005, nonnegative());
+    public final ConfigVar<Double> normalFeedforward = ConfigVar.of(0.005, Validator.nonnull());
 
     public final ConfigVar<Double> robotMass = ConfigVar.of(12.9, positive());
 
@@ -97,6 +101,11 @@ public final class ForesightConfig {
 
     public final ConfigVar<Double> parametricTConstraint = ConfigVar.of(0.025, positive());
     // TODO: add rest of parametric constraints
+
+    public final ConfigVar<Double> headingConstraint = ConfigVar.of(0.007, positive());
+    public final ConfigVar<Double> translationalConstraint = ConfigVar.of(0.1, positive());
+    public final ConfigVar<Double> velocityConstraint = ConfigVar.of(0.1, positive());
+    public final ConfigVar<Double> timeoutConstraint = ConfigVar.of(100.0, nonnegative());
 
     public ForesightConfig(Configuration<ForesightConfig> config) {
         config.configure(this);

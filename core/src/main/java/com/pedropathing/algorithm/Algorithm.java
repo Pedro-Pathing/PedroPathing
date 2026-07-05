@@ -22,4 +22,6 @@ public interface Algorithm {
     double remainingDistance();
     double pathCompletion();
     boolean atParametricEnd(double t);
+    void reset();
+    boolean isBusy();
 }

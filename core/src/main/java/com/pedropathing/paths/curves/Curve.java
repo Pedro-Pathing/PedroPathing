@@ -26,10 +26,14 @@ public interface Curve {
 
     double getT(double pathCompletion);
 
+    Vector2D derivative(@TValue double t);
+
     /**
      * Normalized
      */
-    Vector2D tangent(@TValue double t);
+    default Vector2D tangent(@TValue double t) {
+        return derivative(t).normalized();
+    }
 
     double curvature(@TValue double t);
 

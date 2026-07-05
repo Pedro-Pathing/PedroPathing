@@ -95,6 +95,7 @@ public class Follower {
         clearState();
         mode = Mode.FOLLOW;
         pathTracker = new PathTracker(path);
+        algorithm.reset();
     }
 
     public void hold(Pose pose) {
@@ -151,8 +152,17 @@ public class Follower {
         return localizer.twist();
     }
 
+    public double distanceToEndpoint() {
+        if (pathTracker == null) return 0.0;
+        return currentPath().endPose().distance(pose());
+    }
+
     public boolean following() {
         return mode == Mode.FOLLOW;
+    }
+
+    public boolean isBusy() {
+        return algorithm.isBusy();
     }
 
     public boolean holding() {
@@ -229,5 +239,4 @@ public class Follower {
     public double getTangentialVelocity() {
         return velocity().toVector2D().dot(closestTangent());
     }
-
 }

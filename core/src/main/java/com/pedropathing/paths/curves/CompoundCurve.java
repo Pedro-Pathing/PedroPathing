@@ -113,6 +113,11 @@ public class CompoundCurve implements Curve {
     }
 
     @Override
+    public Vector2D derivative(double t) {
+        return curves.get(t).derivative(curves.localT(t));
+    }
+
+    @Override
     public double curvature(double t) {
         return curves.get(t).curvature(curves.localT(t));
     }

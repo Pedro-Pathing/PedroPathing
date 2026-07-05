@@ -42,6 +42,24 @@ public class PIDController implements Controller {
     }
 
     @Override
+    public double calculate(double target, double error, double velocity) {
+        long currentTime = System.nanoTime();
+        double dt = (currentTime - previousTime) * 1e-9;
+        previousTime = currentTime;
+
+        if (dt <= 1e-3) {
+            return error * kP + integral * kI;
+        }
+
+        integral += error * dt;
+
+        previousError = error;
+        firstUpdate = false;
+
+        return error * kP + integral * kI - velocity * kD * Math.signum(error);
+    }
+
+    @Override
     public void reset() {
         integral = 0.0;
         previousError = 0.0;

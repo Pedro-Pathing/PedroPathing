@@ -16,7 +16,7 @@ import java.util.List;
 
 public abstract class Path {
     public final Curve curve;
-
+    private Pose endPose;
     public final List<Modifier> modifiers;
 
     public Path(Curve curve, List<Modifier> modifiers) {
@@ -25,12 +25,25 @@ public abstract class Path {
     }
 
     public abstract double heading(@TValue double t);
+    public abstract double derivative(@TValue double t);
 
     protected abstract boolean hasHeading();
 
     public final List<PathSegment> getSegments() {
         if (!hasHeading()) throw new IllegalStateException("Cannot resolve segments: path has no heading.");
-        return getSegments(this::heading, listOf());
+        return getSegments(PathSegment.HeadingProvider.of(this::heading, this::derivative), listOf());
+    }
+
+    public Pose endPose() {
+        if (endPose == null) {
+            endPose = curve.get(1.0).toPose(heading(1.0));
+        }
+
+        return endPose;
+    }
+
+    public Pose get(@TValue double t) {
+        return curve.get(t).toPose(heading(t));
     }
 
     protected abstract List<PathSegment> getSegments(

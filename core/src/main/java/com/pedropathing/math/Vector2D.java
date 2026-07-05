@@ -99,6 +99,7 @@ public class Vector2D {
     }
 
     public double theta() {
+        if (isZero()) return 0;
         return Math.atan2(y, x);
     }
 
