@@ -11,8 +11,18 @@ public class ManualDrive {
     }
 
     /** Takes in robotCentric drive powers and uses the currentHeading to rotate them to fieldCentric drive powers with an offset heading. */
-    public static DrivePowers fieldCentric(DrivePowers powers, double currentHeading, double offset) {
-        Vector2D fieldRelative = Vector2D.cartesian(powers.forward(), powers.strafe()).rotate(currentHeading + offset);
+    public static DrivePowers fieldCentric(DrivePowers powers, double currentHeading, double offsetHeading) {
+        Vector2D fieldRelative = Vector2D.cartesian(powers.forward(), powers.strafe()).rotate(currentHeading + offsetHeading);
         return new DrivePowers(fieldRelative.x(), fieldRelative.y(), powers.turn());
+    }
+
+    /** Takes in robotCentric drive powers and uses the currentHeading to rotate them to fieldCentric drive powers. */
+    public static DrivePowers fieldCentric(double forward, double lateral, double turn, double currentHeading) {
+        return fieldCentric(new DrivePowers(forward, lateral, turn), currentHeading);
+    }
+
+    /** Takes in robotCentric drive powers and uses the currentHeading to rotate them to fieldCentric drive powers with an offset heading. */
+    public static DrivePowers fieldCentric(double forward, double lateral, double turn, double currentHeading, double offsetHeading) {
+        return fieldCentric(new DrivePowers(forward, lateral, turn), currentHeading, offsetHeading);
     }
 }
