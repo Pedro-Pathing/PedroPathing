@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
  * on the curve. Essentially, Bezier curves are a way of defining a parametric line easily. You can
  * read more on Bezier curves here: <a href="https://en.wikipedia.org/wiki/Bézier_curve">...</a>
  *
+ * @author Havish Sripada - 12808 Revamped Robotics
  * @author Anyi Lin - 10158 Scott's Bots
  * @author Aaron Yang - 10158 Scott's Bots
  * @author Harrison Womack - 10158 Scott's Bots
@@ -91,7 +92,8 @@ public class BezierCurve implements Curve {
             controlPointMatrix[i] = new double[]{p.x(), p.y()};
         }
         Matrix controlMatrix = new Matrix(controlPointMatrix);
-        cachedMatrix = CharacteristicMatrixSupplier.getBezierCharacteristicMatrix(this.controlPoints.size() - 1).times(controlMatrix);
+        cachedMatrix = controlMatrix.transpose().times(
+                CharacteristicMatrixSupplier.getBezierCharacteristicMatrix(this.controlPoints.size() - 1).transpose());
         diffPowers = initializeDegreeArray(controlPoints.size() - 1);
         diffCoefficients = initializeCoefficientArray(diffPowers, controlPoints.size() - 1);
     }
@@ -259,13 +261,15 @@ public class BezierCurve implements Curve {
         initialGuess = bestGuess;
 
         for (int i = 0; i < SEARCH_LIMIT; i++) {
-            Matrix pointAtT = Matrix.fromRows(getTVector(initialGuess, 0), getTVector(initialGuess, 1),
-                    getTVector(initialGuess, 2));;
-            Vector2D lastPos = Vector2D.cartesian(pointAtT.get(0, 0), pointAtT.get(0, 1));
-            Vector resultant = pointAtT.times(lastPos.minus(position).toVector());
+            Vector2D lastPos = get(initialGuess);
+            Vector2D firstDeriv = getDerivative(initialGuess);
+            Vector2D secondDeriv = getDerivative(2, initialGuess);
 
-            double firstDerivative = 2 * resultant.get(1);
-            double secondDerivative = 2 * (resultant.get(2) + (pointAtT.get(1, 0) * pointAtT.get(1, 0) + (pointAtT.get(1, 1) * pointAtT.get(1, 1))));
+            double deltaX = lastPos.x() - position.x();
+            double deltaY = lastPos.y() - position.y();
+            double firstDerivative = 2 * ((deltaX * firstDeriv.x()) + (deltaY * firstDeriv.y()));
+            double secondDerivative = 2 * ((deltaX * secondDeriv.x()) + (deltaY * secondDeriv.y())
+                    + (firstDeriv.x() * firstDeriv.x()) + (firstDeriv.y() * firstDeriv.y()));
 
             initialGuess = clamp(initialGuess - firstDerivative / (secondDerivative + 1e-9), 0, 1);
             if (get(initialGuess).distance(lastPos) < 0.1) break;
@@ -342,49 +346,7 @@ public class BezierCurve implements Curve {
      */
     @Override
     public double getT(double pathCompletion) {
-        return completionMap.interpolateValue(pathCompletion);
-    }
-
-    /**
-     * Generates a BezierCurve that passes through the given points
-     * @param startPoint the initial point the curve passes through
-     * @param midpoint a point in the middle for the curve to pass through
-     * @param endPoint the final point the curve passes through
-     * @return the BezierCurve passing through the points
-     */
-    public static BezierCurve through(Pose startPoint, Pose midpoint, Pose endPoint) {
-        double cx = 2 * midpoint.x() - (startPoint.x() + endPoint.x()) / 2.0;
-        double cy = 2 * midpoint.y() - (startPoint.y() + endPoint.y()) / 2.0;
-        Pose controlPoint = new Pose(cx, cy);
-        return new BezierCurve(startPoint, controlPoint, endPoint);
-    }
-
-    /**
-     * Generates a BezierCurve that passes through the given points
-     * @param startPoint the first point the curve passes through
-     * @param midPoint1 the second point the curve passes through
-     * @param midPoint2 the third point the curve passes through
-     * @param endPoint the fourth point the curve passes through
-     * @return the BezierCurve passing through the points
-     */
-    public static BezierCurve through(Pose startPoint, Pose midPoint1, Pose midPoint2, Pose endPoint) {
-        double distance1 = Math.pow(midPoint1.distance(startPoint), 0.5);
-        double distance2 = Math.pow(midPoint2.distance(midPoint1), 0.5);
-        double distance3 = Math.pow(endPoint.distance(midPoint2), 0.5);
-        double sqDistance1 = distance1 * distance1;
-        double sqDistance2 = distance2 * distance2;
-        double sqDistance3 = distance3 * distance3;
-        double t1 = (2 * distance1 * distance1) + (3 * distance1 * distance2) + (distance2 * distance2);
-        double t2 = 3 * distance1 * (distance1 + distance2);
-        double t3 = (2 * distance3 * distance3) + (3 * distance3 * distance2) + (distance2 * distance2);
-        double t4 = 3 * distance3 * (distance3 + distance2);
-
-        Pose controlPoint1 = new Pose((sqDistance1 * midPoint2.x() - sqDistance2 * startPoint.x() + t1 * midPoint1.x()) / t2,
-                (sqDistance1 * midPoint2.y() - sqDistance2 * startPoint.y() + t1 * midPoint1.y()) / t2);
-        Pose controlPoint2 = new Pose((sqDistance3 * midPoint1.x() - sqDistance2 * endPoint.x() + t3 * midPoint2.x()) / t4,
-                (sqDistance3 * midPoint1.y() - sqDistance2 * endPoint.y() + t3 * midPoint2.y()) / t4);
-
-        return new BezierCurve(startPoint, controlPoint1, controlPoint2, endPoint);
+        return completionMap.interpolateValue(pathCompletion * length);
     }
 
     /**
@@ -393,7 +355,16 @@ public class BezierCurve implements Curve {
      * @return the BezierCurve passing through the points
      */
     public static BezierCurve through(Pose... points){
+        return interpolateThroughPoints(points);
+    }
+
+    private static BezierCurve interpolateThroughPoints(Pose... points) {
+        if (points.length < 3) {
+            throw new IllegalArgumentException("Too few control points");
+        }
+
         double[] tValues = new double[points.length];
+        tValues[0] = 0;
         tValues[points.length - 1] = 1;
         double increment = 1d / (points.length - 1);
 
@@ -403,24 +374,88 @@ public class BezierCurve implements Curve {
 
         double[][] tMatrix = new double[points.length][points.length];
         for (int i = 0; i < tMatrix.length; i++) {
-            tMatrix[i] = getTVector(points.length, tValues[i]).elements();
+            for (int j = 0; j < tMatrix[i].length; j++) {
+                tMatrix[i][j] = bernstein(points.length - 1, j, tValues[i]);
+            }
         }
 
-        Matrix bezier = CharacteristicMatrixSupplier.getBezierCharacteristicMatrix(points.length - 1);
-
-        double[][] targetPointMatrix = new double[points.length][2];
+        double[] targetX = new double[points.length];
+        double[] targetY = new double[points.length];
         for (int i = 0; i < points.length; i++) {
-            targetPointMatrix[i] = new double[] {points[i].x(), points[i].y()};
+            targetX[i] = points[i].x();
+            targetY[i] = points[i].y();
         }
 
-        Matrix coefficients = new Matrix(tMatrix).times(bezier);
-        Matrix outputControlPoints = coefficients.invert().times(new Matrix(targetPointMatrix));
+        double[] controlXs = solveLinearSystem(tMatrix, targetX);
+        double[] controlYs = solveLinearSystem(tMatrix, targetY);
         Pose[] output = new Pose[points.length];
 
-        for (int i = 0; i < outputControlPoints.rows; i++) {
-            output[i] = new Pose(outputControlPoints.get(i, 0), outputControlPoints.get(i, 1));
+        for (int i = 0; i < output.length; i++) {
+            output[i] = new Pose(controlXs[i], controlYs[i]);
         }
 
         return new BezierCurve(output);
+    }
+
+    private static double[] solveLinearSystem(double[][] coefficients, double[] constants) {
+        int n = constants.length;
+        double[][] augmented = new double[n][n + 1];
+
+        for (int i = 0; i < n; i++) {
+            System.arraycopy(coefficients[i], 0, augmented[i], 0, n);
+            augmented[i][n] = constants[i];
+        }
+
+        for (int col = 0; col < n; col++) {
+            int pivotRow = col;
+            for (int row = col + 1; row < n; row++) {
+                if (Math.abs(augmented[row][col]) > Math.abs(augmented[pivotRow][col])) {
+                    pivotRow = row;
+                }
+            }
+
+            if (Math.abs(augmented[pivotRow][col]) < 1e-9) {
+                throw new IllegalArgumentException("Interpolation matrix is singular");
+            }
+
+            if (pivotRow != col) {
+                double[] temp = augmented[col];
+                augmented[col] = augmented[pivotRow];
+                augmented[pivotRow] = temp;
+            }
+
+            for (int row = col + 1; row < n; row++) {
+                double factor = augmented[row][col] / augmented[col][col];
+                for (int k = col; k <= n; k++) {
+                    augmented[row][k] -= factor * augmented[col][k];
+                }
+            }
+        }
+
+        double[] solution = new double[n];
+        for (int row = n - 1; row >= 0; row--) {
+            double sum = augmented[row][n];
+            for (int col = row + 1; col < n; col++) {
+                sum -= augmented[row][col] * solution[col];
+            }
+            solution[row] = sum / augmented[row][row];
+        }
+
+        return solution;
+    }
+
+    private static double binomial(int n, int k) {
+        if (k < 0 || k > n) return 0;
+        if (k == 0 || k == n) return 1;
+        k = Math.min(k, n - k);
+        double result = 1;
+        for (int i = 1; i <= k; i++) {
+            result = result * (n - (k - i)) / i;
+        }
+        return result;
+    }
+
+    private static double bernstein(int n, int k, double t) {
+        return binomial(n, k) * Math.pow(t, k) * Math.pow(1 - t, n - k);
     }
 }
