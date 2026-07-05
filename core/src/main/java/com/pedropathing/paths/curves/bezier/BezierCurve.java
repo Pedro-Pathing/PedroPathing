@@ -29,8 +29,10 @@ import java.util.stream.Collectors;
  * @version 1.0, 3/5/2024
  */
 public class BezierCurve implements Curve {
+    private static final double SUBDIVISION_TOLERANCE = 1e-5;
+    private static final int MAX_SUBDIVISION_DEPTH = 15;
+
     private ArrayList<Vector2D> controlPoints;
-    protected final int APPROXIMATION_STEPS = 1000;
     protected final int SEARCH_LIMIT = 10;
     private double length;
     private Matrix cachedMatrix;
@@ -100,23 +102,34 @@ public class BezierCurve implements Curve {
     }
 
     /**
-     * This approximates the length of the BezierCurve in APPROXIMATION_STEPS number of steps. It's
-     * like a Riemann's sum, but for a parametric function's arc length.
+     * This approximates the length of the BezierCurve using adaptive subdivision.
+     * It recursively splits the curve where curvature is high to build an accurate completionMap.
      *
      * @return returns the approximated length of the BezierCurve.
      */
     private double approximateLength() {
-        Vector2D previousPoint = get(0);
-        Vector2D currentPoint;
-        double approxLength = 0;
-        for (int i = 1; i <= APPROXIMATION_STEPS; i++) {
-            double t = i/(double)APPROXIMATION_STEPS;
-            currentPoint = get(t);
-            approxLength += previousPoint.distance(currentPoint);
-            previousPoint = currentPoint;
-            completionMap.put(t, approxLength);
+        completionMap.put(0.0, 0.0);
+        Vector2D p0 = get(0.0);
+        Vector2D p1 = get(1.0);
+        return subdivide(0.0, 1.0, p0, p1, 0);
+    }
+
+    private double subdivide(double startT, double endT, Vector2D startPoint, Vector2D endPoint, int depth) {
+        double tMid = (startT + endT) / 2.0;
+        Vector2D pMid = get(tMid);
+        double length = startPoint.distance(endPoint);
+        double splitLength = startPoint.distance(pMid) + pMid.distance(endPoint);
+
+        if (Math.abs(splitLength - length) < SUBDIVISION_TOLERANCE || depth >= MAX_SUBDIVISION_DEPTH) {
+            double currentLength = completionMap.get(startT) + splitLength;
+            completionMap.put(tMid, completionMap.get(startT) + startPoint.distance(pMid));
+            completionMap.put(endT, currentLength);
+            return splitLength;
         }
-        return approxLength;
+
+        double leftLength = subdivide(startT, tMid, startPoint, pMid, depth + 1);
+        double rightLength = subdivide(tMid, endT, pMid, endPoint, depth + 1);
+        return leftLength + rightLength;
     }
 
     /**
