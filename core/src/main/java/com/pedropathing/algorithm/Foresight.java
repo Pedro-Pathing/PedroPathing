@@ -221,14 +221,14 @@ public class Foresight implements Algorithm {
         double[] powers;
 
         if (translationalPriority && headingPriority) {
-            prioritization = new int[] {0, 1, 2};
-            powers = new double[] {translationalPower, headingPower, drivePower};
+            prioritization = new int[] {1, 0, 2};
+            powers = new double[] {headingPower, translationalPower, drivePower};
         } else if (translationalPriority) {
             prioritization = new int[] {0, 2, 1};
             powers = new double[] {translationalPower, drivePower, headingPower};
         } else {
-            prioritization = new int[] {1, 2, 0};
-            powers = new double[] {drivePower, translationalPower, headingPower};
+            prioritization = new int[] {2, 0, 1};
+            powers = new double[] {headingPower, drivePower, translationalPower};
         }
 
         powers = clampPowers(powers);
