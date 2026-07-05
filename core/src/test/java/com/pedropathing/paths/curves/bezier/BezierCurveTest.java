@@ -82,7 +82,7 @@ public class BezierCurveTest {
 
         assertAll(
                 () -> assertPoint(curve.get(0.5), 50, 50),
-                () -> assertPoint(curve.getDerivative(0.5), 100, 0),
+                () -> assertPoint(curve.derivative(0.5), 100, 0),
                 () -> assertPoint(curve.getDerivative(1, 0.5), 100, 0),
                 () -> assertPoint(curve.getDerivative(2, 0.5), 0, -400),
                 () -> assertEquals(1.0, curve.tangent(0.5).magnitude(), EPS),

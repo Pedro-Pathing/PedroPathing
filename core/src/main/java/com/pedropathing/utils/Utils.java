@@ -27,6 +27,17 @@ public final class Utils {
         return Math.max(lower, Math.min(num, upper));
     }
 
+    public static double binomial(int n, int k) {
+        if (k < 0 || k > n) return 0;
+        if (k == 0 || k == n) return 1;
+        k = Math.min(k, n - k);
+        double result = 1;
+        for (int i = 1; i <= k; i++) {
+            result = result * (n - (k - i)) / i;
+        }
+        return result;
+    }
+
     @SafeVarargs
     public static <T> List<T> listOf(T... elements) {
         if (elements.length == 0) return Collections.emptyList();

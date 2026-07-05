@@ -1,4 +1,5 @@
 package com.pedropathing.paths.curves.bezier;
+import static com.pedropathing.utils.Utils.binomial;
 import static com.pedropathing.utils.Utils.clamp;
 
 import com.pedropathing.math.Matrix;
@@ -262,7 +263,7 @@ public class BezierCurve implements Curve {
 
         for (int i = 0; i < SEARCH_LIMIT; i++) {
             Vector2D lastPos = get(initialGuess);
-            Vector2D firstDeriv = getDerivative(initialGuess);
+            Vector2D firstDeriv = derivative(initialGuess);
             Vector2D secondDeriv = getDerivative(2, initialGuess);
 
             double deltaX = lastPos.x() - position.x();
@@ -324,7 +325,7 @@ public class BezierCurve implements Curve {
         double derivMag = derivative.magnitude();
 
         if (derivMag < 1e-9) return 0;
-        return (derivative.det(secondDerivative)) / Math.pow(derivMag, 3);
+        return (derivative.det(secondDerivative)) / derivMag / derivMag / derivMag;
     }
 
     /**
@@ -372,87 +373,29 @@ public class BezierCurve implements Curve {
             tValues[i] = tValues[i - 1] + increment;
         }
 
-        double[][] tMatrix = new double[points.length][points.length];
-        for (int i = 0; i < tMatrix.length; i++) {
-            for (int j = 0; j < tMatrix[i].length; j++) {
-                tMatrix[i][j] = bernstein(points.length - 1, j, tValues[i]);
+        double[][] tVals = new double[points.length][points.length];
+        for (int i = 0; i < tVals.length; i++) {
+            for (int j = 0; j < tVals[i].length; j++) {
+                tVals[i][j] = bernstein(points.length - 1, j, tValues[i]);
             }
         }
+        Matrix tMatrix = new Matrix(tVals);
 
-        double[] targetX = new double[points.length];
-        double[] targetY = new double[points.length];
+        double[][] targetVals = new double[points.length][2];
         for (int i = 0; i < points.length; i++) {
-            targetX[i] = points[i].x();
-            targetY[i] = points[i].y();
+            targetVals[i][0] = points[i].x();
+            targetVals[i][1] = points[i].y();
+        }
+        Matrix targetMatrix = new Matrix(targetVals);
+        Matrix controlPointMatrix = tMatrix.solve(targetMatrix);
+
+        Vector2D[] controlPoints = new Vector2D[points.length];
+        for (int i = 0; i < controlPoints.length; i++) {
+            controlPoints[i] = Vector2D.cartesian(controlPointMatrix.get(i, 0),
+                    controlPointMatrix.get(i, 1));
         }
 
-        double[] controlXs = solveLinearSystem(tMatrix, targetX);
-        double[] controlYs = solveLinearSystem(tMatrix, targetY);
-        Pose[] output = new Pose[points.length];
-
-        for (int i = 0; i < output.length; i++) {
-            output[i] = new Pose(controlXs[i], controlYs[i]);
-        }
-
-        return new BezierCurve(output);
-    }
-
-    private static double[] solveLinearSystem(double[][] coefficients, double[] constants) {
-        int n = constants.length;
-        double[][] augmented = new double[n][n + 1];
-
-        for (int i = 0; i < n; i++) {
-            System.arraycopy(coefficients[i], 0, augmented[i], 0, n);
-            augmented[i][n] = constants[i];
-        }
-
-        for (int col = 0; col < n; col++) {
-            int pivotRow = col;
-            for (int row = col + 1; row < n; row++) {
-                if (Math.abs(augmented[row][col]) > Math.abs(augmented[pivotRow][col])) {
-                    pivotRow = row;
-                }
-            }
-
-            if (Math.abs(augmented[pivotRow][col]) < 1e-9) {
-                throw new IllegalArgumentException("Interpolation matrix is singular");
-            }
-
-            if (pivotRow != col) {
-                double[] temp = augmented[col];
-                augmented[col] = augmented[pivotRow];
-                augmented[pivotRow] = temp;
-            }
-
-            for (int row = col + 1; row < n; row++) {
-                double factor = augmented[row][col] / augmented[col][col];
-                for (int k = col; k <= n; k++) {
-                    augmented[row][k] -= factor * augmented[col][k];
-                }
-            }
-        }
-
-        double[] solution = new double[n];
-        for (int row = n - 1; row >= 0; row--) {
-            double sum = augmented[row][n];
-            for (int col = row + 1; col < n; col++) {
-                sum -= augmented[row][col] * solution[col];
-            }
-            solution[row] = sum / augmented[row][row];
-        }
-
-        return solution;
-    }
-
-    private static double binomial(int n, int k) {
-        if (k < 0 || k > n) return 0;
-        if (k == 0 || k == n) return 1;
-        k = Math.min(k, n - k);
-        double result = 1;
-        for (int i = 1; i <= k; i++) {
-            result = result * (n - (k - i)) / i;
-        }
-        return result;
+        return new BezierCurve(controlPoints);
     }
 
     private static double bernstein(int n, int k, double t) {

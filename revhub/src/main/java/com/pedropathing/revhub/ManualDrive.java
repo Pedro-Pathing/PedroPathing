@@ -4,7 +4,6 @@ import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.math.Vector2D;
 
 public class ManualDrive {
-
     /** Takes in robotCentric drive powers and uses the currentHeading to rotate them to fieldCentric drive powers. */
     public static DrivePowers fieldCentric(DrivePowers powers, double currentHeading) {
         return fieldCentric(powers, currentHeading, 0.0);

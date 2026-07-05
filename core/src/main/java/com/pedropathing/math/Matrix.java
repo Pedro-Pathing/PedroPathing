@@ -425,6 +425,10 @@ public class Matrix {
         return new Vector(rref(constants.toMatrix()).second().getCol(0));
     }
 
+    public Matrix solve(Matrix augment) {
+        return rref(augment).second();
+    }
+
     /**
      * Returns the minor of this matrix formed by removing the specified row
      * and column.
