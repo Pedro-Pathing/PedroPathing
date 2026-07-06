@@ -5,6 +5,7 @@
 package com.pedropathing.algorithm;
 
 import static com.pedropathing.config.Validator.nonnegative;
+import static com.pedropathing.config.Validator.nonnull;
 import static com.pedropathing.config.Validator.positive;
 
 import com.pedropathing.config.ConfigVar;
@@ -15,7 +16,8 @@ import com.pedropathing.math.Matrix;
 
 public final class ForesightConfig {
     public final ConfigVar<Controller> headingController = ConfigVar.of(Controller.pid(1.5, 0, 0.1));
-    public final ConfigVar<Double> headingFeedforward = ConfigVar.of(1.0, nonnegative());
+    public final ConfigVar<Controller> headingFeedforward = ConfigVar.of(Controller.dynamicFeedforward(1.0)
+            .plus(Controller.staticFeedforward(0.01)), nonnull());
     // TODO test iZone, decay, and maxI to prevent integral wind-up and have zero-steady state error
 
     public final ConfigVar<Controller> translationalController = ConfigVar.of(Controller.pid(0.3, 0, 0)

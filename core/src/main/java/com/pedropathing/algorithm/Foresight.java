@@ -92,7 +92,7 @@ public class Foresight implements Algorithm {
 
         double parametricVelocity = tangentialSpeed / pathTracker.current().curve.derivative(closestT).magnitude();
         double headingDerivative = pathTracker.current().headingDerivative(closestT) * parametricVelocity;
-        double headingFeedforward = headingDerivative * config.headingFeedforward.get();
+        double headingFeedforward = config.headingFeedforward.get().calculate(headingDerivative, 0);
 
         boolean pathSkip = isBraking && (pathTracker.remainingPaths() > 1 || !config.brakeAtEnd.get());
 
