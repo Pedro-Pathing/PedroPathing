@@ -134,7 +134,7 @@ public class Foresight implements Algorithm {
             if (isHeadingBeforePath) driveVector = Vector2D.zero();
         } else {
             double centripetal = centripetal(tangentialSpeed, curvature)
-                    + config.normalFeedforward.get() * tangentialSpeed * tangentialSpeed;
+                    + config.normalFeedforward.get() * tangentialSpeed;
             normalFeedforward = closestNormal.times(centripetal);
 
             if ((Math.abs(headingError) > 2 * config.headingDeviationTolerance.get())
@@ -366,11 +366,9 @@ public class Foresight implements Algorithm {
         double targetVel = Math.min(targetVelocityToBrakeInTime, constrainedVelocity);
         double error = targetVel - tangentialVel;
 
-        // TODO: Kalman Filter?
         return config.brakeController
                 .get()
-                .calculate(
-                        targetVel - excessVelocityAfterBraking(remainingDistance, brakingDisplacement, theta), error);
+                .calculate(targetVel - excessVelocityAfterBraking(remainingDistance, brakingDisplacement, theta), error);
     }
 
     public double coast(double tangentialVel, double theta, double remainingDistance, double constrainedVelocity) {
