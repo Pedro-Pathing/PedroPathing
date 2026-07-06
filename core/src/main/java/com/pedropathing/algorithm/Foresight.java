@@ -26,6 +26,7 @@ public class Foresight implements Algorithm {
     private static final int TRANSLATIONAL = 0;
     private static final int HEADING = 1;
     private static final int DRIVE = 2;
+    private static final int FF_TERMS = 2;
     private final ForesightConfig config;
     private final Supplier<Ellipse2D> maxAchievableVelocity, maxAchievableDeceleration;
     private double closestT, curvature;
@@ -264,13 +265,13 @@ public class Foresight implements Algorithm {
 
         if (translationalPriority && headingPriority) {
             prioritization = new int[] {0, 1, 2};
-            powers = new double[] {normalFeedforward, translationalPower, headingPower, drivePower};
+            powers = new double[] {normalFeedforward, headingFeedforward, translationalPower, headingPower, drivePower};
         } else if (translationalPriority) {
             prioritization = new int[] {0, 2, 1};
-            powers = new double[] {normalFeedforward, translationalPower, drivePower, headingPower};
+            powers = new double[] {normalFeedforward, headingFeedforward, translationalPower, drivePower, headingPower};
         } else {
             prioritization = new int[] {1, 2, 0};
-            powers = new double[] {normalFeedforward, drivePower, translationalPower, headingPower};
+            powers = new double[] {normalFeedforward, headingFeedforward, drivePower, translationalPower, headingPower};
         }
 
         powers = clampPowers(powers);
@@ -281,15 +282,18 @@ public class Foresight implements Algorithm {
         Vector2D normalDirection = Math.abs(normalFeedforward) < 1e-6 ? Vector2D.zero() : normalFeedforwardVector.div(normalFeedforward);
 
         Vector2D fieldRelativeDrivePower = translationalDirection
-                .times(powers[prioritization[TRANSLATIONAL]])
-                .plus(driveDirection.times(powers[prioritization[DRIVE]]));
+                .times(powers[prioritization[TRANSLATIONAL] + FF_TERMS])
+                .plus(normalDirection.times(powers[0]))
+                .plus(driveDirection.times(powers[prioritization[DRIVE] + FF_TERMS]));
 
-        return getDrivePowers(fieldRelativeDrivePower, state, powers[prioritization[HEADING]]);
+        double totalHeadingPower = powers[prioritization[HEADING] + FF_TERMS] + powers[1];
+
+        return getDrivePowers(fieldRelativeDrivePower, state, totalHeadingPower);
     }
 
     private double[] clampPowers(double[] powers) {
         double magnitudeRemaining = 1.0;
-        double[] usedPowers = new double[3];
+        double[] usedPowers = new double[powers.length];
 
         for (int i = 0; i < usedPowers.length; i++) {
             double used = Control.allocatePower(powers[i], magnitudeRemaining);
