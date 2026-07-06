@@ -152,6 +152,7 @@ public class Foresight implements Algorithm {
             resetTimer = false;
         }
 
+        closestPose = target;
         headingError = headingError(state.pose().heading(), target.heading());
         Vector2D displacementToPath = closestPose.minus(state.pose()).toVector2D();
         translationalError = displacementToPath.magnitude();
