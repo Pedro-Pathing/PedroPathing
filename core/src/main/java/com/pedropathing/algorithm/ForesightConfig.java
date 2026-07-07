@@ -20,7 +20,9 @@ public final class ForesightConfig {
             .plus(Controller.staticFeedforward(0.01)), nonnull());
     // TODO test iZone, decay, and maxI to prevent integral wind-up and have zero-steady state error
 
-    public final ConfigVar<Controller> translationalController = ConfigVar.of(Controller.pid(0.3, 0, 0)
+    public final ConfigVar<Controller> forwardTranslationalController = ConfigVar.of(Controller.pid(0.3, 0, 0)
+            .plus(Controller.staticFeedforward(0.015)));
+    public final ConfigVar<Controller> lateralTranslationalController = ConfigVar.of(Controller.pid(0.3, 0, 0)
             .plus(Controller.staticFeedforward(0.015)));
 
     public final ConfigVar<Controller> brakeController = ConfigVar.of(Controller.pid(0.025, 0, 0)

@@ -152,4 +152,12 @@ public class Vector2D {
     public Vector2D abs() {
         return Vector2D.cartesian(Math.abs(x), Math.abs(y));
     }
+
+    public Vector2D toBodyFrame(double heading) {
+        return rotate(-heading);
+    }
+
+    public Vector2D toWorldFrame(double heading) {
+        return rotate(heading);
+    }
 }

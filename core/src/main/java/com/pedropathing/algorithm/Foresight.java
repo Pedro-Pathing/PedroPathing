@@ -117,7 +117,7 @@ public class Foresight implements Algorithm {
 
         Vector2D displacementToPath = closestPose.minus(state.pose()).toVector2D();
         translationalError = displacementToPath.magnitude();
-        Vector2D translationalVector = computeTranslationalCorrection(displacementToPath, brakingDisplacement);
+        Vector2D translationalVector = computeTranslationalCorrection(state, displacementToPath, brakingDisplacement);
         Vector2D normalFeedforward = Vector2D.zero();
 
         boolean atParametricStart = closestT <= config.parametricTConstraint.get();
@@ -163,6 +163,7 @@ public class Foresight implements Algorithm {
             busy = false;
 
         Vector2D translational = computeTranslationalCorrection(
+                state,
                 displacementToPath,
                 getBrakeDisplacement(state.twist(), state.pose().heading()));
         double headingPower = headingPower(headingError, state);
@@ -318,14 +319,22 @@ public class Foresight implements Algorithm {
         return normalizeSigned(target - current);
     }
 
-    public Vector2D computeTranslationalCorrection(Vector2D displacementVector, Vector2D brakingDisplacement) {
+    public Vector2D computeTranslationalCorrection(MotionState state, Vector2D displacementVector, Vector2D brakingDisplacement) {
         if (displacementVector == null || displacementVector.isZero()) return Vector2D.zero();
         Vector2D adjustedError = displacementVector.minus(brakingDisplacement);
         double distance = adjustedError.magnitude();
         if (distance < config.minCorrectionDistance.get()) return Vector2D.zero();
         return adjustedError
-                .times(config.translationalController.get().calculate(0, distance))
+                .times(getTranslationalCorrection(state, adjustedError))
                 .div(distance);
+    }
+
+    private double getTranslationalCorrection(MotionState state, Vector2D error) {
+        Vector2D bodyFrameError = error.toBodyFrame(state.pose().heading());
+        double distance = bodyFrameError.magnitude();
+        double forwardCorrection = config.forwardTranslationalController.get().calculate(0, distance);
+        double lateralCorrection = config.lateralTranslationalController.get().calculate(0, distance);
+        return Ellipse2D.interpolateRadius(forwardCorrection, lateralCorrection, error.theta());
     }
 
     public double centripetal(double speed, double curvature) {

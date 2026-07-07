@@ -93,13 +93,18 @@ public class Ellipse2D {
     }
 
     public double radius(double phi) {
-        double xTerm = Math.cos(phi) / getMajorAxis();
-        double yTerm = Math.sin(phi) / getMinorAxis();
-        return 1 / Math.hypot(xTerm, yTerm);
+        return 1.0 / Math.sqrt(Vector2D.unit(phi).quadraticForm(characteristic));
     }
 
     public static Ellipse2D fromAxes(double forwardAxis, double lateralAxis) {
         if (forwardAxis >= lateralAxis) return new Ellipse2D(forwardAxis, lateralAxis);
         else return new Ellipse2D(Math.PI / 2, lateralAxis, forwardAxis);
+    }
+
+    public static double interpolateRadius(double forwardAxis, double lateralAxis, double interpolateAngle) {
+        return 1.0 / Math.hypot(
+                Math.cos(interpolateAngle) / forwardAxis,
+                Math.sin(interpolateAngle) / lateralAxis
+        );
     }
 }
