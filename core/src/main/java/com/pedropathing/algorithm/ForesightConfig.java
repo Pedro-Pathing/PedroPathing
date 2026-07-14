@@ -46,7 +46,7 @@ public final class ForesightConfig {
      * Centripetal force to power scaling.
      */
     public final ConfigVar<Double> centripetalScaling = ConfigVar.of(0.005, nonnegative());
-    public final ConfigVar<Double> normalFeedforward = ConfigVar.of(0.005, Validator.nonnull());
+    public final ConfigVar<Double> normalFeedforward = ConfigVar.of(0.0, Validator.nonnull());
 
     public final ConfigVar<Double> robotMass = ConfigVar.of(12.9, positive());
 
@@ -77,6 +77,8 @@ public final class ForesightConfig {
 
     public final ConfigVar<Matrix> linearBrakeCoefficients = ConfigVar.required();
     public final ConfigVar<Matrix> quadraticBrakeCoefficients = ConfigVar.required();
+
+    public final ConfigVar<Boolean> fullPowerCoast = ConfigVar.required();
 
     /**
      * Maximum achievable speed that the robot can move forward/backward at, in units per second.

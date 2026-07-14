@@ -99,13 +99,13 @@ public class Follower {
     }
 
     public void hold(Pose pose) {
-        clearState();
-        mode = Mode.HOLD;
-        holdPose = pose;
+        hold(pose, false);
     }
 
     public void hold(Pose pose, boolean useScaling) {
-        hold(pose);
+        clearState();
+        mode = Mode.HOLD;
+        holdPose = pose;
         useHoldScaling = useScaling;
     }
 
@@ -238,5 +238,9 @@ public class Follower {
 
     public double getTangentialVelocity() {
         return velocity().toVector2D().dot(closestTangent());
+    }
+
+    public Algorithm getAlgorithm() {
+        return algorithm;
     }
 }

@@ -27,7 +27,7 @@ public class Foresight implements Algorithm {
     private static final int HEADING = 1;
     private static final int DRIVE = 2;
     private static final int FF_TERMS = 2;
-    private final ForesightConfig config;
+    public final ForesightConfig config;
     private final Supplier<Ellipse2D> maxAchievableVelocity, maxAchievableDeceleration;
     private double closestT, curvature;
     private double curveCompletion, remainingDistance, tangentialSpeed;
@@ -58,7 +58,7 @@ public class Foresight implements Algorithm {
     public DrivePowers calculatePath(PathTracker pathTracker, MotionState state, double deltaTime) {
         double targetHeading;
 
-        if (closestT >= (1 - config.parametricTConstraint.get())) { // End Constraint
+        if (testParametric()) { // End Constraint
             closestT = 1.0;
             targetHeading = pathTracker.current().heading(closestT);
             closestPose = pathTracker.current().curve.get(closestT).toPose(targetHeading);
@@ -156,6 +156,7 @@ public class Foresight implements Algorithm {
         closestPose = target;
         headingError = headingError(state.pose().heading(), target.heading());
         Vector2D displacementToPath = closestPose.minus(state.pose()).toVector2D();
+        closestTangent = displacementToPath.normalized();
         translationalError = displacementToPath.magnitude();
         tangentialSpeed = closestTangent.dot(state.velocity().toVector2D());
 
@@ -226,13 +227,14 @@ public class Foresight implements Algorithm {
         timer.reset();
         resetTimer = true;
         busy = true;
+        closestT = 0.0;
     }
 
     /**
      * Compute heading correction power for the given state and target heading.
      */
     public double headingPower(double headingError, MotionState state) {
-        return config.headingController.get().calculate(0, headingError, state.twist().omega());
+        return -config.headingController.get().calculate(0, headingError, state.twist().omega());
     }
 
     /**
@@ -267,12 +269,12 @@ public class Foresight implements Algorithm {
         if (translationalPriority && headingPriority) {
             prioritization = new int[] {0, 1, 2};
             powers = new double[] {normalFeedforward, headingFeedforward, translationalPower, headingPower, drivePower};
-        } else if (translationalPriority) {
+        } else if (headingPriority) {
+            prioritization = new int[] {1, 0, 2};
+            powers = new double[] {normalFeedforward, headingFeedforward, headingPower, translationalPower, drivePower};
+        } else {
             prioritization = new int[] {0, 2, 1};
             powers = new double[] {normalFeedforward, headingFeedforward, translationalPower, drivePower, headingPower};
-        } else {
-            prioritization = new int[] {1, 2, 0};
-            powers = new double[] {normalFeedforward, headingFeedforward, drivePower, translationalPower, headingPower};
         }
 
         powers = clampPowers(powers);
@@ -367,6 +369,15 @@ public class Foresight implements Algorithm {
             boolean isBraking,
             double remainingDistance,
             double brakingDisplacement) {
+        if (config.fullPowerCoast.get()) {
+            if (!isBraking) return 1.0;
+            double theta = closestTangentVector.angleTo(Vector2D.unit(heading));
+            double error = targetVelocityToBrakeInTime - tangentialVel;
+            return config.brakeController
+                    .get()
+                    .calculate(targetVelocityToBrakeInTime - excessVelocityAfterBraking(remainingDistance, brakingDisplacement, theta), error);
+        }
+
         double maxVelocityToFitAccel = tangentialVel + config.maxAccelerationConstraint.get() * deltaTime;
         double constrainedVelocity = Math.min(config.maxVelocityConstraint.get(), maxVelocityToFitAccel);
         double theta = closestTangentVector.angleTo(Vector2D.unit(heading));
@@ -446,7 +457,7 @@ public class Foresight implements Algorithm {
     }
 
     public boolean testParametric() {
-        return closestT > config.parametricTConstraint.get();
+        return closestT >= (1 - config.parametricTConstraint.get());
     }
 
     public boolean testTimeout() {
