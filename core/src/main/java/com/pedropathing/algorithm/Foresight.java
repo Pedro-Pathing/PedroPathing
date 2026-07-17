@@ -6,7 +6,6 @@ package com.pedropathing.algorithm;
 
 import static com.pedropathing.config.Memoize.memo;
 import static com.pedropathing.utils.Angle.normalizeSigned;
-import static com.pedropathing.utils.Control.findNormalizingScaling;
 
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.drivetrain.Drivetrain;
@@ -123,9 +122,13 @@ public class Foresight implements Algorithm {
                 brakingDisplacement.dot(closestTangent),
                 targetAcceleration));
 
-        Vector2D displacementToPath = closestPose.minus(state.pose()).toVector2D();
+        Vector2D displacementToPath = closestPose.minus(state.pose()).toVector2D().projectOnto(closestNormal);
         translationalError = displacementToPath.magnitude();
-        Vector2D translationalVector = computeTranslationalCorrection(state, displacementToPath, brakingDisplacement);
+        Vector2D translationalVector = computeTranslationalCorrection(
+                state,
+                displacementToPath,
+                brakingDisplacement.projectOnto(closestNormal)
+        );
         Vector2D normalFeedforward = Vector2D.zero();
 
         boolean atParametricStart = closestT <= config.parametricTConstraint.get();
@@ -179,8 +182,6 @@ public class Foresight implements Algorithm {
                 displacementToPath,
                 getBrakeDisplacement(state.twist(), state.pose().heading()));
         double headingPower = headingPower(headingError, state);
-        // Apply hold-point scalers. Clamp the scaler values to [0, 1] at runtime to
-        // avoid accidental amplification if the configuration is set incorrectly.
 
         if (useScaling) {
             double translationalScale = config.holdPointTranslationalScaling.get();
@@ -272,13 +273,8 @@ public class Foresight implements Algorithm {
             double headingError) {
         boolean translationalPriority = Math.abs(translationalError) > config.translationalDeviationTolerance.get();
         boolean headingPriority = Math.abs(headingError) > config.headingDeviationTolerance.get();
-        double translationalPower = translationalVector.magnitude();
-        double drivePower = driveVector.magnitude();
-        double normalFeedforward = normalFeedforwardVector.magnitude();
 
         List<Pair<Vector2D, Boolean>> vectors;
-        //int[] prioritization;
-        //double[] powers;
 
         if (translationalPriority && headingPriority) {
             vectors = Arrays.asList(
@@ -306,54 +302,9 @@ public class Foresight implements Algorithm {
             );
         }
 
-        /*
-        if (translationalPriority && headingPriority) {
-            prioritization = new int[] {0, 1, 2};
-            powers = new double[] {normalFeedforward, headingFeedforward, translationalPower, headingPower, drivePower};
-        } else if (headingPriority) {
-            prioritization = new int[] {1, 0, 2};
-            powers = new double[] {normalFeedforward, headingFeedforward, headingPower, translationalPower, drivePower};
-        } else {
-            prioritization = new int[] {0, 2, 1};
-            powers = new double[] {normalFeedforward, headingFeedforward, translationalPower, drivePower, headingPower};
-        }
-
-        powers = clampPowers(powers);
-
-        Vector2D translationalDirection =
-                Math.abs(translationalPower) < 1e-6 ? Vector2D.zero() : translationalVector.div(translationalPower);
-        Vector2D driveDirection = Math.abs(drivePower) < 1e-6 ? Vector2D.zero() : driveVector.div(drivePower);
-        Vector2D normalDirection = Math.abs(normalFeedforward) < 1e-6 ? Vector2D.zero() : normalFeedforwardVector.div(normalFeedforward);
-
-        Vector2D fieldRelativeDrivePower = translationalDirection
-                .times(powers[prioritization[TRANSLATIONAL] + FF_TERMS])
-                .plus(normalDirection.times(powers[0]))
-                .plus(driveDirection.times(powers[prioritization[DRIVE] + FF_TERMS]));
-
-        double totalHeadingPower = powers[prioritization[HEADING] + FF_TERMS] + powers[1];
-
-         */
-
         Pair<Vector2D, Double> clamped = clampPowers(drivetrain, vectors, state);
-
         return getDrivePowers(clamped.first(), state, clamped.second());
     }
-
-    /*
-    private double[] clampPowers(double[] powers) {
-        double magnitudeRemaining = 1.0;
-        double[] usedPowers = new double[powers.length];
-
-        for (int i = 0; i < usedPowers.length; i++) {
-            double used = Control.allocatePower(powers[i], magnitudeRemaining);
-            magnitudeRemaining = Control.getRemainingMagnitude(magnitudeRemaining, used);
-            usedPowers[i] = used;
-        }
-
-        return usedPowers;
-    }
-
-     */
 
     private Pair<Vector2D, Double> clampPowers(
             Drivetrain drivetrain,
@@ -403,18 +354,6 @@ public class Foresight implements Algorithm {
         }
 
         return Pair.of(pathing, heading);
-    }
-
-    protected boolean scaleDown(Vector2D staticVector, Vector2D variableVector, boolean isAngular) {
-        return (staticVector.plus(variableVector).magnitude() >= 1.0) ||
-                (isAngular && staticVector.minus(variableVector).magnitude() >= 1.0);
-    }
-
-    protected Vector2D scaledVector(Vector2D staticVector, Vector2D variableVector, boolean isAngular) {
-        double scalingFactor = isAngular ? Math.min(findNormalizingScaling(staticVector, variableVector, 1.0),
-                findNormalizingScaling(staticVector, variableVector.times(-1), 1.0)) :
-                findNormalizingScaling(staticVector, variableVector, 1.0);
-        return variableVector.times(scalingFactor);
     }
 
     public DrivePowers getDrivePowers(Vector2D fieldRelativeDrivePower, MotionState state, double headingPower) {
