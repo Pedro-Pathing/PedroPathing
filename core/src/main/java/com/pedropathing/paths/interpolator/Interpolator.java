@@ -24,6 +24,21 @@ public interface Interpolator {
         }
     };
 
+    default Interpolator reverse() {
+        Interpolator outer = this;
+        return new Interpolator() {
+            @Override
+            public double interpolate(Curve curve, double t) {
+                return Angle.normalize(outer.interpolate(curve, t) + Math.PI);
+            }
+
+            @Override
+            public double differentiate(Curve curve, double t) {
+                return outer.differentiate(curve, t);
+            }
+        };
+    }
+
     static Interpolator constant(double heading) {
         double finalHeading = Angle.normalize(heading);
         return (Curve curve, @TValue double t) -> finalHeading;

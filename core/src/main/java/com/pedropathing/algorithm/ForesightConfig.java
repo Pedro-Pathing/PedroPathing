@@ -28,6 +28,8 @@ public final class ForesightConfig {
     public final ConfigVar<Controller> brakeController = ConfigVar.of(Controller.pid(0.025, 0, 0)
             .plus(Controller.dynamicFeedforward(0.015))
             .plus(Controller.staticFeedforward(0.05)));
+    public final ConfigVar<Controller> brakeAccelFeedforward = ConfigVar.of(Controller.dynamicFeedforward(0.0025));
+
     public final ConfigVar<Controller> coastController = ConfigVar.of(Controller.pid(0.025, 0, 0)
             .plus(Controller.dynamicFeedforward(0.015))
             .plus(Controller.staticFeedforward(0.05)));
@@ -78,7 +80,9 @@ public final class ForesightConfig {
     public final ConfigVar<Matrix> linearBrakeCoefficients = ConfigVar.required();
     public final ConfigVar<Matrix> quadraticBrakeCoefficients = ConfigVar.required();
 
-    public final ConfigVar<Boolean> fullPowerCoast = ConfigVar.required();
+    public final ConfigVar<Boolean> fullPowerCoast = ConfigVar.of(true);
+    public final ConfigVar<Boolean> cosineScale = ConfigVar.of(true);
+    public final ConfigVar<Boolean> turnBeforeDriving = ConfigVar.of(false);
 
     /**
      * Maximum achievable speed that the robot can move forward/backward at, in units per second.

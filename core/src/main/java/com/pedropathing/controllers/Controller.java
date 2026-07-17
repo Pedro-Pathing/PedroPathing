@@ -8,6 +8,8 @@ package com.pedropathing.controllers;
 public interface Controller {
     double calculate(double target, double error);
 
+    Controller zero = (t, e) -> 0;
+
     default double calculate(double target, double error, double velocity) {
         return calculate(target, error);
     }
@@ -73,4 +75,6 @@ public interface Controller {
             }
         };
     }
+
+
 }
