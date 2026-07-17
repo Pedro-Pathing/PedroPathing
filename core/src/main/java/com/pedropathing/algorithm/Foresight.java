@@ -6,12 +6,14 @@ package com.pedropathing.algorithm;
 
 import static com.pedropathing.config.Memoize.memo;
 import static com.pedropathing.utils.Angle.normalizeSigned;
+import static com.pedropathing.utils.Control.findNormalizingScaling;
 
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.localization.MotionState;
 import com.pedropathing.math.Ellipse2D;
 import com.pedropathing.math.Pose;
 import com.pedropathing.math.Twist;
+import com.pedropathing.math.Vector;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.paths.PathTracker;
 import com.pedropathing.utils.Control;
@@ -19,6 +21,8 @@ import com.pedropathing.utils.Pair;
 import com.pedropathing.utils.Timer;
 import com.pedropathing.utils.Utils;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -255,6 +259,7 @@ public class Foresight implements Algorithm {
         return trackDeviationScale * headingScale;
     }
 
+    @SuppressWarnings("unchecked")
     public DrivePowers allocatePowers(
             MotionState state,
             Vector2D normalFeedforwardVector,
@@ -270,9 +275,37 @@ public class Foresight implements Algorithm {
         double drivePower = driveVector.magnitude();
         double normalFeedforward = normalFeedforwardVector.magnitude();
 
-        int[] prioritization;
-        double[] powers;
+        List<Pair<Vector2D, Boolean>> vectors;
+        //int[] prioritization;
+        //double[] powers;
 
+        if (translationalPriority && headingPriority) {
+            vectors = Arrays.asList(
+                    Pair.of(normalFeedforwardVector, false),
+                    Pair.of(Vector2D.polar(headingFeedforward, state.pose().heading()), true),
+                    Pair.of(translationalVector, false),
+                    Pair.of(Vector2D.polar(headingPower, state.pose().heading()), true),
+                    Pair.of(driveVector, false)
+            );
+        } else if (headingPriority) {
+            vectors = Arrays.asList(
+                    Pair.of(normalFeedforwardVector, false),
+                    Pair.of(Vector2D.polar(headingFeedforward, state.pose().heading()), true),
+                    Pair.of(Vector2D.polar(headingPower, state.pose().heading()), true),
+                    Pair.of(translationalVector, false),
+                    Pair.of(driveVector, false)
+            );
+        } else {
+            vectors = Arrays.asList(
+                    Pair.of(normalFeedforwardVector, false),
+                    Pair.of(Vector2D.polar(headingFeedforward, state.pose().heading()), true),
+                    Pair.of(translationalVector, false),
+                    Pair.of(driveVector, false),
+                    Pair.of(Vector2D.polar(headingPower, state.pose().heading()), true)
+            );
+        }
+
+        /*
         if (translationalPriority && headingPriority) {
             prioritization = new int[] {0, 1, 2};
             powers = new double[] {normalFeedforward, headingFeedforward, translationalPower, headingPower, drivePower};
@@ -298,9 +331,14 @@ public class Foresight implements Algorithm {
 
         double totalHeadingPower = powers[prioritization[HEADING] + FF_TERMS] + powers[1];
 
-        return getDrivePowers(fieldRelativeDrivePower, state, totalHeadingPower);
+         */
+
+        Pair<Vector2D, Double> clamped = clampPowers(vectors, state.pose().heading());
+
+        return getDrivePowers(clamped.first(), state, clamped.second());
     }
 
+    /*
     private double[] clampPowers(double[] powers) {
         double magnitudeRemaining = 1.0;
         double[] usedPowers = new double[powers.length];
@@ -312,6 +350,69 @@ public class Foresight implements Algorithm {
         }
 
         return usedPowers;
+    }
+
+     */
+
+    private Pair<Vector2D, Double> clampPowers(List<Pair<Vector2D, Boolean>> powers, double robotHeading) {
+
+        Vector2D headingDirection = Vector2D.polar(1.0, robotHeading);
+
+        Pair<Vector2D, Boolean> first = powers.get(0);
+
+        Vector2D combined = first.first();
+        Vector2D pathing = first.second() ? Vector2D.zero() : combined;
+        double heading = first.second() ? combined.dot(headingDirection) : 0.0;
+
+        if (combined.magnitude() > 1.0) {
+            if (first.second()) {
+                return Pair.of(Vector2D.zero(), heading > 0 ? 1.0 : -1.0);
+            }
+            return Pair.of(pathing.normalized(), 0.0);
+        }
+
+        for (int i = 1; i < powers.size(); i++) {
+            Pair<Vector2D, Boolean> power = powers.get(i);
+
+            Vector2D vector = power.first();
+            if (vector.isZero()) continue;
+
+            boolean isAngular = power.second();
+
+            if (scaleDown(combined, vector, isAngular)) {
+                Vector2D scaled = scaledVector(combined, vector, isAngular);
+
+                if (isAngular) {
+                    heading += scaled.dot(headingDirection);
+                } else {
+                    pathing = pathing.plus(scaled);
+                }
+
+                return Pair.of(pathing, heading);
+            }
+
+            combined = combined.plus(vector);
+
+            if (isAngular) {
+                heading += vector.dot(headingDirection);
+            } else {
+                pathing = pathing.plus(vector);
+            }
+        }
+
+        return Pair.of(pathing, heading);
+    }
+
+    protected boolean scaleDown(Vector2D staticVector, Vector2D variableVector, boolean isAngular) {
+        return (staticVector.plus(variableVector).magnitude() >= 1.0) ||
+                (isAngular && staticVector.minus(variableVector).magnitude() >= 1.0);
+    }
+
+    protected Vector2D scaledVector(Vector2D staticVector, Vector2D variableVector, boolean isAngular) {
+        double scalingFactor = isAngular ? Math.min(findNormalizingScaling(staticVector, variableVector, 1.0),
+                findNormalizingScaling(staticVector, variableVector.times(-1), 1.0)) :
+                findNormalizingScaling(staticVector, variableVector, 1.0);
+        return variableVector.times(scalingFactor);
     }
 
     public DrivePowers getDrivePowers(Vector2D fieldRelativeDrivePower, MotionState state, double headingPower) {
@@ -379,12 +480,12 @@ public class Foresight implements Algorithm {
             double brakingDisplacement,
             double targetAccel) {
         if (config.fullPowerCoast.get()) {
-            if (!isBraking) {
-                targetVelocity = 10000;
+            double error = targetVelocityToBrakeInTime - tangentialVel;
+            if (!isBraking || (error > 0)) {
+                targetVelocity = 0;
                 return 1.0;
             }
             double theta = closestTangentVector.angleTo(Vector2D.unit(heading));
-            double error = targetVelocityToBrakeInTime - tangentialVel;
             targetVelocity = targetVelocityToBrakeInTime;
             return config.brakeController
                     .get()
@@ -400,7 +501,7 @@ public class Foresight implements Algorithm {
 
         if (!isBraking)
             if (constrainedVelocity >= currentMaxAchievableVelocity) {
-                targetVelocity = 10000;
+                targetVelocity = 0;
                 return 1.0;
             }
             else return coast(tangentialVel, theta, remainingDistance, constrainedVelocity);

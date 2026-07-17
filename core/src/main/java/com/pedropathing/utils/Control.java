@@ -4,6 +4,9 @@
  */
 package com.pedropathing.utils;
 
+import com.pedropathing.math.Vector;
+import com.pedropathing.math.Vector2D;
+
 public class Control {
     /**
      * Calculates the remaining magnitude on a unit circle after subtracting a component.
@@ -18,6 +21,15 @@ public class Control {
     public static double allocatePower(double requested, double budget) {
         return Math.copySign(Math.min(Math.abs(requested), budget), requested);
     }
+
+    public static double findNormalizingScaling(Vector2D staticVector, Vector2D variableVector, double maxPowerScaling) {
+        double a = Math.pow(variableVector.x(), 2) + Math.pow(variableVector.y(), 2);
+        double b = staticVector.x() * variableVector.x() + staticVector.y() * variableVector.y();
+        double c = Math.pow(staticVector.x(), 2) + Math.pow(staticVector.y(), 2) - Math.pow(maxPowerScaling, 2);
+        double scaling = (-b + Math.sqrt(b * b - a * c)) / a;
+        return Math.max(0.0, Math.min(1.0, scaling));
+    }
+
 
     /**
      * Scales the control output using a cosine function to avoid continuing when deviating far from the target.
