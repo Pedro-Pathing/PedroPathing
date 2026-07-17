@@ -63,12 +63,12 @@ public class Follower {
                     break;
                 }
 
-                DrivePowers powers = algorithm.calculatePath(pathTracker, localizer.state(), deltaTime);
+                DrivePowers powers = algorithm.calculatePath(drivetrain, pathTracker, localizer.state(), deltaTime);
                 drivetrain.drive(powers, false);
                 break;
             }
             case HOLD: {
-                DrivePowers powers = algorithm.calculateHold(holdPose, localizer.state(), useHoldScaling, deltaTime);
+                DrivePowers powers = algorithm.calculateHold(drivetrain, holdPose, localizer.state(), useHoldScaling, deltaTime);
                 drivetrain.drive(powers, false);
                 break;
             }

@@ -3,6 +3,9 @@ package com.pedropathing.revhub.drivetrains;
 import android.annotation.SuppressLint;
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.drivetrain.Drivetrain;
+import com.pedropathing.localization.MotionState;
+import com.pedropathing.math.Vector2D;
+import com.pedropathing.utils.Utils;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -42,6 +45,16 @@ public class Mecanum implements Drivetrain {
 
     @SuppressLint("DefaultLocale")
     public void applyDrive(DrivePowers powers) {
+        System.arraycopy(computeWheelPowers(powers), 0, wheelPowers, 0, wheelPowers.length);
+
+        for (int i = 0; i < wheelPowers.length; i++) {
+            motors[i].setPower(wheelPowers[i]);
+        }
+    }
+
+    @Override
+    public double[] computeWheelPowers(DrivePowers powers) {
+        double[] wheelPowers = new double[4];
         double forward = powers.forward();
         double strafe = powers.strafe();
         double turn = powers.turn();
@@ -60,11 +73,31 @@ public class Mecanum implements Drivetrain {
         wheelPowers[BL] = bl * scale;
         wheelPowers[BR] = br * scale;
 
-        for (int i = 0; i < wheelPowers.length; i++) {
-            motors[i].setPower(wheelPowers[i]);
-        }
+        return wheelPowers;
     }
 
+    @Override
+    public double maxScaling(DrivePowers current, DrivePowers delta) {
+        double lambda = 1.0;
+
+        double[] currentPowers = computeWheelPowers(current);
+        double[] deltaPowers = computeWheelPowers(delta);
+
+        for (int i = 0; i < 4; i++) {
+            double a = currentPowers[i];
+            double b = deltaPowers[i];
+
+            if (Math.abs(b) < 1e-9) continue;
+
+            double t1 = ( 1.0 - a) / b;
+            double t2 = (-1.0 - a) / b;
+
+            if (t1 >= 0.0 && t1 < lambda) lambda = t1;
+            if (t2 >= 0.0 && t2 < lambda) lambda = t2;
+        }
+
+        return Utils.clamp(lambda, 0.0, 1.0);
+    }
 
     @Override
     public void drive(DrivePowers powers, boolean manual) {
