@@ -40,7 +40,7 @@ public class CompoundPath extends Path {
     }
 
     @Override
-    public double derivative(@TValue double t) {
+    public double headingDerivative(@TValue double t) {
         if (interpolator != null) return interpolator.interpolate(curve, t);
         return paths.get(t).heading(paths.localT(t));
     }

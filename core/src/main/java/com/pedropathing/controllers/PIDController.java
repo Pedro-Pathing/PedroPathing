@@ -56,7 +56,7 @@ public class PIDController implements Controller {
         previousError = error;
         firstUpdate = false;
 
-        return error * kP + integral * kI - velocity * kD * Math.signum(error);
+        return error * kP + integral * kI - velocity * kD;
     }
 
     @Override

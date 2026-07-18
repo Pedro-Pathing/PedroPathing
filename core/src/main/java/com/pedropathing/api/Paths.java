@@ -41,6 +41,10 @@ public final class Paths {
         return path(new BezierCurve(poses));
     }
 
+    public static Path curve(Vector2D... points) {
+        return path(new BezierCurve(points));
+    }
+
     /**
      * Generates a path with a Bézier curve through the input poses.
      * Requires at least 2 control poses.

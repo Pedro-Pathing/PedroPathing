@@ -37,7 +37,7 @@ public class AtomicPath extends Path {
     }
 
     @Override
-    public double derivative(@TValue double t) {
+    public double headingDerivative(@TValue double t) {
         if (interpolator == null) throw new UnsupportedOperationException("No heading interpolator set.");
         return interpolator.differentiate(curve, t);
     }

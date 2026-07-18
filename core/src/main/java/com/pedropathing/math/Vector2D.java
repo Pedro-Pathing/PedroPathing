@@ -160,4 +160,12 @@ public class Vector2D {
     public Vector2D toWorldFrame(double heading) {
         return rotate(heading);
     }
+
+    @Override
+    public String toString() {
+        return "Vector2D{" +
+                "x=" + x +
+                ", y=" + y +
+                '}';
+    }
 }

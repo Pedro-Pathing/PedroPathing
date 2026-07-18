@@ -26,10 +26,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 public class Foresight implements Algorithm {
-    private static final int TRANSLATIONAL = 0;
-    private static final int HEADING = 1;
-    private static final int DRIVE = 2;
-    private static final int FF_TERMS = 2;
     public final ForesightConfig config;
     private final Supplier<Ellipse2D> maxAchievableVelocity, maxAchievableDeceleration;
     private double closestT, curvature;
@@ -152,8 +148,9 @@ public class Foresight implements Algorithm {
                     + config.normalFeedforward.get() * tangentialSpeed;
             normalFeedforward = closestNormal.times(centripetal);
 
-            if ((Math.abs(headingError) > 2 * config.headingDeviationTolerance.get())
-                    || (Math.abs(translationalError) > 2 * config.translationalDeviationTolerance.get()) && config.cosineScale.get())
+            if (((Math.abs(headingError) > 2 * config.headingDeviationTolerance.get())
+                    || (Math.abs(translationalError) > 2 * config.translationalDeviationTolerance.get()))
+                    && config.cosineScale.get())
                 driveVector = driveVector.times(getDriveScalar(translationalError, headingError));
         }
 
@@ -231,7 +228,7 @@ public class Foresight implements Algorithm {
 
     @Override
     public boolean atParametricEnd(double t) {
-        return t >= config.parametricTConstraint.get();
+        return testParametric();
     }
 
     @Override
@@ -246,7 +243,7 @@ public class Foresight implements Algorithm {
      * Compute heading correction power for the given state and target heading.
      */
     public double headingPower(double headingError, MotionState state) {
-        return -config.headingController.get().calculate(0, headingError, state.twist().omega());
+        return config.headingController.get().calculate(0, headingError, state.twist().omega());
     }
 
     /**
@@ -331,9 +328,6 @@ public class Foresight implements Algorithm {
                         drivetrain);
 
                 heading += scalingFactor * deltaHeading;
-
-                if (scalingFactor < 1.0)
-                    break;
             } else {
                 Vector2D vector = power.first();
 
@@ -347,9 +341,6 @@ public class Foresight implements Algorithm {
 
                 Vector2D scaled = vector.times(scalingFactor);
                 pathing = pathing.plus(scaled);
-
-                if (scalingFactor < 1.0)
-                    break;
             }
         }
 
@@ -363,7 +354,7 @@ public class Foresight implements Algorithm {
                 robotFrameDrivePower.x(), state.twist().vx(), config.maxBrakingPower.get());
         double strafe = Control.clampBrakingPower(
                 robotFrameDrivePower.y(), state.twist().vy(), config.maxBrakingPower.get());
-        return new DrivePowers(forward, -strafe, headingPower);
+        return new DrivePowers(forward, strafe, headingPower);
     }
 
     public double headingError(double current, double target) {
@@ -477,12 +468,11 @@ public class Foresight implements Algorithm {
 
 
     public double coast(double tangentialVel, double theta, double remainingDistance, double constrainedVelocity) {
-        double targetCoastDecel = maxAchievableDeceleration.get().radius(theta);
-        double coastVelNeededToStopInTime =
-                Math.sqrt(config.coastDownToVelocity.get() * config.coastDownToVelocity.get()
-                        + 2 * Math.abs(targetCoastDecel) * remainingDistance);
+        double targetCoastDecel = -Math.abs(maxAchievableDeceleration.get().radius(theta));
+        double coastVelNeededToStopInTime = Math.sqrt(config.coastDownToVelocity.get() * config.coastDownToVelocity.get()
+                        - 2 * targetCoastDecel * remainingDistance);
 
-        double zeroPowerCoastFinalVelSquared = tangentialVel * tangentialVel + 2 * targetCoastDecel * remainingDistance;
+        double zeroPowerCoastFinalVelSquared = excessVelAfterCoast(remainingDistance, tangentialVel, theta);
         double zeroPowerCoastFinalVel =
                 Math.signum(zeroPowerCoastFinalVelSquared) * Math.sqrt(Math.abs(zeroPowerCoastFinalVelSquared));
         double targetVel = Math.min(coastVelNeededToStopInTime, constrainedVelocity);
