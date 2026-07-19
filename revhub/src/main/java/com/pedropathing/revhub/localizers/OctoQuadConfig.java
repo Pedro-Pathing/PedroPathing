@@ -15,13 +15,13 @@ public class OctoQuadConfig {
     public final ConfigVar<Float> yPodOffset = ConfigVar.required();
 
     /** Distance unit used for xPodOffset and yPodOffset **/
-    public final ConfigVar<DistanceUnit> offsetUnits = ConfigVar.of(DistanceUnit.MM);
+    public final ConfigVar<DistanceUnit> offsetUnits = ConfigVar.of(DistanceUnit.INCH);
 
     /** Global distance unit for all poses and positions */
     public final ConfigVar<DistanceUnit> globalDistanceUnit = ConfigVar.of(DistanceUnit.INCH);
 
     /** Distance unit used for ticksPerUnit **/
-    public final ConfigVar<DistanceUnit> encoderResolutionUnit = ConfigVar.of(DistanceUnit.MM);
+    public final ConfigVar<DistanceUnit> encoderResolutionUnit = ConfigVar.of(DistanceUnit.INCH);
 
     public final ConfigVar<Double> ticksPerUnit = ConfigVar.required();
 
