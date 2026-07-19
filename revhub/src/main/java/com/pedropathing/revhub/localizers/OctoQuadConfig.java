@@ -11,8 +11,8 @@ public class OctoQuadConfig {
     public final ConfigVar<OctoQuad.EncoderDirection> yPodDirection = ConfigVar.required();
     public final ConfigVar<Integer> xPodPort = ConfigVar.of(0);
     public final ConfigVar<Integer> yPodPort = ConfigVar.of(1);
-    public final ConfigVar<Float> xPodOffset = ConfigVar.required();
-    public final ConfigVar<Float> yPodOffset = ConfigVar.required();
+    public final ConfigVar<Double> xPodOffset = ConfigVar.required();
+    public final ConfigVar<Double> yPodOffset = ConfigVar.required();
 
     /** Distance unit used for xPodOffset and yPodOffset **/
     public final ConfigVar<DistanceUnit> offsetUnits = ConfigVar.of(DistanceUnit.INCH);
@@ -31,7 +31,7 @@ public class OctoQuadConfig {
      * Then put your new value as imuScalar = measuredRotation/realRotation.
      * So if your robot reads 50 extra degrees, then your imuScalar would be 3650/3600 ~ 1.014
      **/
-    public final ConfigVar<Float> headingScalar = ConfigVar.of(1.0f);
+    public final ConfigVar<Double> headingScalar = ConfigVar.of(1.0);
 
     public final ConfigVar<OctoQuad.I2cRecoveryMode> i2cRecoveryMode = ConfigVar.of(OctoQuad.I2cRecoveryMode.MODE_1_PERIPH_RST_ON_FRAME_ERR);
 

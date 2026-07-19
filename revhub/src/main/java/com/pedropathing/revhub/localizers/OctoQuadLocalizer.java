@@ -31,7 +31,7 @@ public class OctoQuadLocalizer implements Localizer {
                 ticksPerMM,
                 (float) -config.offsetUnits.get().toMm(config.xPodOffset.get()),
                 (float) -config.offsetUnits.get().toMm(config.yPodOffset.get()),
-                config.headingScalar.get(),
+                config.headingScalar.get().floatValue(),
                 config.localizerVelocityIntervalMS.get()
         );
         octoQuad.setI2cRecoveryMode(config.i2cRecoveryMode.get());
