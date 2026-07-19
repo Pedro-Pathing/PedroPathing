@@ -17,7 +17,6 @@ public class Pinpoint implements Localizer {
     private final GoBildaPinpointDriver odometry;
     private final DistanceUnit globalDistanceUnit;
 
-    private Pose pose;
     private MotionState motionState;
 
     public Pinpoint(HardwareMap hardwareMap, PinpointConfig config) {
@@ -27,14 +26,16 @@ public class Pinpoint implements Localizer {
 
         odometry.setOffsets(config.xPodOffset.get(), config.yPodOffset.get(), config.offsetUnits.get());
 
-        odometry.setBulkReadScope(
-                GoBildaPinpointDriver.Register.X_POSITION,
-                GoBildaPinpointDriver.Register.Y_POSITION,
-                GoBildaPinpointDriver.Register.X_VELOCITY,
-                GoBildaPinpointDriver.Register.Y_VELOCITY,
-                GoBildaPinpointDriver.Register.H_ORIENTATION,
-                GoBildaPinpointDriver.Register.H_VELOCITY
-        );
+        if (odometry.getDeviceVersion() >= 2) {
+            odometry.setBulkReadScope(
+                    GoBildaPinpointDriver.Register.X_POSITION,
+                    GoBildaPinpointDriver.Register.Y_POSITION,
+                    GoBildaPinpointDriver.Register.X_VELOCITY,
+                    GoBildaPinpointDriver.Register.Y_VELOCITY,
+                    GoBildaPinpointDriver.Register.H_ORIENTATION,
+                    GoBildaPinpointDriver.Register.H_VELOCITY
+            );
+        }
 
         if (config.ticksPerUnit.get().isPresent()) {
             odometry.setEncoderResolution(config.ticksPerUnit.get().getAsDouble(), config.encoderResolutionUnit.get());
@@ -60,15 +61,14 @@ public class Pinpoint implements Localizer {
                         pose.heading()
                 )
         );
-
-        this.pose = pose;
+        motionState = motionState.withPose(pose);
     }
 
     @Override
     public void update() {
         odometry.update();
 
-        pose = new Pose(
+        Pose pose = new Pose(
                 odometry.getPosX(globalDistanceUnit),
                 odometry.getPosY(globalDistanceUnit),
                 odometry.getHeading(AngleUnit.RADIANS)
