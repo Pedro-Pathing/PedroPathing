@@ -48,8 +48,7 @@ public class Pinpoint implements Localizer {
                 config.yPodDirection.get()
         );
 
-        odometry.resetPosAndIMU();
-
+        reset();
         update();
     }
 

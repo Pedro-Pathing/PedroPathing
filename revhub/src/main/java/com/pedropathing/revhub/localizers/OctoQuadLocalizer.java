@@ -35,11 +35,10 @@ public class OctoQuadLocalizer implements Localizer {
                 config.localizerVelocityIntervalMS.get()
         );
         octoQuad.setI2cRecoveryMode(config.i2cRecoveryMode.get());
-        octoQuad.resetLocalizerAndCalibrateIMU();
+
+        reset();
 
         while (octoQuad.getLocalizerStatus() != OctoQuad.LocalizerStatus.RUNNING) {}
-
-        octoQuad.setLocalizerPose(0, 0, 0);
 
         update();
     }
