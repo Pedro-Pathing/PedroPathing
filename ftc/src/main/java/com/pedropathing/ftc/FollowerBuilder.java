@@ -33,7 +33,7 @@ public class FollowerBuilder {
     private final HardwareMap hardwareMap;
     private Supplier<Localizer> localizerSupplier;
     private Drivetrain drivetrain;
-    private boolean resetIMU = true;
+    private boolean resetIMUOnInit = true;
 
     public FollowerBuilder(FollowerConstants constants, HardwareMap hardwareMap) {
         this.constants = constants;
@@ -62,7 +62,7 @@ public class FollowerBuilder {
     }
 
     public FollowerBuilder pinpointLocalizer(PinpointConstants lConstants) {
-        this.localizerSupplier = () -> new PinpointLocalizer(hardwareMap, lConstants, resetIMU);
+        this.localizerSupplier = () -> new PinpointLocalizer(hardwareMap, lConstants, resetIMUOnInit);
         return this;
     }
 
@@ -105,12 +105,12 @@ public class FollowerBuilder {
         return this;
     }
 
-    public FollowerBuilder resetIMU(boolean resetIMU) {
-        this.resetIMU = resetIMU;
+    public FollowerBuilder resetIMUOnInit(boolean resetIMUOnInit) {
+        this.resetIMUOnInit = resetIMUOnInit;
         return this;
     }
 
     public Follower build() {
-        return new Follower(constants, localizerSupplier.get(), drivetrain, constraints, resetIMU);
+        return new Follower(constants, localizerSupplier.get(), drivetrain, constraints, resetIMUOnInit);
     }
 }

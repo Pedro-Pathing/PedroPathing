@@ -72,13 +72,13 @@ public class Follower {
      * @param localizer Localizer to use
      * @param drivetrain Drivetrain to use
      * @param pathConstraints PathConstraints to use
-     * @param resetIMU whether to reset the IMU or not (if applicable)
+     * @param resetIMUOnInit whether to reset the IMU or not (if applicable)
      */
-    public Follower(FollowerConstants constants, Localizer localizer, Drivetrain drivetrain, PathConstraints pathConstraints, boolean resetIMU) {
+    public Follower(FollowerConstants constants, Localizer localizer, Drivetrain drivetrain, PathConstraints pathConstraints, boolean resetIMUOnInit) {
         this.constants = constants;
         this.pathConstraints = pathConstraints;
 
-        poseTracker = new PoseTracker(localizer, resetIMU);
+        poseTracker = new PoseTracker(localizer, resetIMUOnInit);
         errorCalculator = new ErrorCalculator(constants);
         vectorCalculator = new VectorCalculator(constants);
         this.drivetrain = drivetrain;

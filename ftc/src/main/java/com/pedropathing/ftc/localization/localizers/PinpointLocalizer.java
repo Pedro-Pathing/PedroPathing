@@ -54,8 +54,8 @@ public class PinpointLocalizer implements Localizer {
      *
      * @param map the HardwareMap
      */
-    public PinpointLocalizer(HardwareMap map, PinpointConstants constants, boolean resetIMU) {
-        this(map, constants, new Pose(), resetIMU);
+    public PinpointLocalizer(HardwareMap map, PinpointConstants constants, boolean resetIMUOnInit) {
+        this(map, constants, new Pose(), resetIMUOnInit);
     }
 
     /**
@@ -66,7 +66,7 @@ public class PinpointLocalizer implements Localizer {
      * @param setStartPose the Pose to start from
      */
     @SuppressLint("NewApi")
-    public PinpointLocalizer(HardwareMap map, PinpointConstants constants, Pose setStartPose, boolean resetIMU) {
+    public PinpointLocalizer(HardwareMap map, PinpointConstants constants, Pose setStartPose, boolean resetIMUOnInit) {
 
         odo = map.get(GoBildaPinpointDriver.class,constants.hardwareMapName);
         setOffsets(constants.forwardPodY, constants.strafePodX, constants.distanceUnit);
@@ -83,7 +83,7 @@ public class PinpointLocalizer implements Localizer {
 
         odo.setEncoderDirections(constants.forwardEncoderDirection, constants.strafeEncoderDirection);
 
-        if (resetIMU) {
+        if (resetIMUOnInit) {
             setStartPose(setStartPose);
             pinpointPose = startPose;
             previousHeading = setStartPose.getHeading();
