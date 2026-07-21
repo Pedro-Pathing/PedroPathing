@@ -3,7 +3,6 @@ package com.pedropathing.revhub.localizers;
 import com.pedropathing.localization.Localizer;
 import com.pedropathing.localization.MotionState;
 import com.pedropathing.math.Pose;
-import com.pedropathing.math.Twist;
 import com.pedropathing.math.Velocity;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -12,6 +11,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
+
+import static com.qualcomm.hardware.gobilda.GoBildaPinpointDriver.DeviceStatus.CALIBRATING;
 
 public class Pinpoint implements Localizer {
     private final GoBildaPinpointDriver odometry;
@@ -49,6 +50,9 @@ public class Pinpoint implements Localizer {
         );
 
         reset();
+
+        while (odometry.getDeviceStatus() == CALIBRATING) {}
+
         update();
     }
 
