@@ -21,7 +21,7 @@ public class PiecewiseController implements Controller {
      *
      * @return this
      */
-    public PiecewiseController add(double threshold, Controller controller) {
+    public PiecewiseController put(double threshold, Controller controller) {
         controllers.put(threshold, controller);
         return this;
     }

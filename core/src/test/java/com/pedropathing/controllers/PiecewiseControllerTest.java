@@ -13,8 +13,8 @@ public class PiecewiseControllerTest {
     public void piecewiseSelectsCorrectControllerByThreshold() {
         Controller baseline = Controller.staticFeedforward(1.0);
         PiecewiseController pc = Controller.piecewise(baseline)
-                .add(0.0, Controller.staticFeedforward(2.0))
-                .add(1.0, Controller.staticFeedforward(3.0));
+                .put(0.0, Controller.staticFeedforward(2.0))
+                .put(1.0, Controller.staticFeedforward(3.0));
 
         // error < 0 -> baseline (sign preserved)
         assertEquals(-1.0, pc.calculate(0.0, -1.0), 1e-9);

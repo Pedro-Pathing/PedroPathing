@@ -95,6 +95,10 @@ public abstract class Path {
         return heading(Interpolator.tangent);
     }
 
+    public Path reverseTangent() {
+        return heading(Interpolator.tangent.reverse());
+    }
+
     public Path facingPoint(Vector2D point) {
         return heading(Interpolator.facingPoint(point));
     }
