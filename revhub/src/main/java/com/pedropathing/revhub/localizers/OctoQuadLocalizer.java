@@ -47,6 +47,10 @@ public class OctoQuadLocalizer implements Localizer {
     public void update() {
         octoQuad.readLocalizerData(localizer);
 
+        if (!localizer.isDataValid()) {
+            return;
+        }
+
         Pose pose = new Pose(
                 globalDistanceUnit.fromMm(localizer.posX_mm),
                 globalDistanceUnit.fromMm(localizer.posY_mm),
