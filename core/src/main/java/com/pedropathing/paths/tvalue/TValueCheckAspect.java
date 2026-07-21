@@ -10,7 +10,7 @@ import org.aspectj.lang.annotation.Before;
 @Aspect
 public class TValueCheckAspect {
     private static void checkT(double t) {
-        if (t < 0 || t > 1) throw new IllegalArgumentException("t must be between 0 and 1 but was " + t + ".");
+        if (t < -(1e-6) || t > (1 + 1e-6)) throw new IllegalArgumentException("t must be between 0 and 1 but was " + t + ".");
     }
 
     @Before(
