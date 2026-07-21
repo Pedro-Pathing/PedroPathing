@@ -1,5 +1,5 @@
 [versions]
-ftc = "11.1.0"
+ftc = "11.2.0"
 dokka = "2.2.0"
 agp = "8.7.3"
 kotlin = "2.3.21"
