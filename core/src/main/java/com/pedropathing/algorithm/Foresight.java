@@ -167,9 +167,16 @@ public class Foresight implements Algorithm {
         closestPose = target;
         headingError = headingError(state.pose().heading(), target.heading());
         Vector2D displacementToPath = closestPose.minus(state.pose()).toVector2D();
-        closestTangent = displacementToPath.normalized();
         translationalError = displacementToPath.magnitude();
-        tangentialSpeed = closestTangent.dot(state.velocity().toVector2D());
+
+        if (displacementToPath.isZero()) {
+            tangentialSpeed = 0;
+            closestTangent = Vector2D.zero();
+        }
+        else {
+            closestTangent = displacementToPath.normalized();
+            tangentialSpeed = closestTangent.dot(state.velocity().toVector2D());
+        }
 
         if (busy && testTimeout() || (testHeading() && testTranslational() && testVelocity()))
             busy = false;
