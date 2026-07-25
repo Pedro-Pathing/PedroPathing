@@ -56,13 +56,13 @@ public class Mecanum implements Drivetrain {
     public double[] computeWheelPowers(DrivePowers powers) {
         double[] wheelPowers = new double[4];
         double forward = powers.forward();
-        double strafe = -powers.strafe();
-        double turn = -powers.turn();
+        double strafe = powers.strafe();
+        double turn = powers.turn();
 
-        double fl = forward + strafe + turn;
-        double fr = forward - strafe - turn;
-        double bl = forward - strafe + turn;
-        double br = forward + strafe - turn;
+        double fl = forward - strafe - turn;
+        double fr = forward + strafe + turn;
+        double bl = forward + strafe - turn;
+        double br = forward - strafe + turn;
 
         double max = Math.max(1.0, Math.max(Math.abs(fl), Math.max(Math.abs(bl), Math.max(Math.abs(fr), Math.abs(br)))));
 

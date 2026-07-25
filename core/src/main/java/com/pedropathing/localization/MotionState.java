@@ -32,6 +32,10 @@ public class MotionState {
         return new MotionState(pose, twist.toVelocity(pose.heading()), twist);
     }
 
+    public MotionState withPose(Pose pose) {
+        return new MotionState(pose, velocity, velocity.toTwist(pose.heading()));
+    }
+
     public Pose pose() {
         return pose;
     }
