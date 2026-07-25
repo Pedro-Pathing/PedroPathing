@@ -77,6 +77,8 @@ public final class ForesightConfig {
     public final ConfigVar<Double> translationalDeviationTolerance = ConfigVar.of(2.5, positive());
     public final ConfigVar<Boolean> brakeAtEnd = ConfigVar.of(true);
 
+    public final ConfigVar<Double> headingDriveRatio = ConfigVar.of(0.5, nonnegative());
+
     public final ConfigVar<Matrix> linearBrakeCoefficients = ConfigVar.required();
     public final ConfigVar<Matrix> quadraticBrakeCoefficients = ConfigVar.required();
 

@@ -273,6 +273,10 @@ public class Foresight implements Algorithm {
 
         List<Pair<Vector2D, Boolean>> vectors;
 
+        //allocate heading power before + after drive
+        headingFeedforward = headingPower * config.headingDriveRatio.get();
+        headingPower *= (1 - config.headingDriveRatio.get());
+
         if (translationalPriority && headingPriority) {
             vectors = Arrays.asList(
                     Pair.of(normalFeedforwardVector, false),
