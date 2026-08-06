@@ -25,6 +25,11 @@ public class Line implements Curve {
         this.end = end;
         length = start.distance(end);
         displacement = end.minus(start);
+
+        if (end.minus(start).magnitude() == 0) {
+            throw new IllegalArgumentException("Line cannot have zero length");
+        }
+
         tangent = displacement.normalized();
     }
 
