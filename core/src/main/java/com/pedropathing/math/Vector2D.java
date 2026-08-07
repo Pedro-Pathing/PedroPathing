@@ -20,8 +20,8 @@ public class Vector2D {
         return new Vector2D(x, y);
     }
 
-    public static Vector2D polar(double radius, double angle) {
-        return new Vector2D(radius * Math.cos(angle), radius * Math.sin(angle));
+    public static Vector2D polar(double magnitude, double theta) {
+        return new Vector2D(magnitude * Math.cos(theta), magnitude * Math.sin(theta));
     }
 
     public static Vector2D unit(double angle) {
