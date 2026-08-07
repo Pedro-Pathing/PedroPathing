@@ -49,10 +49,6 @@ public class Pinpoint implements Localizer {
                 config.yPodDirection.get()
         );
 
-        reset();
-
-        while (pinpoint.getDeviceStatus() == CALIBRATING) {}
-
         update();
     }
 
