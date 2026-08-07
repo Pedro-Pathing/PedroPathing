@@ -97,7 +97,7 @@ public interface Interpolator {
     double interpolate(Curve curve, double t);
 
     default double differentiate(Curve curve, double t) {
-        //TODO: It's only necessary to have this method in an Algorithm that uses it
+        // TODO: It's only necessary to have this method in an Algorithm that uses it
         return 0;
     }
 }

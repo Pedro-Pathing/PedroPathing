@@ -13,7 +13,8 @@ public final class TValue {
 
     public static void check(double t) {
         if (t < -EPSILON || t > 1 + EPSILON) {
-            IllegalArgumentException exception = new IllegalArgumentException("t must be between 0 and 1 but was " + t + ".");
+            IllegalArgumentException exception =
+                    new IllegalArgumentException("t must be between 0 and 1 but was " + t + ".");
             StackTraceElement[] trace = exception.getStackTrace();
             exception.setStackTrace(Arrays.copyOfRange(trace, 1, trace.length));
             throw exception;

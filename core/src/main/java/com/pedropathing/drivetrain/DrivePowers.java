@@ -34,10 +34,6 @@ public class DrivePowers {
 
     @Override
     public String toString() {
-        return "DrivePowers{" +
-                "forward=" + forward +
-                ", strafe=" + strafe +
-                ", turn=" + turn +
-                '}';
+        return "DrivePowers{" + "forward=" + forward + ", strafe=" + strafe + ", turn=" + turn + '}';
     }
 }

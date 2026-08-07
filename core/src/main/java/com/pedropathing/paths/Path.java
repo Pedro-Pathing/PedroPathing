@@ -11,7 +11,6 @@ import com.pedropathing.math.Pose;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.paths.interpolator.Interpolator;
-
 import java.util.List;
 
 public abstract class Path {
@@ -25,6 +24,7 @@ public abstract class Path {
     }
 
     public abstract double heading(double t);
+
     public abstract double headingDerivative(double t);
 
     protected abstract boolean hasHeading();
@@ -83,9 +83,10 @@ public abstract class Path {
     }
 
     public Path linear(double start, double end, double endT) {
-        if (endT == 1)
-            return linear(start, end);
-        return heading(Interpolator.piecewise().until(endT, Interpolator.linear(start, end)).until(1, Interpolator.constant(end)));
+        if (endT == 1) return linear(start, end);
+        return heading(Interpolator.piecewise()
+                .until(endT, Interpolator.linear(start, end))
+                .until(1, Interpolator.constant(end)));
     }
 
     public Path linear(Pose start, Pose end, double endT) {

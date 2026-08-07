@@ -16,14 +16,14 @@ import com.pedropathing.math.Matrix;
 
 public final class ForesightConfig {
     public final ConfigVar<Controller> headingController = ConfigVar.of(Controller.pid(1.5, 0, 0.1));
-    public final ConfigVar<Controller> headingFeedforward = ConfigVar.of(Controller.dynamicFeedforward(1.0)
-            .plus(Controller.staticFeedforward(0.01)), nonnull());
+    public final ConfigVar<Controller> headingFeedforward =
+            ConfigVar.of(Controller.dynamicFeedforward(1.0).plus(Controller.staticFeedforward(0.01)), nonnull());
     // TODO test iZone, decay, and maxI to prevent integral wind-up and have zero-steady state error
 
-    public final ConfigVar<Controller> forwardTranslationalController = ConfigVar.of(Controller.pid(0.3, 0, 0)
-            .plus(Controller.staticFeedforward(0.015)));
-    public final ConfigVar<Controller> lateralTranslationalController = ConfigVar.of(Controller.pid(0.3, 0, 0)
-            .plus(Controller.staticFeedforward(0.015)));
+    public final ConfigVar<Controller> forwardTranslationalController =
+            ConfigVar.of(Controller.pid(0.3, 0, 0).plus(Controller.staticFeedforward(0.015)));
+    public final ConfigVar<Controller> lateralTranslationalController =
+            ConfigVar.of(Controller.pid(0.3, 0, 0).plus(Controller.staticFeedforward(0.015)));
 
     public final ConfigVar<Controller> brakeController = ConfigVar.of(Controller.pid(0.025, 0, 0)
             .plus(Controller.dynamicFeedforward(0.015))
@@ -48,6 +48,7 @@ public final class ForesightConfig {
      * Centripetal force to power scaling.
      */
     public final ConfigVar<Double> centripetalScaling = ConfigVar.of(0.005, nonnegative());
+
     public final ConfigVar<Double> normalFeedforward = ConfigVar.of(0.0, Validator.nonnull());
 
     public final ConfigVar<Double> robotMass = ConfigVar.of(12.9, positive());

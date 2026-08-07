@@ -7,7 +7,6 @@ package com.pedropathing.paths;
 import com.pedropathing.config.Modifier;
 import com.pedropathing.math.Pose;
 import com.pedropathing.paths.curves.Curve;
-
 import java.util.List;
 import java.util.function.DoubleUnaryOperator;
 
@@ -49,6 +48,7 @@ public final class PathSegment {
 
     public interface HeadingProvider {
         double heading(double t);
+
         double derivative(double t);
 
         static HeadingProvider of(DoubleUnaryOperator heading, DoubleUnaryOperator derivative) {

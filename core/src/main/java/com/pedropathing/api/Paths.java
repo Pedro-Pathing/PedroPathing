@@ -50,8 +50,7 @@ public final class Paths {
      * Requires at least 2 control poses.
      */
     public static Path through(Pose... poses) {
-        if (poses.length == 2)
-            return line(poses[0], poses[1]);
+        if (poses.length == 2) return line(poses[0], poses[1]);
         return path(BezierCurve.through(poses));
     }
 }

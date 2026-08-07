@@ -10,7 +10,6 @@ import com.pedropathing.config.Modifier;
 import com.pedropathing.paths.curves.CompoundCurve;
 import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.paths.interpolator.Interpolator;
-
 import java.util.List;
 
 public class CompoundPath extends Path {

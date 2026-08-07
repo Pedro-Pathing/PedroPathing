@@ -10,7 +10,6 @@ import static com.pedropathing.utils.Utils.listOf;
 import com.pedropathing.config.Modifier;
 import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.paths.interpolator.Interpolator;
-
 import java.util.List;
 
 public class AtomicPath extends Path {
