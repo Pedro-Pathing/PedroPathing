@@ -7,11 +7,9 @@ package com.pedropathing.paths;
 import com.pedropathing.config.Modifier;
 import com.pedropathing.math.Pose;
 import com.pedropathing.paths.curves.Curve;
-import com.pedropathing.paths.tvalue.TValue;
 
 import java.util.List;
 import java.util.function.DoubleUnaryOperator;
-import java.util.function.Supplier;
 
 public final class PathSegment {
     public final Curve curve;
@@ -26,15 +24,18 @@ public final class PathSegment {
         endPose = curve.get(1.0).toPose(heading.heading(1.0));
     }
 
-    public double heading(@TValue double t) {
+    public double heading(double t) {
+        TValue.check(t);
         return heading.heading(t);
     }
 
-    public double headingDerivative(@TValue double t) {
+    public double headingDerivative(double t) {
+        TValue.check(t);
         return heading.derivative(t);
     }
 
-    public Pose get(@TValue double t) {
+    public Pose get(double t) {
+        TValue.check(t);
         return curve.get(t).toPose(heading(t));
     }
 

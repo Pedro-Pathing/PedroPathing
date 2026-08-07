@@ -7,7 +7,6 @@ package com.pedropathing.paths.interpolator;
 import com.pedropathing.math.Pose;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.paths.curves.Curve;
-import com.pedropathing.paths.tvalue.TValue;
 import com.pedropathing.utils.Angle;
 
 @FunctionalInterface
@@ -41,7 +40,7 @@ public interface Interpolator {
 
     static Interpolator constant(double heading) {
         double finalHeading = Angle.normalize(heading);
-        return (Curve curve, @TValue double t) -> finalHeading;
+        return (Curve curve, double t) -> finalHeading;
     }
 
     static Interpolator constant(Pose pose) {
@@ -95,9 +94,9 @@ public interface Interpolator {
         return new PiecewiseInterpolator();
     }
 
-    double interpolate(Curve curve, @TValue double t);
+    double interpolate(Curve curve, double t);
 
-    default double differentiate(Curve curve, @TValue double t) {
+    default double differentiate(Curve curve, double t) {
         //TODO: It's only necessary to have this method in an Algorithm that uses it
         return 0;
     }

@@ -6,7 +6,7 @@ package com.pedropathing.paths.curves;
 
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.paths.Piecewise;
-import com.pedropathing.paths.tvalue.TValue;
+import com.pedropathing.paths.TValue;
 import java.util.List;
 
 public class CompoundCurve implements Curve {
@@ -18,7 +18,8 @@ public class CompoundCurve implements Curve {
     }
 
     @Override
-    public Vector2D get(@TValue double t) {
+    public Vector2D get(double t) {
+        TValue.check(t);
         return curves.get(t).get(curves.localT(t));
     }
 
@@ -50,6 +51,7 @@ public class CompoundCurve implements Curve {
 
     @Override
     public double remainingDistance(double t) {
+        TValue.check(t);
         return curves.length() - distanceAt(t);
     }
 
@@ -109,16 +111,19 @@ public class CompoundCurve implements Curve {
 
     @Override
     public Vector2D tangent(double t) {
+        TValue.check(t);
         return curves.get(t).tangent(curves.localT(t));
     }
 
     @Override
     public Vector2D derivative(double t) {
+        TValue.check(t);
         return curves.get(t).derivative(curves.localT(t));
     }
 
     @Override
     public double curvature(double t) {
+        TValue.check(t);
         return curves.get(t).curvature(curves.localT(t));
     }
 }

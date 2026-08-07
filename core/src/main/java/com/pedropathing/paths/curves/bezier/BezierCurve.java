@@ -7,7 +7,7 @@ import com.pedropathing.math.Pose;
 import com.pedropathing.math.Vector;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.paths.curves.Curve;
-import com.pedropathing.paths.tvalue.TValue;
+import com.pedropathing.paths.TValue;
 import com.pedropathing.utils.BijectiveMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -185,7 +185,7 @@ public class BezierCurve implements Curve {
      * @param diffLevel specifies how many differentiations are done
      * @return t vector
      */
-    public Vector getTVector(@TValue double t, int diffLevel) {
+    public Vector getTVector(double t, int diffLevel) {
         if (diffLevel == 0) return getTVector(t);
         int[] degrees = this.diffPowers[diffLevel];
         double[] powers = new double[this.controlPoints.size()];
@@ -204,7 +204,7 @@ public class BezierCurve implements Curve {
         return new Vector(output);
     }
 
-    private static Vector getTVector(int[][] diffPowers, int[][] diffCoefficients, @TValue double t, int diffLevel) {
+    private static Vector getTVector(int[][] diffPowers, int[][] diffCoefficients, double t, int diffLevel) {
         if (diffLevel == 0) return getTVector(diffCoefficients[0].length, t);
         int[] degrees = diffPowers[diffLevel];
         double[] powers = new double[diffCoefficients[0].length];
@@ -223,7 +223,7 @@ public class BezierCurve implements Curve {
         return new Vector(output);
     }
 
-    public Vector getTVector(@TValue double t) {
+    public Vector getTVector(double t) {
         double[] output = new double[controlPoints.size()];
 
         for (int i = 0; i < output.length; i++) {
@@ -233,7 +233,7 @@ public class BezierCurve implements Curve {
         return new Vector(output);
     }
 
-    private static Vector getTVector(int size, @TValue double t) {
+    private static Vector getTVector(int size, double t) {
         double[] output = new double[size];
 
         for (int i = 0; i < output.length; i++) {
@@ -253,7 +253,8 @@ public class BezierCurve implements Curve {
      * @return this returns the point requested.
      */
     @Override
-    public Vector2D get(@TValue double t) {
+    public Vector2D get(double t) {
+        TValue.check(t);
         return getDerivative(0, t);
     }
 
@@ -292,7 +293,7 @@ public class BezierCurve implements Curve {
         return initialGuess;
     }
 
-    public Vector2D getDerivative(int n, @TValue double t) {
+    public Vector2D getDerivative(int n, double t) {
         Vector outVel = cachedMatrix.times(getTVector(t, n));
         return Vector2D.cartesian(outVel.get(0), outVel.get(1));
     }
@@ -304,7 +305,8 @@ public class BezierCurve implements Curve {
      * @param t this is the t value of the parametric curve. t is clamped to be between 0 and 1 inclusive.
      * @return this returns the derivative requested.
      */
-    public Vector2D derivative(@TValue double t) {
+    public Vector2D derivative(double t) {
+        TValue.check(t);
         return getDerivative(1, t);
     }
 
@@ -328,11 +330,13 @@ public class BezierCurve implements Curve {
 
     @Override
     public double remainingDistance(double t) {
+        TValue.check(t);
         return (1 - getPathCompletion(t)) * length;
     }
 
     @Override
     public double curvature(double t) {
+        TValue.check(t);
         Vector2D derivative = derivative(t);
         Vector2D secondDerivative = getDerivative(2, t);
         double derivMag = derivative.magnitude();
