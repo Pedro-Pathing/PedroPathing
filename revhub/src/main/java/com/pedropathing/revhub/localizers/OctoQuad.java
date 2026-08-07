@@ -4,19 +4,18 @@ import com.pedropathing.localization.Localizer;
 import com.pedropathing.localization.MotionState;
 import com.pedropathing.math.Pose;
 import com.pedropathing.math.Velocity;
-import com.qualcomm.hardware.digitalchickenlabs.OctoQuad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-public class OctoQuadLocalizer implements Localizer {
-    private final OctoQuad.LocalizerDataBlock localizer = new OctoQuad.LocalizerDataBlock();
-    private final OctoQuad octoQuad;
+public class OctoQuad implements Localizer {
+    private final com.qualcomm.hardware.digitalchickenlabs.OctoQuad.LocalizerDataBlock localizer = new com.qualcomm.hardware.digitalchickenlabs.OctoQuad.LocalizerDataBlock();
+    private final com.qualcomm.hardware.digitalchickenlabs.OctoQuad octoQuad;
     private final DistanceUnit globalDistanceUnit;
 
     private MotionState motionState;
 
-    public OctoQuadLocalizer(HardwareMap hardwareMap, OctoQuadConfig config) {
-        octoQuad = hardwareMap.get(OctoQuad.class, config.name.get());
+    public OctoQuad(HardwareMap hardwareMap, OctoQuadConfig config) {
+        octoQuad = hardwareMap.get(com.qualcomm.hardware.digitalchickenlabs.OctoQuad.class, config.name.get());
 
         globalDistanceUnit = config.globalDistanceUnit.get();
 
@@ -38,7 +37,7 @@ public class OctoQuadLocalizer implements Localizer {
 
         reset();
 
-        while (octoQuad.getLocalizerStatus() != OctoQuad.LocalizerStatus.RUNNING) {}
+        while (octoQuad.getLocalizerStatus() != com.qualcomm.hardware.digitalchickenlabs.OctoQuad.LocalizerStatus.RUNNING) {}
 
         update();
     }
@@ -69,7 +68,12 @@ public class OctoQuadLocalizer implements Localizer {
     @Override
     public void setPose(Pose pose) {
         octoQuad.setLocalizerPose((int) globalDistanceUnit.toMm(pose.x()), (int) globalDistanceUnit.toMm(pose.y()), (float) pose.heading());
-        motionState = motionState.withPose(pose);
+
+        if (motionState != null) {
+            motionState = motionState.withPose(pose);
+        } else {
+            motionState = MotionState.ofVelocity(pose, Velocity.zero());
+        }
     }
 
     @Override

@@ -15,7 +15,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
 import static com.qualcomm.hardware.gobilda.GoBildaPinpointDriver.DeviceStatus.CALIBRATING;
 
 public class Pinpoint implements Localizer {
-    private final GoBildaPinpointDriver odometry;
+    private final GoBildaPinpointDriver pinpoint;
     private final DistanceUnit globalDistanceUnit;
 
     private MotionState motionState;
@@ -23,12 +23,12 @@ public class Pinpoint implements Localizer {
     public Pinpoint(HardwareMap hardwareMap, PinpointConfig config) {
         this.globalDistanceUnit = config.globalDistanceUnit.get();
 
-        odometry = hardwareMap.get(GoBildaPinpointDriver.class, config.name.get());
+        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, config.name.get());
 
-        odometry.setOffsets(config.xPodOffset.get(), config.yPodOffset.get(), config.offsetUnits.get());
+        pinpoint.setOffsets(config.xPodOffset.get(), config.yPodOffset.get(), config.offsetUnits.get());
 
-        if (odometry.getDeviceVersion() >= 2) {
-            odometry.setBulkReadScope(
+        if (pinpoint.getDeviceVersion() >= 2) {
+            pinpoint.setBulkReadScope(
                     GoBildaPinpointDriver.Register.X_POSITION,
                     GoBildaPinpointDriver.Register.Y_POSITION,
                     GoBildaPinpointDriver.Register.X_VELOCITY,
@@ -39,25 +39,25 @@ public class Pinpoint implements Localizer {
         }
 
         if (config.ticksPerUnit.get().isPresent()) {
-            odometry.setEncoderResolution(config.ticksPerUnit.get().getAsDouble(), config.encoderResolutionUnit.get());
+            pinpoint.setEncoderResolution(config.ticksPerUnit.get().getAsDouble(), config.encoderResolutionUnit.get());
         } else {
-            odometry.setEncoderResolution(config.podType.get());
+            pinpoint.setEncoderResolution(config.podType.get());
         }
 
-        odometry.setEncoderDirections(
+        pinpoint.setEncoderDirections(
                 config.xPodDirection.get(),
                 config.yPodDirection.get()
         );
 
         reset();
 
-        while (odometry.getDeviceStatus() == CALIBRATING) {}
+        while (pinpoint.getDeviceStatus() == CALIBRATING) {}
 
         update();
     }
 
     public void setPose(Pose pose) {
-        odometry.setPosition(
+        pinpoint.setPosition(
                 new Pose2D(
                         globalDistanceUnit,
                         pose.x(),
@@ -66,23 +66,28 @@ public class Pinpoint implements Localizer {
                         pose.heading()
                 )
         );
-        motionState = motionState.withPose(pose);
+
+        if (motionState != null) {
+            motionState = motionState.withPose(pose);
+        } else {
+            motionState = MotionState.ofVelocity(pose, Velocity.zero());
+        }
     }
 
     @Override
     public void update() {
-        odometry.update();
+        pinpoint.update();
 
         Pose pose = new Pose(
-                odometry.getPosX(globalDistanceUnit),
-                odometry.getPosY(globalDistanceUnit),
-                odometry.getHeading(AngleUnit.RADIANS)
+                pinpoint.getPosX(globalDistanceUnit),
+                pinpoint.getPosY(globalDistanceUnit),
+                pinpoint.getHeading(AngleUnit.RADIANS)
         );
 
         Velocity velocity = new Velocity(
-                odometry.getVelX(globalDistanceUnit),
-                odometry.getVelY(globalDistanceUnit),
-                odometry.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS)
+                pinpoint.getVelX(globalDistanceUnit),
+                pinpoint.getVelY(globalDistanceUnit),
+                pinpoint.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS)
         );
 
         motionState = MotionState.ofVelocity(pose, velocity);
@@ -94,6 +99,6 @@ public class Pinpoint implements Localizer {
     }
 
     public void reset() {
-        odometry.resetPosAndIMU();
+        pinpoint.resetPosAndIMU();
     }
 }
