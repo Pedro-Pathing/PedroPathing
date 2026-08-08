@@ -144,7 +144,7 @@ public class Swerve implements Drivetrain {
 
             Vector2D translationVector = zeroTrans ? Vector2D.zero() : rawTrans;
 
-            Vector2D rotationVector = Vector2D.polar(rotationScalar, Math.atan2(-pod.getOffset().y(), pod.getOffset().x()))
+            Vector2D rotationVector = Vector2D.polar(rotationScalar, Math.atan2(-pod.getOffset().x(), -pod.getOffset().y()))
                     .rotate(Math.PI / 2);
 
             podVectors[i] = translationVector.plus(rotationVector);
