@@ -57,8 +57,13 @@ public final class ForesightConfig {
      */
     public final ConfigVar<Double> maxBrakingPower = ConfigVar.of(0.2, positive());
 
-    public final ConfigVar<Double> maxAccelerationConstraint = ConfigVar.of(Double.POSITIVE_INFINITY, positive());
-    public final ConfigVar<Double> maxVelocityConstraint = ConfigVar.of(Double.POSITIVE_INFINITY, positive());
+    public final ConfigVar<Double> maxAccelerationConstraint = ConfigVar.of(Constraint.NONE, positive());
+    public final ConfigVar<Double> maxVelocityConstraint = ConfigVar.of(Constraint.NONE, positive());
+    public final ConfigVar<Double> maxDecelerationConstraint = ConfigVar.of(Constraint.NONE, positive());
+
+    static class Constraint {
+        public static double NONE = Double.POSITIVE_INFINITY;
+    }
 
     /**
      * How much overshooting is allowed when braking. A value of 1 means no bias, while a value greater than 1 means the controller will overshoot the target, and a value lower than 1 means the controller will undershoot the target.
@@ -82,7 +87,6 @@ public final class ForesightConfig {
     public final ConfigVar<Matrix> linearBrakeCoefficients = ConfigVar.required();
     public final ConfigVar<Matrix> quadraticBrakeCoefficients = ConfigVar.required();
 
-    public final ConfigVar<Boolean> fullPowerCoast = ConfigVar.of(true);
     public final ConfigVar<Boolean> cosineScale = ConfigVar.of(true);
     public final ConfigVar<Boolean> turnBeforeDriving = ConfigVar.of(false);
 
@@ -99,12 +103,12 @@ public final class ForesightConfig {
     /**
      * Maximum achievable magnitude that the robot can decelerate forward/backward at, in units per second^2.
      */
-    public final ConfigVar<Double> maxAchievableForwardDeceleration = ConfigVar.required(positive());
+    public final ConfigVar<Double> naturalForwardDeceleration = ConfigVar.required(positive());
 
     /**
      * Maximum achievable magnitude that the robot can decelerate laterally, in units per second^2.
      */
-    public final ConfigVar<Double> maxAchievableStrafeDeceleration = ConfigVar.required(positive());
+    public final ConfigVar<Double> naturalStrafeDeceleration = ConfigVar.required(positive());
 
     /**
      * The distance the controller will stop commanding power to correct for path deviations.
