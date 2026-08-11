@@ -52,7 +52,6 @@ public class Mecanum implements Drivetrain {
         }
     }
 
-    @Override
     public double[] computeWheelPowers(DrivePowers powers) {
         double[] wheelPowers = new double[4];
         double forward = powers.forward();
@@ -89,7 +88,7 @@ public class Mecanum implements Drivetrain {
 
             if (Math.abs(b) < 1e-9) continue;
 
-            double t1 = ( 1.0 - a) / b;
+            double t1 = (1.0 - a) / b;
             double t2 = (-1.0 - a) / b;
 
             if (t1 >= 0.0 && t1 < lambda) lambda = t1;

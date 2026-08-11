@@ -3,6 +3,8 @@ import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.drivetrain.Drivetrain;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.utils.Angle;
+import com.pedropathing.utils.Pair;
+import com.pedropathing.utils.Utils;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
@@ -51,19 +53,6 @@ public class Swerve implements Drivetrain {
         this.pods = Arrays.asList(pods);
     }
 
-    // TODO: MAX SCALING AND COMPUTE WHEEL POWERS
-
-    /**
-     * This method takes in forward, strafe, and rotation values and applies them to
-     * the drivetrain.
-     *
-     * @param powers DrivePowers object containing forward, strafe, and rotation values
-     * @return an array of wheel powers
-     */
-    public double[] computeWheelPowers(DrivePowers powers) {
-        return new double[]{0, 0, 0, 0};
-    }
-
     /**
      * Stops following and holds pod angles while floating drive motors.
      */
@@ -86,43 +75,17 @@ public class Swerve implements Drivetrain {
 
     public void applyDrive(DrivePowers powers) {
         double forward = powers.forward();
-        double strafe = powers.strafe();
-        double rotation = powers.turn();
-
-        strafe *= -1;
+        double strafe = -powers.strafe();
+        double rotation = -powers.turn();
 
         lastForward = forward;
         lastStrafe = strafe;
         lastRotation = rotation;
 
-        // stores forward and strafe values as the translation vector with max magnitude of 1
-        Vector2D rawTrans = Vector2D.polar(Range.clip(Math.hypot(strafe, forward), 0, 1), Math.atan2(forward, strafe));
-
-        boolean zeroTrans = rawTrans.magnitude() < epsilon;
+        boolean zeroTrans = Math.hypot(strafe, forward) < epsilon;
         boolean zeroRotation = Math.abs(rotation) < epsilon;
 
-        double rotationScalar = (zeroRotation) ? 0 : rotation;
-
-        Vector2D[] podVectors = new Vector2D[pods.size()];
-
-        for (int i = 0; i < pods.size(); i++) {
-            SwervePod pod = pods.get(i);
-
-            Vector2D translationVector = zeroTrans ? Vector2D.zero() : rawTrans;
-
-            // actually positive rotation scalar because positive turning is to the left
-            Vector2D rotationVector = Vector2D.polar(rotationScalar, Math.atan2(pod.getOffset().x(), -pod.getOffset().y()));
-
-            // this gets the perpendicular vector for the wheel
-            rotationVector.rotate(Math.PI / 2);
-
-            podVectors[i] = translationVector.plus(rotationVector);
-            if (zeroPowerBehavior == SwerveConfig.ZeroPowerBehavior.X_LOCK
-                    && zeroTrans && zeroRotation) {
-                rotationVector.rotate(-Math.PI / 2);
-                podVectors[i] = rotationVector;
-            }
-        }
+        Vector2D[] podVectors = computePodPowers(powers);
 
         // finding if any vector has magnitude > maxPowerScaling
         double maxMagnitude = 1;
@@ -163,9 +126,63 @@ public class Swerve implements Drivetrain {
         }
     }
 
+    public Vector2D[] computePodPowers(DrivePowers powers) {
+        double forward = powers.forward();
+        double strafe = -powers.strafe();
+        double rotation = -powers.turn();
+
+        Vector2D[] podVectors = new Vector2D[pods.size()];
+        Vector2D rawTrans = Vector2D.polar(Range.clip(Math.hypot(strafe, forward), 0, 1), Math.atan2(forward, strafe));
+
+        boolean zeroTrans = rawTrans.magnitude() < epsilon;
+        boolean zeroRotation = Math.abs(rotation) < epsilon;
+
+        double rotationScalar = (zeroRotation) ? 0 : rotation;
+
+        for (int i = 0; i < pods.size(); i++) {
+            SwervePod pod = pods.get(i);
+
+            Vector2D translationVector = zeroTrans ? Vector2D.zero() : rawTrans;
+
+            Vector2D rotationVector = Vector2D.polar(rotationScalar, Math.atan2(-pod.getOffset().x(), -pod.getOffset().y()))
+                    .rotate(Math.PI / 2);
+
+            podVectors[i] = translationVector.plus(rotationVector);
+            if (zeroPowerBehavior == SwerveConfig.ZeroPowerBehavior.X_LOCK
+                    && zeroTrans && zeroRotation) {
+                rotationVector.rotate(-Math.PI / 2);
+                podVectors[i] = rotationVector;
+            }
+        }
+
+        return podVectors;
+    }
+
     @Override
     public double maxScaling(DrivePowers current, DrivePowers delta) {
-        return 0;
+        double lambda = 1.0;
+
+        Vector2D[] currentPowers = computePodPowers(current);
+        Vector2D[] deltaPowers = computePodPowers(delta);
+
+        for (int i = 0; i < currentPowers.length; i++) {
+            Vector2D a = currentPowers[i];
+            Vector2D b = deltaPowers[i];
+
+            double quadraticTerm = b.magnitudeSquared();
+            double linearTerm = 2 * a.dot(b);
+            double constantTerm = a.magnitudeSquared() - 1;
+
+            Pair<Double, Double> wheelSolution = Utils.solveQuadratic(quadraticTerm, linearTerm, constantTerm);
+
+            double t1 =  wheelSolution.first();
+            double t2 = wheelSolution.second();
+
+            if (t1 >= 0.0 && t1 < lambda) lambda = t1;
+            if (t2 >= 0.0 && t2 < lambda) lambda = t2;
+        }
+
+        return lambda;
     }
 
     public void setZeroPowerBehavior(DcMotor.ZeroPowerBehavior behavior) {
