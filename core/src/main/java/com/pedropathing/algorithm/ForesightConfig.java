@@ -61,6 +61,13 @@ public final class ForesightConfig {
     public final ConfigVar<Double> maxVelocityConstraint = ConfigVar.of(Constraint.NONE, positive());
     public final ConfigVar<Double> maxDecelerationConstraint = ConfigVar.of(Constraint.NONE, positive());
 
+    /**
+     * Set the maxVelocityConstraint to a fraction of the maxAchievableVelocity.
+     */
+    public void setPathSpeed(double speed) {
+        maxVelocityConstraint.set(maxAchievableForwardVelocity.get() * speed);
+    }
+
     static class Constraint {
         public static double NONE = Double.POSITIVE_INFINITY;
     }
