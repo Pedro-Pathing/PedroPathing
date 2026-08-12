@@ -16,14 +16,13 @@ import com.pedropathing.math.Matrix;
 
 public final class ForesightConfig {
     public final ConfigVar<Controller> headingController = ConfigVar.of(Controller.pid(1.5, 0, 0.1));
-    public final ConfigVar<Controller> headingFeedforward = ConfigVar.of(Controller.dynamicFeedforward(1.0)
-            .plus(Controller.staticFeedforward(0.01)), nonnull());
-    // TODO test iZone, decay, and maxI to prevent integral wind-up and have zero-steady state error
+    public final ConfigVar<Controller> headingFeedforward =
+            ConfigVar.of(Controller.dynamicFeedforward(1.0).plus(Controller.staticFeedforward(0.01)), nonnull());
 
-    public final ConfigVar<Controller> forwardTranslationalController = ConfigVar.of(Controller.pid(0.3, 0, 0)
-            .plus(Controller.staticFeedforward(0.015)));
-    public final ConfigVar<Controller> lateralTranslationalController = ConfigVar.of(Controller.pid(0.3, 0, 0)
-            .plus(Controller.staticFeedforward(0.015)));
+    public final ConfigVar<Controller> forwardTranslationalController =
+            ConfigVar.of(Controller.pid(0.3, 0, 0).plus(Controller.staticFeedforward(0.015)));
+    public final ConfigVar<Controller> lateralTranslationalController =
+            ConfigVar.of(Controller.pid(0.3, 0, 0).plus(Controller.staticFeedforward(0.015)));
 
     public final ConfigVar<Controller> brakeController = ConfigVar.of(Controller.pid(0.025, 0, 0)
             .plus(Controller.dynamicFeedforward(0.015))
@@ -48,6 +47,7 @@ public final class ForesightConfig {
      * Centripetal force to power scaling.
      */
     public final ConfigVar<Double> centripetalScaling = ConfigVar.of(0.005, nonnegative());
+
     public final ConfigVar<Double> normalFeedforward = ConfigVar.of(0.0, Validator.nonnull());
 
     public final ConfigVar<Double> robotMass = ConfigVar.of(12.9, positive());
@@ -57,8 +57,20 @@ public final class ForesightConfig {
      */
     public final ConfigVar<Double> maxBrakingPower = ConfigVar.of(0.2, positive());
 
-    public final ConfigVar<Double> maxAccelerationConstraint = ConfigVar.of(Double.POSITIVE_INFINITY, positive());
-    public final ConfigVar<Double> maxVelocityConstraint = ConfigVar.of(Double.POSITIVE_INFINITY, positive());
+    public final ConfigVar<Double> maxAccelerationConstraint = ConfigVar.of(Constraint.NONE, positive());
+    public final ConfigVar<Double> maxVelocityConstraint = ConfigVar.of(Constraint.NONE, positive());
+    public final ConfigVar<Double> maxDecelerationConstraint = ConfigVar.of(Constraint.NONE, positive());
+
+    /**
+     * Set the maxVelocityConstraint to a fraction of the maxAchievableVelocity.
+     */
+    public void setPathSpeed(double speed) {
+        maxVelocityConstraint.set(maxAchievableForwardVelocity.get() * speed);
+    }
+
+    static class Constraint {
+        public static double NONE = Double.POSITIVE_INFINITY;
+    }
 
     /**
      * How much overshooting is allowed when braking. A value of 1 means no bias, while a value greater than 1 means the controller will overshoot the target, and a value lower than 1 means the controller will undershoot the target.
@@ -82,7 +94,6 @@ public final class ForesightConfig {
     public final ConfigVar<Matrix> linearBrakeCoefficients = ConfigVar.required();
     public final ConfigVar<Matrix> quadraticBrakeCoefficients = ConfigVar.required();
 
-    public final ConfigVar<Boolean> fullPowerCoast = ConfigVar.of(true);
     public final ConfigVar<Boolean> cosineScale = ConfigVar.of(true);
     public final ConfigVar<Boolean> turnBeforeDriving = ConfigVar.of(false);
 
@@ -99,12 +110,12 @@ public final class ForesightConfig {
     /**
      * Maximum achievable magnitude that the robot can decelerate forward/backward at, in units per second^2.
      */
-    public final ConfigVar<Double> maxAchievableForwardDeceleration = ConfigVar.required(positive());
+    public final ConfigVar<Double> naturalForwardDeceleration = ConfigVar.required(positive());
 
     /**
      * Maximum achievable magnitude that the robot can decelerate laterally, in units per second^2.
      */
-    public final ConfigVar<Double> maxAchievableStrafeDeceleration = ConfigVar.required(positive());
+    public final ConfigVar<Double> naturalStrafeDeceleration = ConfigVar.required(positive());
 
     /**
      * The distance the controller will stop commanding power to correct for path deviations.
@@ -112,8 +123,6 @@ public final class ForesightConfig {
     public final ConfigVar<Double> minCorrectionDistance = ConfigVar.of(1e-3);
 
     public final ConfigVar<Double> parametricTConstraint = ConfigVar.of(0.025, positive());
-    // TODO: add rest of parametric constraints
-
     public final ConfigVar<Double> headingConstraint = ConfigVar.of(0.007, positive());
     public final ConfigVar<Double> translationalConstraint = ConfigVar.of(0.1, positive());
     public final ConfigVar<Double> velocityConstraint = ConfigVar.of(0.1, positive());

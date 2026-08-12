@@ -9,6 +9,11 @@ gradle-app.setting
 *.ipr
 **/out/
 
+.project
+.classpath
+.settings/
+bin/
+
 .DS_Store
 Thumbs.db
 

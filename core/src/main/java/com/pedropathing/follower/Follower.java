@@ -68,7 +68,8 @@ public class Follower {
                 break;
             }
             case HOLD: {
-                DrivePowers powers = algorithm.calculateHold(drivetrain, holdPose, localizer.state(), useHoldScaling, deltaTime);
+                DrivePowers powers =
+                        algorithm.calculateHold(drivetrain, holdPose, localizer.state(), useHoldScaling, deltaTime);
                 drivetrain.drive(powers, false);
                 break;
             }
