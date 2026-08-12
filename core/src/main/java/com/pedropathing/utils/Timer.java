@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
  * This is the Timer class. It is timer with nanosecond precision using System.nanotime()
  *
  * @author Baron Henderson - 20077 The Indubitables
+ * @author Havish Sripada - 12808 RevAmped Robotics
  * @version 1.0, 6/23/26
  */
 public class Timer {
@@ -41,21 +42,6 @@ public class Timer {
 
     /** This returns the elapsed time in seconds */
     public double seconds() {
-        return get(TimeUnit.SECONDS);
-    }
-
-    /** This returns the elapsed time in nanoseconds */
-    public double ns() {
-        return nanoseconds();
-    }
-
-    /** This returns the elapsed time in milliseconds */
-    public double ms() {
-        return milliseconds();
-    }
-
-    /** This returns the elapsed time in seconds */
-    public double s() {
-        return seconds();
+        return nanoseconds() * 1e-9;
     }
 }
