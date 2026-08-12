@@ -408,17 +408,6 @@ public class Foresight implements Algorithm {
                config.brakeAccelFeedforward.get().calculate(targetAccel, 0);
     }
 
-    public double maxScaling(Vector2D translation,
-                             double heading,
-                             Vector2D deltaTranslation,
-                             double deltaHeading,
-                             MotionState state,
-                             Drivetrain drivetrain) {
-        DrivePowers current = getDrivePowers(
-                translation,
-                state,
-                heading);
-
     public double maxScaling(
             Vector2D translation,
             double heading,
