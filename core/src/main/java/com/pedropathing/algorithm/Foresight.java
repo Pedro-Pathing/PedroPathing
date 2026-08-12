@@ -4,16 +4,12 @@
  */
 package com.pedropathing.algorithm;
 
-import static com.pedropathing.config.Memoize.memo;
 import static com.pedropathing.utils.Angle.normalizeSigned;
 
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.drivetrain.Drivetrain;
 import com.pedropathing.localization.MotionState;
-import com.pedropathing.math.Ellipse2D;
-import com.pedropathing.math.Pose;
-import com.pedropathing.math.Twist;
-import com.pedropathing.math.Vector2D;
+import com.pedropathing.math.*;
 import com.pedropathing.paths.PathTracker;
 import com.pedropathing.utils.Control;
 import com.pedropathing.utils.Pair;
@@ -22,11 +18,9 @@ import com.pedropathing.utils.Utils;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 public class Foresight implements Algorithm {
     public final ForesightConfig config;
-    private final Supplier<Ellipse2D> maxAchievableVelocity, maxAchievableDeceleration;
     private double closestT, curvature;
     private double curveCompletion, remainingDistance, tangentialSpeed;
     private Pose closestPose;
@@ -38,18 +32,6 @@ public class Foresight implements Algorithm {
 
     public Foresight(ForesightConfig config) {
         this.config = config;
-
-        maxAchievableVelocity = memo(
-                () -> Ellipse2D.fromAxes(
-                        config.maxAchievableForwardVelocity.get(), config.maxAchievableStrafeVelocity.get()),
-                config.maxAchievableForwardVelocity,
-                config.maxAchievableStrafeVelocity);
-
-        maxAchievableDeceleration = memo(
-                () -> Ellipse2D.fromAxes(
-                        config.maxAchievableForwardDeceleration.get(), config.maxAchievableStrafeDeceleration.get()),
-                config.maxAchievableForwardDeceleration,
-                config.maxAchievableStrafeDeceleration);
     }
 
     @Override
@@ -372,17 +354,12 @@ public class Foresight implements Algorithm {
         Vector2D adjustedError = displacementVector.minus(brakingDisplacement);
         double distance = adjustedError.magnitude();
         if (distance < config.minCorrectionDistance.get()) return Vector2D.zero();
-        return adjustedError
-                .times(getTranslationalCorrection(state, adjustedError))
-                .div(distance);
-    }
 
-    private double getTranslationalCorrection(MotionState state, Vector2D error) {
-        Vector2D bodyFrameError = error.toBodyFrame(state.pose().heading());
-        double distance = bodyFrameError.magnitude();
-        double forwardCorrection = config.forwardTranslationalController.get().calculate(0, distance);
-        double lateralCorrection = config.lateralTranslationalController.get().calculate(0, distance);
-        return Ellipse2D.interpolateRadius(forwardCorrection, lateralCorrection, error.theta());
+        Vector2D bodyFrameError = adjustedError.toBodyFrame(state.pose().heading());
+        return Vector2D.cartesian(
+                config.forwardTranslationalController.get().calculate(0, bodyFrameError.x()),
+                config.lateralTranslationalController.get().calculate(0, bodyFrameError.y())
+        ).toWorldFrame(state.pose().heading());
     }
 
     public double centripetal(double speed, double curvature) {
@@ -417,46 +394,30 @@ public class Foresight implements Algorithm {
             double remainingDistance,
             double brakingDisplacement,
             double targetAccel) {
-        if (config.fullPowerCoast.get()) {
-            double error = targetVelocityToBrakeInTime - tangentialVel;
-            if (!isBraking || (error > 0)) {
-                targetVelocity = 0;
-                return 1.0;
-            }
-            double theta = closestTangentVector.angleTo(Vector2D.unit(heading));
-            targetVelocity = targetVelocityToBrakeInTime;
-            return config.brakeController
-                            .get()
-                            .calculate(
-                                    targetVelocityToBrakeInTime
-                                            - excessVelocityAfterBraking(remainingDistance, brakingDisplacement, theta),
-                                    error)
-                    + config.brakeAccelFeedforward.get().calculate(targetAccel, 0);
-        }
+        double headingFromTangent = closestTangentVector.angleTo(Vector2D.unit(heading));
+        double maxAchievableVelocity = Diamond.interpolateRadius(config.maxAchievableForwardVelocity.get(), config.maxAchievableStrafeVelocity.get(), headingFromTangent);
 
-        double maxVelocityToFitAccel = tangentialVel + config.maxAccelerationConstraint.get() * deltaTime;
-        double constrainedVelocity = Math.min(config.maxVelocityConstraint.get(), maxVelocityToFitAccel);
-        double theta = closestTangentVector.angleTo(Vector2D.unit(heading));
+        if (!isBraking) return coast(tangentialVel, headingFromTangent, remainingDistance, deltaTime, maxAchievableVelocity);
 
-        double currentMaxAchievableVelocity = maxAchievableVelocity.get().radius(theta);
-
-        if (!isBraking)
-            if (constrainedVelocity >= currentMaxAchievableVelocity) {
-                targetVelocity = 0;
-                return 1.0;
-            } else return coast(tangentialVel, theta, remainingDistance, constrainedVelocity);
-
-        targetVelocity = Math.min(targetVelocityToBrakeInTime, constrainedVelocity);
+        targetVelocity = Math.min(targetVelocityToBrakeInTime, maxAchievableVelocity);
         double error = targetVelocity - tangentialVel;
 
         return config.brakeController
-                        .get()
-                        .calculate(
-                                targetVelocity
-                                        - excessVelocityAfterBraking(remainingDistance, brakingDisplacement, theta),
-                                error)
-                + config.brakeAccelFeedforward.get().calculate(targetAccel, 0);
+                .get()
+                .calculate(targetVelocity - excessVelocityAfterBraking(remainingDistance, brakingDisplacement, headingFromTangent), error) +
+               config.brakeAccelFeedforward.get().calculate(targetAccel, 0);
     }
+
+    public double maxScaling(Vector2D translation,
+                             double heading,
+                             Vector2D deltaTranslation,
+                             double deltaHeading,
+                             MotionState state,
+                             Drivetrain drivetrain) {
+        DrivePowers current = getDrivePowers(
+                translation,
+                state,
+                heading);
 
     public double maxScaling(
             Vector2D translation,
@@ -472,19 +433,33 @@ public class Foresight implements Algorithm {
         return drivetrain.maxScaling(current, delta);
     }
 
-    public double coast(double tangentialVel, double theta, double remainingDistance, double constrainedVelocity) {
-        double targetCoastDecel = -Math.abs(maxAchievableDeceleration.get().radius(theta));
-        double coastVelNeededToStopInTime =
-                Math.sqrt(config.coastDownToVelocity.get() * config.coastDownToVelocity.get()
-                        - 2 * targetCoastDecel * remainingDistance);
+    public double coast(double tangentialVel, double headingFromTangent, double remainingDistance, double deltaTime, double maxAchievableVelocity) {
+        double maxAccelerationConstraint = config.maxAccelerationConstraint.get();
+        double maxVelocityConstraint = config.maxVelocityConstraint.get();
+        double maxDecelerationConstraint = config.maxDecelerationConstraint.get();
+        double coastDownToVelocity = config.coastDownToVelocity.get();
 
-        double zeroPowerCoastFinalVelSquared = excessVelAfterCoast(remainingDistance, tangentialVel, theta);
-        double zeroPowerCoastFinalVel =
-                Math.signum(zeroPowerCoastFinalVelSquared) * Math.sqrt(Math.abs(zeroPowerCoastFinalVelSquared));
-        double targetVel = Math.min(coastVelNeededToStopInTime, constrainedVelocity);
+        double constrainedVelocity = maxAchievableVelocity;
+        if (maxVelocityConstraint != ForesightConfig.Constraint.NONE) {
+            constrainedVelocity = Math.min(constrainedVelocity, maxVelocityConstraint);
+        }
+        if (maxAccelerationConstraint != ForesightConfig.Constraint.NONE) {
+            constrainedVelocity = Math.min(constrainedVelocity, tangentialVel + maxAccelerationConstraint * deltaTime);
+        }
 
-        double velocityMomentumCannotProvide = Math.max(0, (config.coastDownToVelocity.get() - zeroPowerCoastFinalVel));
-        double feedforwardVelocity = Math.min(constrainedVelocity, velocityMomentumCannotProvide);
+        double targetVel = constrainedVelocity;
+        double feedforwardVelocity = targetVel;
+
+        if (maxDecelerationConstraint != ForesightConfig.Constraint.NONE) {
+            double velocityNeededToCoastInTime = Math.sqrt(coastDownToVelocity * coastDownToVelocity - 2 * -maxDecelerationConstraint * remainingDistance);
+            double velocityMomentumCannotProvide = Math.max(0, (coastDownToVelocity - excessVelAfterCoast(remainingDistance, tangentialVel, headingFromTangent)));
+            targetVel = Math.min(targetVel, velocityNeededToCoastInTime);
+            feedforwardVelocity = Math.min(feedforwardVelocity, velocityMomentumCannotProvide);
+        }
+
+        if (targetVel >= maxAchievableVelocity) {
+            return 1;
+        }
 
         double error = Math.max(0, targetVel - tangentialVel);
 
@@ -514,8 +489,9 @@ public class Foresight implements Algorithm {
     }
 
     private double excessVelAfterCoast(double remainingDistance, double initialVelocity, double theta) {
-        double accel = Math.abs(maxAchievableDeceleration.get().radius(theta));
-        return Math.sqrt(initialVelocity * initialVelocity - 2 * accel * remainingDistance);
+        double naturalDeceleration = Diamond.interpolateRadius(config.naturalForwardDeceleration.get(), config.naturalStrafeDeceleration.get(), theta);
+        double excessVelocitySquared = initialVelocity * initialVelocity - 2 * naturalDeceleration * remainingDistance;
+        return Math.signum(excessVelocitySquared) * Math.sqrt(Math.abs(excessVelocitySquared));
     }
 
     public double getHeadingError() {
