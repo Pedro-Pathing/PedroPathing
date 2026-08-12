@@ -10,7 +10,6 @@ import com.pedropathing.config.Modifier;
 import com.pedropathing.paths.curves.CompoundCurve;
 import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.paths.interpolator.Interpolator;
-import com.pedropathing.paths.tvalue.TValue;
 import java.util.List;
 
 public class CompoundPath extends Path {
@@ -34,13 +33,15 @@ public class CompoundPath extends Path {
     }
 
     @Override
-    public double heading(@TValue double t) {
+    public double heading(double t) {
+        TValue.check(t);
         if (interpolator != null) return interpolator.interpolate(curve, t);
         return paths.get(t).heading(paths.localT(t));
     }
 
     @Override
-    public double headingDerivative(@TValue double t) {
+    public double headingDerivative(double t) {
+        TValue.check(t);
         if (interpolator != null) return interpolator.interpolate(curve, t);
         return paths.get(t).heading(paths.localT(t));
     }

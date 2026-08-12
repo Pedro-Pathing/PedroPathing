@@ -1,4 +1,9 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.paths.curves.bezier;
+
 import static com.pedropathing.utils.Utils.binomial;
 import static com.pedropathing.utils.Utils.clamp;
 
@@ -6,8 +11,8 @@ import com.pedropathing.math.Matrix;
 import com.pedropathing.math.Pose;
 import com.pedropathing.math.Vector;
 import com.pedropathing.math.Vector2D;
+import com.pedropathing.paths.TValue;
 import com.pedropathing.paths.curves.Curve;
-import com.pedropathing.paths.tvalue.TValue;
 import com.pedropathing.utils.BijectiveMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,7 +56,7 @@ public class BezierCurve implements Curve {
      * @param controlPoints the control points for the BezierCurve, which must be at least 3 points.
      */
     public BezierCurve(List<Vector2D> controlPoints) {
-        if (controlPoints.size()<3) {
+        if (controlPoints.size() < 3) {
             throw new IllegalArgumentException("Too few control points");
         }
 
@@ -92,11 +97,13 @@ public class BezierCurve implements Curve {
         double[][] controlPointMatrix = new double[this.controlPoints.size()][2];
         for (int i = 0; i < this.controlPoints.size(); i++) {
             Vector2D p = controlPoints.get(i);
-            controlPointMatrix[i] = new double[]{p.x(), p.y()};
+            controlPointMatrix[i] = new double[] {p.x(), p.y()};
         }
         Matrix controlMatrix = new Matrix(controlPointMatrix);
-        cachedMatrix = controlMatrix.transpose().times(
-                CharacteristicMatrixSupplier.getBezierCharacteristicMatrix(this.controlPoints.size() - 1).transpose());
+        cachedMatrix = controlMatrix
+                .transpose()
+                .times(CharacteristicMatrixSupplier.getBezierCharacteristicMatrix(this.controlPoints.size() - 1)
+                        .transpose());
         diffPowers = initializeDegreeArray(controlPoints.size() - 1);
         diffCoefficients = initializeCoefficientArray(diffPowers, controlPoints.size() - 1);
     }
@@ -151,7 +158,7 @@ public class BezierCurve implements Curve {
      * @param diffLevel number of differentiations
      * @return powers of each term in integers
      */
-    private static int[] genDiff(int deg, int diffLevel){
+    private static int[] genDiff(int deg, int diffLevel) {
         int[] output = new int[deg + 1];
 
         for (int i = diffLevel; i < output.length; i++) {
@@ -185,7 +192,7 @@ public class BezierCurve implements Curve {
      * @param diffLevel specifies how many differentiations are done
      * @return t vector
      */
-    public Vector getTVector(@TValue double t, int diffLevel) {
+    public Vector getTVector(double t, int diffLevel) {
         if (diffLevel == 0) return getTVector(t);
         int[] degrees = this.diffPowers[diffLevel];
         double[] powers = new double[this.controlPoints.size()];
@@ -204,7 +211,7 @@ public class BezierCurve implements Curve {
         return new Vector(output);
     }
 
-    private static Vector getTVector(int[][] diffPowers, int[][] diffCoefficients, @TValue double t, int diffLevel) {
+    private static Vector getTVector(int[][] diffPowers, int[][] diffCoefficients, double t, int diffLevel) {
         if (diffLevel == 0) return getTVector(diffCoefficients[0].length, t);
         int[] degrees = diffPowers[diffLevel];
         double[] powers = new double[diffCoefficients[0].length];
@@ -223,7 +230,7 @@ public class BezierCurve implements Curve {
         return new Vector(output);
     }
 
-    public Vector getTVector(@TValue double t) {
+    public Vector getTVector(double t) {
         double[] output = new double[controlPoints.size()];
 
         for (int i = 0; i < output.length; i++) {
@@ -233,7 +240,7 @@ public class BezierCurve implements Curve {
         return new Vector(output);
     }
 
-    private static Vector getTVector(int size, @TValue double t) {
+    private static Vector getTVector(int size, double t) {
         double[] output = new double[size];
 
         for (int i = 0; i < output.length; i++) {
@@ -253,13 +260,14 @@ public class BezierCurve implements Curve {
      * @return this returns the point requested.
      */
     @Override
-    public Vector2D get(@TValue double t) {
+    public Vector2D get(double t) {
+        TValue.check(t);
         return getDerivative(0, t);
     }
 
     @Override
     public double closestT(Vector2D position, double initialGuess) {
-        double[] searchEstimates = new double[]{0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, initialGuess};
+        double[] searchEstimates = new double[] {0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, initialGuess};
         double closestDist = 1e9;
         double bestGuess = 0;
 
@@ -282,8 +290,11 @@ public class BezierCurve implements Curve {
             double deltaX = lastPos.x() - position.x();
             double deltaY = lastPos.y() - position.y();
             double firstDerivative = 2 * ((deltaX * firstDeriv.x()) + (deltaY * firstDeriv.y()));
-            double secondDerivative = 2 * ((deltaX * secondDeriv.x()) + (deltaY * secondDeriv.y())
-                    + (firstDeriv.x() * firstDeriv.x()) + (firstDeriv.y() * firstDeriv.y()));
+            double secondDerivative = 2
+                    * ((deltaX * secondDeriv.x())
+                            + (deltaY * secondDeriv.y())
+                            + (firstDeriv.x() * firstDeriv.x())
+                            + (firstDeriv.y() * firstDeriv.y()));
 
             initialGuess = clamp(initialGuess - firstDerivative / (secondDerivative + 1e-9), 0, 1);
             if (get(initialGuess).distance(lastPos) < 0.1) break;
@@ -292,7 +303,7 @@ public class BezierCurve implements Curve {
         return initialGuess;
     }
 
-    public Vector2D getDerivative(int n, @TValue double t) {
+    public Vector2D getDerivative(int n, double t) {
         Vector outVel = cachedMatrix.times(getTVector(t, n));
         return Vector2D.cartesian(outVel.get(0), outVel.get(1));
     }
@@ -304,7 +315,8 @@ public class BezierCurve implements Curve {
      * @param t this is the t value of the parametric curve. t is clamped to be between 0 and 1 inclusive.
      * @return this returns the derivative requested.
      */
-    public Vector2D derivative(@TValue double t) {
+    public Vector2D derivative(double t) {
+        TValue.check(t);
         return getDerivative(1, t);
     }
 
@@ -328,11 +340,13 @@ public class BezierCurve implements Curve {
 
     @Override
     public double remainingDistance(double t) {
+        TValue.check(t);
         return (1 - getPathCompletion(t)) * length;
     }
 
     @Override
     public double curvature(double t) {
+        TValue.check(t);
         Vector2D derivative = derivative(t);
         Vector2D secondDerivative = getDerivative(2, t);
         double derivMag = derivative.magnitude();
@@ -368,7 +382,7 @@ public class BezierCurve implements Curve {
      * @param points vararg of points; requirements more than two points
      * @return the BezierCurve passing through the points
      */
-    public static BezierCurve through(Pose... points){
+    public static BezierCurve through(Pose... points) {
         return interpolateThroughPoints(points);
     }
 
@@ -404,8 +418,7 @@ public class BezierCurve implements Curve {
 
         Vector2D[] controlPoints = new Vector2D[points.length];
         for (int i = 0; i < controlPoints.length; i++) {
-            controlPoints[i] = Vector2D.cartesian(controlPointMatrix.get(i, 0),
-                    controlPointMatrix.get(i, 1));
+            controlPoints[i] = Vector2D.cartesian(controlPointMatrix.get(i, 0), controlPointMatrix.get(i, 1));
         }
 
         return new BezierCurve(controlPoints);

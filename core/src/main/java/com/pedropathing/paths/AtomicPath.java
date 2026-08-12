@@ -10,7 +10,6 @@ import static com.pedropathing.utils.Utils.listOf;
 import com.pedropathing.config.Modifier;
 import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.paths.interpolator.Interpolator;
-import com.pedropathing.paths.tvalue.TValue;
 import java.util.List;
 
 public class AtomicPath extends Path {
@@ -31,13 +30,15 @@ public class AtomicPath extends Path {
     }
 
     @Override
-    public double heading(@TValue double t) {
+    public double heading(double t) {
+        TValue.check(t);
         if (interpolator == null) throw new UnsupportedOperationException("No heading interpolator set.");
         return interpolator.interpolate(curve, t);
     }
 
     @Override
-    public double headingDerivative(@TValue double t) {
+    public double headingDerivative(double t) {
+        TValue.check(t);
         if (interpolator == null) throw new UnsupportedOperationException("No heading interpolator set.");
         return interpolator.differentiate(curve, t);
     }

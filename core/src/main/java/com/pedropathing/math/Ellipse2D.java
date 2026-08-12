@@ -96,10 +96,7 @@ public class Ellipse2D {
         double cos = Math.cos(phi - theta);
         double sin = Math.sin(phi - theta);
 
-        return 1.0 / Math.sqrt(
-                eigenvalues[0] * cos * cos +
-                eigenvalues[1] * sin * sin
-        );
+        return 1.0 / Math.sqrt(eigenvalues[0] * cos * cos + eigenvalues[1] * sin * sin);
     }
 
     public static Ellipse2D fromAxes(double forwardAxis, double lateralAxis) {
@@ -108,9 +105,6 @@ public class Ellipse2D {
     }
 
     public static double interpolateRadius(double forwardAxis, double lateralAxis, double interpolateAngle) {
-        return 1.0 / Math.hypot(
-                Math.cos(interpolateAngle) / forwardAxis,
-                Math.sin(interpolateAngle) / lateralAxis
-        );
+        return 1.0 / Math.hypot(Math.cos(interpolateAngle) / forwardAxis, Math.sin(interpolateAngle) / lateralAxis);
     }
 }

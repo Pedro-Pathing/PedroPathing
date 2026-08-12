@@ -216,20 +216,19 @@ public class Vector {
         double[][] result = new double[size()][other.size()];
 
         for (int i = 0; i < result.length; i++) {
-            for (int j = 0; j < result[0].length; j++)
-                result[i][j] = elements[i] * other.elements[i];
+            for (int j = 0; j < result[0].length; j++) result[i][j] = elements[i] * other.elements[i];
         }
 
         return new Matrix(result);
     }
 
     public Vector cross(Vector other) {
-        if (size() != 3 || other.size() != 3) throw new UnsupportedOperationException("Cross product only implemented in 3D");
+        if (size() != 3 || other.size() != 3)
+            throw new UnsupportedOperationException("Cross product only implemented in 3D");
         return new Vector(
                 elements[1] * other.elements[2] - elements[2] * other.elements[1],
                 elements[2] * other.elements[0] - elements[0] * other.elements[2],
-                elements[0] * other.elements[1] - elements[1] * other.elements[0]
-        );
+                elements[0] * other.elements[1] - elements[1] * other.elements[0]);
     }
 
     public static Vector[] gramSchmidt(Vector... vectors) {
