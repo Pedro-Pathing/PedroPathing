@@ -18,7 +18,6 @@ public final class ForesightConfig {
     public final ConfigVar<Controller> headingController = ConfigVar.of(Controller.pid(1.5, 0, 0.1));
     public final ConfigVar<Controller> headingFeedforward =
             ConfigVar.of(Controller.dynamicFeedforward(1.0).plus(Controller.staticFeedforward(0.01)), nonnull());
-    // TODO test iZone, decay, and maxI to prevent integral wind-up and have zero-steady state error
 
     public final ConfigVar<Controller> forwardTranslationalController =
             ConfigVar.of(Controller.pid(0.3, 0, 0).plus(Controller.staticFeedforward(0.015)));
@@ -124,8 +123,6 @@ public final class ForesightConfig {
     public final ConfigVar<Double> minCorrectionDistance = ConfigVar.of(1e-3);
 
     public final ConfigVar<Double> parametricTConstraint = ConfigVar.of(0.025, positive());
-    // TODO: add rest of parametric constraints
-
     public final ConfigVar<Double> headingConstraint = ConfigVar.of(0.007, positive());
     public final ConfigVar<Double> translationalConstraint = ConfigVar.of(0.1, positive());
     public final ConfigVar<Double> velocityConstraint = ConfigVar.of(0.1, positive());
