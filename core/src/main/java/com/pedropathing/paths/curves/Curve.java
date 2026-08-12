@@ -5,10 +5,9 @@
 package com.pedropathing.paths.curves;
 
 import com.pedropathing.math.Vector2D;
-import com.pedropathing.paths.tvalue.TValue;
 
 public interface Curve {
-    Vector2D get(@TValue double t);
+    Vector2D get(double t);
 
     double closestT(Vector2D position, double initialGuess);
 
@@ -18,26 +17,26 @@ public interface Curve {
 
     double length();
 
-    double remainingDistance(@TValue double t);
+    double remainingDistance(double t);
 
-    default double remainingDistanceNormalized(@TValue double t) {
+    default double remainingDistanceNormalized(double t) {
         return remainingDistance(t) / length();
     }
 
     double getT(double pathCompletion);
 
-    Vector2D derivative(@TValue double t);
+    Vector2D derivative(double t);
 
     /**
      * Normalized
      */
-    default Vector2D tangent(@TValue double t) {
+    default Vector2D tangent(double t) {
         return derivative(t).normalized();
     }
 
-    double curvature(@TValue double t);
+    double curvature(double t);
 
-    default Vector2D leftNormal(@TValue double t) {
+    default Vector2D leftNormal(double t) {
         Vector2D tangent = tangent(t);
         return Vector2D.cartesian(-tangent.y(), tangent.x());
     }

@@ -1,7 +1,10 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.paths.curves.bezier;
 
 import com.pedropathing.math.Matrix;
-
 import java.util.HashMap;
 
 /**
@@ -19,7 +22,7 @@ public class CharacteristicMatrixSupplier {
      * This method sets up this class and caches some commonly used Bézier curves,
      * such as the quadratic and cubic Béziers.
      */
-    public void initialize(){
+    public void initialize() {
         if (!initialized) {
             getBezierCharacteristicMatrix(2); // quadratic bezier
             getBezierCharacteristicMatrix(3); // cubic bezier
@@ -66,7 +69,7 @@ public class CharacteristicMatrixSupplier {
      * @param degree bezier curve's degree
      * @return characteristic matrix of the Matrix class
      */
-    public static Matrix generateBezierCharacteristicMatrix(int degree){
+    public static Matrix generateBezierCharacteristicMatrix(int degree) {
         // get a square matrix that contains Pascal's triangle
         double[][] outputVals = generatePascalTriangle(degree + 1);
 
@@ -86,8 +89,8 @@ public class CharacteristicMatrixSupplier {
      * @param degree bezier curve's degree
      * @return characteristic matrix of the Matrix class
      */
-    public static Matrix getBezierCharacteristicMatrix(int degree){
-        if (!bezierMatrices.containsKey(degree)){
+    public static Matrix getBezierCharacteristicMatrix(int degree) {
+        if (!bezierMatrices.containsKey(degree)) {
             bezierMatrices.put(degree, generateBezierCharacteristicMatrix(degree));
         }
         return bezierMatrices.get(degree);

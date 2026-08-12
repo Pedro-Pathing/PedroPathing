@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.utils;
 
 import java.util.Map;
@@ -102,16 +106,14 @@ public class BijectiveMap {
                 return lowerEntry.getValue(); // Only lower key exists
             }
 
-            if (higherEntry.equals(lowerEntry))
-                return lowerEntry.getValue();
+            if (higherEntry.equals(lowerEntry)) return lowerEntry.getValue();
 
             double lowerKey = lowerEntry.getKey();
             double higherKey = higherEntry.getKey();
             double lowerValue = lowerEntry.getValue();
             double higherValue = higherEntry.getValue();
 
-            if (lowerKey == higherKey)
-                return lowerValue; // Both keys are the same
+            if (lowerKey == higherKey) return lowerValue; // Both keys are the same
 
             // Linear interpolation
             return lowerValue + (higherValue - lowerValue) * ((key - lowerKey) / (higherKey - lowerKey));

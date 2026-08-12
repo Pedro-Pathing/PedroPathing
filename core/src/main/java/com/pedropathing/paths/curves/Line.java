@@ -6,7 +6,7 @@ package com.pedropathing.paths.curves;
 
 import com.pedropathing.math.Pose;
 import com.pedropathing.math.Vector2D;
-import com.pedropathing.paths.tvalue.TValue;
+import com.pedropathing.paths.TValue;
 import com.pedropathing.utils.Utils;
 
 public class Line implements Curve {
@@ -44,17 +44,20 @@ public class Line implements Curve {
     }
 
     @Override
-    public Vector2D get(@TValue double t) {
+    public Vector2D get(double t) {
+        TValue.check(t);
         return start.plus(displacement.times(t));
     }
 
     @Override
-    public Vector2D tangent(@TValue double t) {
+    public Vector2D tangent(double t) {
+        TValue.check(t);
         return tangent;
     }
 
     @Override
-    public double curvature(@TValue double t) {
+    public double curvature(double t) {
+        TValue.check(t);
         return 0;
     }
 
@@ -70,7 +73,8 @@ public class Line implements Curve {
     }
 
     @Override
-    public double remainingDistance(@TValue double t) {
+    public double remainingDistance(double t) {
+        TValue.check(t);
         return (1 - t) * length();
     }
 
@@ -81,6 +85,7 @@ public class Line implements Curve {
 
     @Override
     public Vector2D derivative(double t) {
+        TValue.check(t);
         return displacement;
     }
 }

@@ -4,7 +4,6 @@
  */
 package com.pedropathing.paths;
 
-import com.pedropathing.paths.tvalue.TValue;
 import java.util.*;
 import java.util.function.ToDoubleFunction;
 
@@ -29,20 +28,20 @@ public final class Piecewise<T> {
         }
     }
 
-    public T get(@TValue double t) {
+    public T get(double t) {
         return getSegment(t).value();
     }
 
-    public Segment<T> getSegment(@TValue double t) {
+    public Segment<T> getSegment(double t) {
         return segmentMap.floorEntry(t).getValue();
     }
 
-    public double localT(@TValue double t) {
+    public double localT(double t) {
         Segment<T> segment = getSegment(t);
         return (t - segment.startT()) / getLength.applyAsDouble(segment.value()) * totalLength;
     }
 
-    public double globalT(Segment<T> segment, @TValue double localT) {
+    public double globalT(Segment<T> segment, double localT) {
         return segment.startT() + localT * getLength.applyAsDouble(segment.value()) / totalLength;
     }
 
