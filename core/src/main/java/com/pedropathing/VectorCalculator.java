@@ -153,9 +153,11 @@ public class VectorCalculator {
         correctiveVector = new Vector();
 
         int AVERAGED_VELOCITY_SAMPLE_NUMBER = 8;
+        velocities.clear();
         for (int i = 0; i < AVERAGED_VELOCITY_SAMPLE_NUMBER; i++) {
             velocities.add(new Vector());
         }
+        accelerations.clear();
         for (int i = 0; i < AVERAGED_VELOCITY_SAMPLE_NUMBER / 2; i++) {
             accelerations.add(new Vector());
         }
