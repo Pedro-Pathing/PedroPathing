@@ -172,8 +172,8 @@ public class VectorCalculator {
      * Do the teleop calculations
      */
     public void teleopUpdate() {
-        velocities.add(velocity);
-        velocities.remove(velocities.get(velocities.size() - 1));
+        velocities.add(0, velocity);
+        velocities.remove(velocities.size() - 1);
 
         calculateAveragedVelocityAndAcceleration();
     }
@@ -430,7 +430,7 @@ public class VectorCalculator {
         }
         averagePreviousVelocity = averagePreviousVelocity.times(1.0 / ((double) velocities.size() / 2));
 
-        accelerations.add(averageVelocity.minus(averagePreviousVelocity));
+        accelerations.add(0, averageVelocity.minus(averagePreviousVelocity));
         accelerations.remove(accelerations.size() - 1);
 
         averageAcceleration = new Vector();
