@@ -13,6 +13,7 @@ import com.pedropathing.config.Configuration;
 import com.pedropathing.config.Validator;
 import com.pedropathing.controllers.Controller;
 import com.pedropathing.math.Matrix;
+import com.pedropathing.math.Vector2D;
 
 public final class ForesightConfig {
     public final ConfigVar<Controller> headingController = ConfigVar.of(Controller.pid(1.5, 0, 0.1));
@@ -46,11 +47,7 @@ public final class ForesightConfig {
     /**
      * Centripetal force to power scaling.
      */
-    public final ConfigVar<Double> centripetalScaling = ConfigVar.of(0.005, nonnegative());
-
-    public final ConfigVar<Double> normalFeedforward = ConfigVar.of(0.0, Validator.nonnull());
-
-    public final ConfigVar<Double> robotMass = ConfigVar.of(12.9, positive());
+    public final ConfigVar<Vector2D> centripetalGains = ConfigVar.of(Vector2D.cartesian(0.0065, 0.0065));
 
     /**
      * The maximum amount of power the robot can apply in the opposite direction of momentum. Default is 0.2. Too high of a value might burn out the control hub and too low of a value might not be able to stop quickly after back-emf is overcome.

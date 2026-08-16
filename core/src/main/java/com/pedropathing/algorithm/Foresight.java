@@ -127,9 +127,7 @@ public class Foresight implements Algorithm {
                 driveVector = driveVector.times(getDriveScalar(0, headingError));
             }
         } else {
-            double centripetal =
-                    centripetal(tangentialSpeed, curvature) + config.normalFeedforward.get() * tangentialSpeed;
-            normalFeedforward = closestNormal.times(centripetal);
+            normalFeedforward = centripetalEffort(tangentialSpeed, curvature, state.pose().heading()).projectOnto(closestNormal);
 
             if (((Math.abs(headingError) > 2 * config.headingDeviationTolerance.get())
                             || (Math.abs(translationalError) > 2 * config.translationalDeviationTolerance.get()))
@@ -362,8 +360,11 @@ public class Foresight implements Algorithm {
         ).toWorldFrame(state.pose().heading());
     }
 
-    public double centripetal(double speed, double curvature) {
-        return speed * speed * curvature * config.centripetalScaling.get() * config.robotMass.get();
+    public Vector2D centripetalEffort(double speed, double curvature, double heading) {
+        double desiredCentripetalAccel = speed * speed * curvature;
+        Matrix headingMatrix = Matrix.rotation(heading);
+        Vector2D worldFrameCentripetalGains = config.centripetalGains.get().transform(headingMatrix);
+        return worldFrameCentripetalGains.times(desiredCentripetalAccel);
     }
 
     public Pair<Double, Double> getVelocityToBrakeInTime(double distanceRemaining, double theta) {
