@@ -8,12 +8,12 @@ import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
-public class OTOS implements Localizer {
+public class OTOSLocalizer implements Localizer {
     private final SparkFunOTOS otos;
 
     private MotionState motionState;
 
-    public OTOS(HardwareMap hardwareMap, OTOSConfig config) {
+    public OTOSLocalizer(HardwareMap hardwareMap, OTOSConfig config) {
         otos = hardwareMap.get(SparkFunOTOS.class, config.name.get());
 
         otos.setLinearUnit(config.linearUnit.get());

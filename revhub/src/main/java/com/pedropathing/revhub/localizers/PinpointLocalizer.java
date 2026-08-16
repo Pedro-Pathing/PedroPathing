@@ -12,15 +12,13 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
 
-import static com.qualcomm.hardware.gobilda.GoBildaPinpointDriver.DeviceStatus.CALIBRATING;
-
-public class Pinpoint implements Localizer {
+public class PinpointLocalizer implements Localizer {
     private final GoBildaPinpointDriver pinpoint;
     private final DistanceUnit globalDistanceUnit;
 
     private MotionState motionState;
 
-    public Pinpoint(HardwareMap hardwareMap, PinpointConfig config) {
+    public PinpointLocalizer(HardwareMap hardwareMap, PinpointConfig config) {
         this.globalDistanceUnit = config.globalDistanceUnit.get();
 
         pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, config.name.get());
@@ -49,6 +47,7 @@ public class Pinpoint implements Localizer {
                 config.yPodDirection.get()
         );
 
+        reset();
         update();
     }
 
@@ -95,6 +94,6 @@ public class Pinpoint implements Localizer {
     }
 
     public void reset() {
-        pinpoint.resetPosAndIMU();
+        pinpoint.recalibrateIMU();
     }
 }
