@@ -7,14 +7,14 @@ import com.pedropathing.math.Velocity;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-public class OctoQuad implements Localizer {
+public class OctoQuadLocalizer implements Localizer {
     private final com.qualcomm.hardware.digitalchickenlabs.OctoQuad.LocalizerDataBlock localizer = new com.qualcomm.hardware.digitalchickenlabs.OctoQuad.LocalizerDataBlock();
     private final com.qualcomm.hardware.digitalchickenlabs.OctoQuad octoQuad;
     private final DistanceUnit globalDistanceUnit;
 
     private MotionState motionState;
 
-    public OctoQuad(HardwareMap hardwareMap, OctoQuadConfig config) {
+    public OctoQuadLocalizer(HardwareMap hardwareMap, OctoQuadConfig config) {
         octoQuad = hardwareMap.get(com.qualcomm.hardware.digitalchickenlabs.OctoQuad.class, config.name.get());
 
         globalDistanceUnit = config.globalDistanceUnit.get();

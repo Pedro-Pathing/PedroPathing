@@ -10,7 +10,7 @@ import com.pedropathing.utils.Timer;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-public class TwoWheel implements Localizer {
+public class TwoWheelLocalizer implements Localizer {
     private final CustomIMU imu;
     private final Encoder xPodEncoder;
     private final Encoder yPodEncoder;
@@ -26,7 +26,7 @@ public class TwoWheel implements Localizer {
     private final Timer timer;
     private double previousIMUOrientation;
 
-    public TwoWheel(HardwareMap map, TwoWheelConfig config) {
+    public TwoWheelLocalizer(HardwareMap map, TwoWheelConfig config) {
         this.forwardTicksToInches = config.forwardTicksToInches.get();
         this.strafeTicksToInches = config.strafeTicksToInches.get();
         this.xPodOffset = config.xPodOffset.get();

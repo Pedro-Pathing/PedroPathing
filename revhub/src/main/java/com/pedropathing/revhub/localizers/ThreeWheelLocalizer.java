@@ -9,7 +9,7 @@ import com.pedropathing.utils.Timer;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-public class ThreeWheel implements Localizer {
+public class ThreeWheelLocalizer implements Localizer {
     private final Encoder leftEncoder;
     private final Encoder rightEncoder;
     private final Encoder strafeEncoder;
@@ -28,7 +28,7 @@ public class ThreeWheel implements Localizer {
 
     private final Timer timer;
 
-    public ThreeWheel(HardwareMap map, ThreeWheelConfig config) {
+    public ThreeWheelLocalizer(HardwareMap map, ThreeWheelConfig config) {
         this.forwardTicksToInches = config.forwardTicksToInches.get();
         this.strafeTicksToInches = config.strafeTicksToInches.get();
         this.turnTicksToRadians = config.turnTicksToRadians.get();

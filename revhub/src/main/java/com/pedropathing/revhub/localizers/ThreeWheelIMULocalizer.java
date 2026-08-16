@@ -10,7 +10,7 @@ import com.pedropathing.utils.Timer;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-public class ThreeWheelIMU implements Localizer {
+public class ThreeWheelIMULocalizer implements Localizer {
     private final CustomIMU imu;
     private final Encoder leftEncoder;
     private final Encoder rightEncoder;
@@ -32,7 +32,7 @@ public class ThreeWheelIMU implements Localizer {
     private final Timer timer;
     public static boolean useIMU = true;
 
-    public ThreeWheelIMU(HardwareMap map, ThreeWheelIMUConfig config) {
+    public ThreeWheelIMULocalizer(HardwareMap map, ThreeWheelIMUConfig config) {
         this.forwardTicksToInches = config.forwardTicksToInches.get();
         this.strafeTicksToInches = config.strafeTicksToInches.get();
         this.turnTicksToRadians = config.turnTicksToRadians.get();
