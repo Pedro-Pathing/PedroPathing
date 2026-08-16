@@ -47,6 +47,7 @@ public class PinpointLocalizer implements Localizer {
                 config.yPodDirection.get()
         );
 
+        reset();
         update();
     }
 
@@ -93,6 +94,6 @@ public class PinpointLocalizer implements Localizer {
     }
 
     public void reset() {
-        pinpoint.resetPosAndIMU();
+        pinpoint.recalibrateIMU();
     }
 }
