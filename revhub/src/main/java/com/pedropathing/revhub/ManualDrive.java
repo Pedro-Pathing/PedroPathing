@@ -16,7 +16,7 @@ public class ManualDrive {
 
     /** Takes in robotCentric drive powers and uses the currentHeading to rotate them to fieldCentric drive powers with an offset heading. */
     public static DrivePowers fieldCentric(DrivePowers powers, double currentHeading, double offsetHeading) {
-        Vector2D fieldRelative = Vector2D.cartesian(powers.forward(), powers.strafe()).rotate(currentHeading + offsetHeading);
+        Vector2D fieldRelative = Vector2D.cartesian(powers.forward(), powers.strafe()).rotate(-(currentHeading + offsetHeading));
         return new DrivePowers(fieldRelative.x(), fieldRelative.y(), powers.turn());
     }
 

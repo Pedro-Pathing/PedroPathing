@@ -65,7 +65,7 @@ public final class ForesightConfig {
         maxVelocityConstraint.set(maxAchievableForwardVelocity.get() * speed);
     }
 
-    static class Constraint {
+    public static class Constraint {
         public static double NONE = Double.POSITIVE_INFINITY;
     }
 
