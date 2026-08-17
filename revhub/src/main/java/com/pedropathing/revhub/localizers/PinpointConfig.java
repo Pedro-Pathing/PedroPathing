@@ -22,6 +22,7 @@ public class PinpointConfig {
     public final ConfigVar<GoBildaPinpointDriver.GoBildaOdometryPods> podType = ConfigVar.of(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
 
     public final ConfigVar<OptionalDouble> ticksPerUnit = ConfigVar.of(OptionalDouble.empty());
+    public final ConfigVar<PinpointLocalizer.ResetMode> resetMode = ConfigVar.of(PinpointLocalizer.ResetMode.RECALIBRATE_IMU);
 
     public PinpointConfig(Configuration<PinpointConfig> config) {
         config.configure(this);
