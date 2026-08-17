@@ -13,10 +13,18 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
 
 public class PinpointLocalizer implements Localizer {
+
+    public enum ResetMode {
+        RECALIBRATE_IMU,
+        RESET_AND_RECALIBRATE_IMU,
+        NONE
+    }
+
     private final GoBildaPinpointDriver pinpoint;
     private final DistanceUnit globalDistanceUnit;
 
     private MotionState motionState;
+    private ResetMode resetMode;
 
     public PinpointLocalizer(HardwareMap hardwareMap, PinpointConfig config) {
         this.globalDistanceUnit = config.globalDistanceUnit.get();
@@ -46,6 +54,8 @@ public class PinpointLocalizer implements Localizer {
                 config.xPodDirection.get(),
                 config.yPodDirection.get()
         );
+
+        resetMode = config.resetMode.get();
 
         reset();
         update();
@@ -94,6 +104,10 @@ public class PinpointLocalizer implements Localizer {
     }
 
     public void reset() {
-        pinpoint.recalibrateIMU();
+        if (resetMode == ResetMode.RESET_AND_RECALIBRATE_IMU) {
+            pinpoint.resetPosAndIMU();
+        } else if (resetMode == ResetMode.RECALIBRATE_IMU) {
+            pinpoint.recalibrateIMU();
+        }
     }
 }
