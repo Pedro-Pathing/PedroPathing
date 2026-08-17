@@ -357,7 +357,7 @@ public class Foresight implements Algorithm {
         return Vector2D.cartesian(
                 config.forwardTranslationalController.get().calculate(0, bodyFrameError.x()),
                 config.lateralTranslationalController.get().calculate(0, bodyFrameError.y())
-        ).toWorldFrame(state.pose().heading());
+        ).projectOnto(bodyFrameError).toWorldFrame(state.pose().heading());
     }
 
     public Vector2D centripetalEffort(double speed, double curvature, double heading) {
@@ -396,7 +396,7 @@ public class Foresight implements Algorithm {
             double brakingDisplacement,
             double targetAccel) {
         double headingFromTangent = closestTangentVector.angleTo(Vector2D.unit(heading));
-        double maxAchievableVelocity = Diamond.interpolateRadius(config.maxAchievableForwardVelocity.get(), config.maxAchievableStrafeVelocity.get(), headingFromTangent);
+        double maxAchievableVelocity = DiamondDrivetrainModel.interpolateVelocity(config.maxAchievableForwardVelocity.get(), config.maxAchievableStrafeVelocity.get(), headingFromTangent);
 
         if (!isBraking) return coast(tangentialVel, headingFromTangent, remainingDistance, deltaTime, maxAchievableVelocity);
 
@@ -417,7 +417,6 @@ public class Foresight implements Algorithm {
             MotionState state,
             Drivetrain drivetrain) {
         DrivePowers current = getDrivePowers(translation, state, heading);
-
         DrivePowers delta = getDrivePowers(deltaTranslation, state, deltaHeading);
 
         return drivetrain.maxScaling(current, delta);
@@ -429,15 +428,14 @@ public class Foresight implements Algorithm {
         double maxDecelerationConstraint = config.maxDecelerationConstraint.get();
         double coastDownToVelocity = config.coastDownToVelocity.get();
 
-        double constrainedVelocity = maxAchievableVelocity;
+        double targetVel = maxAchievableVelocity;
         if (maxVelocityConstraint != ForesightConfig.Constraint.NONE) {
-            constrainedVelocity = Math.min(constrainedVelocity, maxVelocityConstraint);
+            targetVel = Math.min(targetVel, maxVelocityConstraint);
         }
         if (maxAccelerationConstraint != ForesightConfig.Constraint.NONE) {
-            constrainedVelocity = Math.min(constrainedVelocity, tangentialVel + maxAccelerationConstraint * deltaTime);
+            targetVel = Math.min(targetVel, tangentialVel + maxAccelerationConstraint * deltaTime);
         }
 
-        double targetVel = constrainedVelocity;
         double feedforwardVelocity = targetVel;
 
         if (maxDecelerationConstraint != ForesightConfig.Constraint.NONE) {
@@ -448,21 +446,19 @@ public class Foresight implements Algorithm {
         }
 
         if (targetVel >= maxAchievableVelocity) {
+            targetVelocity = maxAchievableVelocity;
             return 1;
         }
 
         double error = Math.max(0, targetVel - tangentialVel);
-
+        targetVelocity = targetVel;
         return config.coastController.get().calculate(feedforwardVelocity, error);
     }
 
     public Vector2D getBrakeDisplacement(Twist twist, double heading) {
         Vector2D linearTwist = twist.toVector2D();
-
-        Vector2D quadratic =
-                linearTwist.hadamardProduct(linearTwist.abs()).transform(config.quadraticBrakeCoefficients.get());
+        Vector2D quadratic = linearTwist.hadamardProduct(linearTwist.abs()).transform(config.quadraticBrakeCoefficients.get());
         Vector2D linear = linearTwist.transform(config.linearBrakeCoefficients.get());
-
         return quadratic.plus(linear).rotate(heading);
     }
 
@@ -479,7 +475,7 @@ public class Foresight implements Algorithm {
     }
 
     private double excessVelAfterCoast(double remainingDistance, double initialVelocity, double theta) {
-        double naturalDeceleration = Diamond.interpolateRadius(config.naturalForwardDeceleration.get(), config.naturalStrafeDeceleration.get(), theta);
+        double naturalDeceleration = DiamondDrivetrainModel.interpolateAcceleration(config.naturalForwardDeceleration.get(), config.naturalStrafeDeceleration.get(), theta);
         double excessVelocitySquared = initialVelocity * initialVelocity - 2 * naturalDeceleration * remainingDistance;
         return Math.signum(excessVelocitySquared) * Math.sqrt(Math.abs(excessVelocitySquared));
     }
