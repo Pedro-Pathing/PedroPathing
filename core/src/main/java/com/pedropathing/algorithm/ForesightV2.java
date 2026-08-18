@@ -76,7 +76,6 @@ public class ForesightV2 implements Algorithm {
         Vector2D projectedTangent = curve.tangent(projectedClosestT);
         Vector2D projectedTargetPos = curve.get(projectedClosestT);
         Vector2D projectedNormal = curve.leftNormal(projectedClosestT);
-        double projectedCurvature = curve.curvature(projectedClosestT);
         double projectedRemainingDist = curve.remainingDistance(projectedClosestT);
         double angleToTangent = projectedTangent.theta() - state.pose().heading();
 
@@ -118,7 +117,7 @@ public class ForesightV2 implements Algorithm {
                 drive = drive.times(allocator.getDriveScalar(0, headingError));
             }
         } else {
-            centripetal = centripetalEffort(tangentialSpeed, curvature, headingMatrix);
+            centripetal = centripetalEffort(tangentialSpeed, curvature, headingMatrix).projectOnto(closestNormal);
 
             if (((Math.abs(headingError) > 2 * config.headingDeviationTolerance.get())
                     || (Math.abs(translationalError) > 2 * config.translationalDeviationTolerance.get()))
