@@ -77,6 +77,8 @@ public class ForesightV2 implements Algorithm {
         Vector2D projectedTargetPos = curve.get(projectedClosestT);
         Vector2D projectedNormal = curve.leftNormal(projectedClosestT);
         double projectedRemainingDist = curve.remainingDistance(projectedClosestT);
+        if (projectedRemainingDist <= 0.01)
+            projectedRemainingDist = projectedTangent.dot(projectedTargetPos.minus(projectedPose.toVector2D()));
         double angleToTangent = projectedTangent.theta() - state.pose().heading();
 
         Pair<Double, Double> velocityInversion = getVelocityToBrakeInTime(projectedRemainingDist, projectedTangent, headingMatrix);
@@ -197,8 +199,12 @@ public class ForesightV2 implements Algorithm {
         double k2 = config.linearBrakeCoefficients.get().get(0, 0) * t2.x()
                 + config.linearBrakeCoefficients.get().get(1, 1) * t2.y();
         Pair<Double, Double> velocityInversion =
-                Utils.solveQuadratic(k1, k2, -distanceRemaining / config.brakeAggression.get());
-        double maxVel = Math.max(velocityInversion.first(), velocityInversion.second());
+                Utils.solveQuadratic(k1, k2, -Math.abs(distanceRemaining) / config.brakeAggression.get());
+        if (distanceRemaining == 0) {
+            double maxVel = Math.max(velocityInversion.first(), velocityInversion.second());
+            return Pair.of(maxVel, -maxVel / (2 * maxVel * k1 + k2));
+        }
+        double maxVel = Math.max(velocityInversion.first(), velocityInversion.second()) * Math.signum(distanceRemaining);
         return Pair.of(maxVel, -maxVel / (2 * maxVel * k1 + k2));
     }
 
