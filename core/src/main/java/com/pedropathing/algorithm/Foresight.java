@@ -18,7 +18,7 @@ import com.pedropathing.utils.Timer;
 import com.pedropathing.utils.Utils;
 import java.util.concurrent.TimeUnit;
 
-public class ForesightV2 implements Algorithm {
+public class Foresight implements Algorithm {
     public final ForesightConfig config;
     public final ForesightPowerAllocator allocator;
     private double closestT, curvature;
@@ -37,7 +37,7 @@ public class ForesightV2 implements Algorithm {
     public final Controller brakeController;
     public final Controller coastController;
 
-    public ForesightV2(ForesightConfig config) {
+    public Foresight(ForesightConfig config) {
         this.config = config;
         this.allocator = new ForesightPowerAllocator(config);
 
