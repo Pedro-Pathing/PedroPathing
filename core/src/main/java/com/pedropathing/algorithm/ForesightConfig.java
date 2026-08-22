@@ -5,34 +5,29 @@
 package com.pedropathing.algorithm;
 
 import static com.pedropathing.config.Validator.nonnegative;
-import static com.pedropathing.config.Validator.nonnull;
 import static com.pedropathing.config.Validator.positive;
 
 import com.pedropathing.config.ConfigVar;
 import com.pedropathing.config.Configuration;
-import com.pedropathing.config.Validator;
-import com.pedropathing.controllers.Controller;
 import com.pedropathing.math.Matrix;
 import com.pedropathing.math.Vector2D;
 
 public final class ForesightConfig {
-    public final ConfigVar<Controller> headingController = ConfigVar.of(Controller.pid(1.5, 0, 0.1));
-    public final ConfigVar<Controller> headingFeedforward =
-            ConfigVar.of(Controller.dynamicFeedforward(1.0).plus(Controller.staticFeedforward(0.01)), nonnull());
+    public final ConfigVar<Double> headingProportional = ConfigVar.of(1.5, nonnegative());
+    public final ConfigVar<Double> headingDerivative = ConfigVar.of(0.1, nonnegative());
+    public final ConfigVar<Double> headingStatic = ConfigVar.of(0.01, nonnegative());
 
-    public final ConfigVar<Controller> forwardTranslationalController =
-            ConfigVar.of(Controller.pid(0.3, 0, 0).plus(Controller.staticFeedforward(0.015)));
-    public final ConfigVar<Controller> lateralTranslationalController =
-            ConfigVar.of(Controller.pid(0.3, 0, 0).plus(Controller.staticFeedforward(0.015)));
+    public final ConfigVar<Double> forwardTranslationalProportional = ConfigVar.of(0.3, nonnegative());
+    public final ConfigVar<Double> forwardTranslationalStatic = ConfigVar.of(0.015, nonnegative());
+    public final ConfigVar<Double> strafeTranslationalProportional = ConfigVar.of(0.3, nonnegative());
+    public final ConfigVar<Double> strafeTranslationalStatic = ConfigVar.of(0.015, nonnegative());
 
-    public final ConfigVar<Controller> brakeController = ConfigVar.of(Controller.pid(0.025, 0, 0)
-            .plus(Controller.dynamicFeedforward(0.015))
-            .plus(Controller.staticFeedforward(0.05)));
-    public final ConfigVar<Controller> brakeAccelFeedforward = ConfigVar.of(Controller.dynamicFeedforward(0.0025));
+    public final ConfigVar<Double> brakeProportional = ConfigVar.of(0.025, nonnegative());
+    public final ConfigVar<Double> brakeStatic = ConfigVar.of(0.015, nonnegative());
 
-    public final ConfigVar<Controller> coastController = ConfigVar.of(Controller.pid(0.025, 0, 0)
-            .plus(Controller.dynamicFeedforward(0.015))
-            .plus(Controller.staticFeedforward(0.05)));
+    public final ConfigVar<Double> coastProportional = ConfigVar.of(0.025, nonnegative());
+    public final ConfigVar<Double> coastStatic = ConfigVar.of(0.05, nonnegative());
+    public final ConfigVar<Double> coastFeedforward = ConfigVar.of(0.015, nonnegative());
 
     /**
      * This scales the translational error correction power when holding.
