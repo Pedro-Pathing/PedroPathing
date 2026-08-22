@@ -1,7 +1,9 @@
 package com.pedropathing.algorithm;
 
 import static com.pedropathing.utils.Angle.normalizeSigned;
+import static com.pedropathing.utils.Angle.turnDirection;
 
+import com.pedropathing.controllers.Controller;
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.drivetrain.Drivetrain;
 import com.pedropathing.localization.MotionState;
@@ -12,6 +14,7 @@ import com.pedropathing.math.Twist;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.paths.PathTracker;
 import com.pedropathing.paths.curves.Curve;
+import com.pedropathing.utils.Angle;
 import com.pedropathing.utils.Pair;
 import com.pedropathing.utils.Timer;
 import com.pedropathing.utils.Utils;
@@ -30,9 +33,29 @@ public class ForesightV3 implements Algorithm {
     private double headingError, translationalError, targetVelocity;
     private boolean busy = false;
 
+    public final Controller coastController;
+    public final Controller forwardTranslationalController;
+    public final Controller strafeTranslationalController;
+
     public ForesightV3(ForesightConfig config) {
         this.config = config;
         this.allocator = new ForesightPowerAllocator(config);
+
+        this.forwardTranslationalController = Controller.sum(
+                Controller.proportional(config.forwardTranslationalProportional),
+                Controller.staticFeedforward(config.forwardTranslationalStatic)
+        );
+
+        this.strafeTranslationalController = Controller.sum(
+                Controller.proportional(config.strafeTranslationalProportional),
+                Controller.staticFeedforward(config.strafeTranslationalStatic)
+        );
+
+        this.coastController = Controller.sum(
+                Controller.proportional(config.coastProportional),
+                Controller.proportionalFeedforward(config.coastFeedforward),
+                Controller.staticTargetFeedforward(config.coastStatic)
+        );
     }
 
     @Override
@@ -80,9 +103,7 @@ public class ForesightV3 implements Algorithm {
             projectedRemainingDist = projectedTangent.dot(projectedTargetPos.minus(projectedPose.toVector2D()));
         double angleToTangent = projectedTangent.theta() - projectedPose.heading();
 
-        Pair<Double, Double> velocityInversion = getVelocityToBrakeInTime(projectedRemainingDist, projectedTangent, projectedPose.heading());
-        double velocityToBrakeInTime = velocityInversion.first();
-        double targetAcceleration = velocityInversion.second();
+        double velocityToBrakeInTime = getVelocityToBrakeInTime(projectedRemainingDist, projectedTangent, projectedPose.heading());
         boolean isBraking = velocityToBrakeInTime <= 0 || projectedRemainingDist <= 0;
 
         if (isBraking && (pathTracker.remainingPaths() > 1 || !config.brakeAtEnd.get())) {
@@ -90,12 +111,13 @@ public class ForesightV3 implements Algorithm {
             return calculatePath(drivetrain, pathTracker, state, deltaTime);
         }
 
-        double projectedHeadingPower = headingFeedback(projectedPose.heading(), projectedTargetHeading)
-                - headingFeedback(state.pose().heading(), projectedTargetHeading);
-        double currentHeadingPower = headingFeedback(state.pose().heading(), targetHeading);
+        double projectedHeadingPower = headingFeedback(closestPose.heading() + projectedPose.heading(),
+                projectedTargetHeading + state.pose().heading(), false).second();
+        double currentHeadingPower = headingFeedback(state.pose().heading(), targetHeading, false).second();
         double headingError = normalizeSigned(projectedTargetHeading - projectedPose.heading());
+        projectedHeadingPower += config.headingStatic.get() * turnDirection(headingError);
 
-        Vector2D drive = projectedTangent.times(drive(isBraking, velocityToBrakeInTime, targetAcceleration, deltaTime,
+        Vector2D drive = projectedTangent.times(drive(isBraking, velocityToBrakeInTime, deltaTime,
                 projectedRemainingDist, angleToTangent, tangentialSpeed));
 
         Pair<Double, Vector2D> translationalResult = translationalCorrection(projectedPose, projectedTargetPos,
@@ -148,7 +170,9 @@ public class ForesightV3 implements Algorithm {
 
         closestPose = target;
         Pose projectedPose = state.pose().plus(getBrakeDisplacement(state.twist(), state.pose().heading()));
-        double headingCorrection = headingFeedback(projectedPose.heading(), target.heading());
+        double headingCorrection = headingFeedback(projectedPose.heading(), target.heading(), true).second();
+        headingError = normalizeSigned(target.heading() - state.pose().heading());
+
         Vector2D displacement = target.minus(projectedPose).toVector2D();
 
         //TODO: Cache
@@ -192,7 +216,7 @@ public class ForesightV3 implements Algorithm {
         return new Pose(0, 0, heading).exp(new Twist(bodyDisp.x(), bodyDisp.y(), headingDisp));
     }
 
-    public Pair<Double, Double> getVelocityToBrakeInTime(double distanceRemaining, Vector2D closestTangent, double heading) {
+    public double getVelocityToBrakeInTime(double distanceRemaining, Vector2D closestTangent, double heading) {
         Vector2D t = closestTangent.toBodyFrame(heading).abs();
         Vector2D t2 = t.hadamardProduct(t);
         Vector2D t3 = t2.hadamardProduct(t);
@@ -203,24 +227,24 @@ public class ForesightV3 implements Algorithm {
                 + config.linearBrakeCoefficients.get().get(1, 1) * t2.y();
         Pair<Double, Double> velocityInversion =
                 Utils.solveQuadratic(k1, k2, -Math.abs(distanceRemaining) / config.brakeAggression.get());
-        double maxVel = Math.max(velocityInversion.first(), velocityInversion.second()) * Math.signum(distanceRemaining);
-        return Pair.of(maxVel, -maxVel / (2 * maxVel * k1 + k2));
+        return Math.max(velocityInversion.first(), velocityInversion.second()) * Math.signum(distanceRemaining);
     }
 
-    private double headingFeedback(double currentHeading, double targetHeading) {
-        headingError = normalizeSigned(targetHeading - currentHeading);
-        return config.headingController.get().calculate(0, headingError);
+    private Pair<Double, Double> headingFeedback(double currentHeading, double targetHeading, boolean staticFF) {
+        double headingError = normalizeSigned(targetHeading - currentHeading);
+        return Pair.of(headingError, config.headingProportional.get() * headingError
+                + (staticFF ? config.headingStatic.get() * turnDirection(headingError) : 0));
     }
 
     public double drive(boolean isBraking,
-                        double profiledTargetVelocity, double profiledTargetAcceleration,
+                        double profiledTargetVelocity,
                         double deltaTime, double remainingDistance,
                         double angleToTangent, double tangentialVel) {
         double maxAchievableVelocity = DiamondDrivetrainModel.interpolateVelocity(config.maxAchievableForwardVelocity.get(), config.maxAchievableStrafeVelocity.get(), angleToTangent);
         targetVelocity = Math.min(profiledTargetVelocity, maxAchievableVelocity);
 
         if (!isBraking) return coast(tangentialVel, remainingDistance, deltaTime, maxAchievableVelocity);
-        return config.brakeController.get().calculate(targetVelocity, 0) + config.brakeAccelFeedforward.get().calculate(profiledTargetAcceleration, 0);
+        return config.brakeProportional.get() * targetVelocity;
     }
 
     public double coast(double tangentialVel, double remainingDistance, double deltaTime, double maxAchievableVelocity) {
@@ -252,7 +276,7 @@ public class ForesightV3 implements Algorithm {
 
         double error = Math.max(0, targetVel);
         targetVelocity = targetVel;
-        return config.coastController.get().calculate(feedforwardVelocity, error);
+        return coastController.calculate(feedforwardVelocity, error);
     }
 
     private Pair<Double, Vector2D> translationalCorrection(Pose currentPose, Vector2D targetPos, Vector2D closestNormal) {
@@ -262,8 +286,8 @@ public class ForesightV3 implements Algorithm {
 
         Vector2D bodyFrameError = displacement.toBodyFrame(currentPose.heading());
         return Pair.of(translationalError, Vector2D.cartesian(
-                config.forwardTranslationalController.get().calculate(0, bodyFrameError.x()),
-                config.lateralTranslationalController.get().calculate(0, bodyFrameError.y())
+                forwardTranslationalController.calculate(0, bodyFrameError.x()),
+                strafeTranslationalController.calculate(0, bodyFrameError.y())
         ).projectOnto(bodyFrameError).toWorldFrame(currentPose.heading()));
     }
 

@@ -55,7 +55,15 @@ public class Angle {
      * @return returns the turn direction.
      */
     public static double turnDirection(double startHeading, double endHeading) {
-        if (normalize(endHeading - startHeading) >= 0 && normalize(endHeading - startHeading) <= Math.PI) {
+        double normalizedError = normalize(endHeading - startHeading);
+        if (normalizedError >= 0 && normalizedError <= Math.PI) {
+            return 1; // counter clock wise
+        }
+        return -1; // clock wise
+    }
+
+    public static double turnDirection(double normalizedError) {
+        if (normalizedError >= 0 && normalizedError <= Math.PI) {
             return 1; // counter clock wise
         }
         return -1; // clock wise
