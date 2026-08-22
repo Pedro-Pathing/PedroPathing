@@ -9,6 +9,7 @@ import static com.pedropathing.config.Validator.positive;
 
 import com.pedropathing.config.ConfigVar;
 import com.pedropathing.config.Configuration;
+import com.pedropathing.config.Modifier;
 import com.pedropathing.math.Matrix;
 import com.pedropathing.math.Vector2D;
 
@@ -56,8 +57,8 @@ public final class ForesightConfig {
     /**
      * Set the maxVelocityConstraint to a fraction of the maxAchievableVelocity.
      */
-    public void setPathSpeed(double speed) {
-        maxVelocityConstraint.set(maxAchievableForwardVelocity.get() * speed);
+    public Modifier setPathSpeed(double speed) {
+        return maxVelocityConstraint.at(maxAchievableForwardVelocity.get() * speed);
     }
 
     public static class Constraint {
