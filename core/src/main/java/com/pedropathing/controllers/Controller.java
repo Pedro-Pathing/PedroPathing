@@ -4,25 +4,19 @@
  */
 package com.pedropathing.controllers;
 
+import java.util.function.Supplier;
+
 @FunctionalInterface
 public interface Controller {
     double calculate(double target, double error);
 
     Controller zero = (t, e) -> 0;
 
-    default double calculate(double target, double error, double velocity) {
+    default double calculate(double target, double error, double derivative) {
         return calculate(target, error);
     }
 
     default void reset() {}
-
-    static Controller staticFeedforward(double kStatic) {
-        return (t, e) -> kStatic * Math.signum(e);
-    }
-
-    static Controller dynamicFeedforward(double kF) {
-        return (t, e) -> t * kF;
-    }
 
     static PIDController pid(double kP, double kI, double kD) {
         return new PIDController(kP, kI, kD);
@@ -32,11 +26,167 @@ public interface Controller {
         return new PiecewiseController(baseline);
     }
 
+    static Controller sum(Controller... controllers) {
+        return new Controller() {
+            @Override
+            public double calculate(double target, double error) {
+                double output = 0;
+
+                for (Controller controller : controllers) {
+                    output += controller.calculate(target, error);
+                }
+
+                return output;
+            }
+
+            @Override
+            public void reset() {
+                for (Controller controller : controllers) {
+                    controller.reset();
+                }
+            }
+        };
+    }
+
+    /**
+     * Provide a constant output in the direction of the error.
+     */
+    static Controller staticFeedforward(Supplier<Double> kS) {
+        return (target, error) -> kS.get() * Math.signum(error);
+    }
+
+    /**
+     * Provide a constant output in the direction of the target.
+     */
+    static Controller staticTargetFeedforward(Supplier<Double> kS) {
+        return (target, error) -> kS.get() * Math.signum(target);
+    }
+
+    /**
+     * Provide a constant output proportional to the target.
+     */
+    static Controller proportionalFeedforward(Supplier<Double> kV) {
+        return (target, error) -> kV.get() * target;
+    }
+
+    /**
+     * Provide a constant output proportional to the error.
+     */
+    static Controller proportional(Supplier<Double> kP) {
+        return (target, error) -> kP.get() * error;
+    }
+
+    class TimedController implements Controller {
+        double previousTime;
+        double dt;
+
+        @Override
+        public double calculate(double target, double error) {
+            if (previousTime == 0) {
+                previousTime = System.nanoTime();
+                return 0;
+            }
+            dt = (System.nanoTime() - previousTime) * 1e-9;
+            previousTime = System.nanoTime();
+            return 0;
+        }
+
+        @Override
+        public void reset() {
+            previousTime = 0;
+            dt = 0;
+        }
+    }
+
+    static Controller integral(Supplier<Double> kI) {
+        return new TimedController() {
+            double integral = 0;
+
+            @Override
+            public double calculate(double target, double error) {
+                super.calculate(target, error);
+                integral += error * dt;
+                return kI.get() * integral;
+            }
+
+            @Override
+            public void reset() {
+                super.reset();
+                previousTime = 0;
+            }
+        };
+    }
+
+    static Controller integral(Supplier<Double> kI, Supplier<Double> iZone, Supplier<Double> decay, Supplier<Double> maxI) {
+        return new TimedController() {
+            double integral = 0;
+
+            @Override
+            public double calculate(double target, double error) {
+                super.calculate(target, error);
+
+                if (Math.abs(error) < iZone.get()) {
+                    integral *= decay.get();
+                    integral += error * dt;
+                    double cap = maxI.get();
+                    integral = Math.max(-cap, Math.min(cap, integral));
+                }
+                return kI.get() * integral;
+            }
+
+            @Override
+            public void reset() {
+                super.reset();
+                integral = 0;
+            }
+        };
+    }
+
+    static Controller derivative(Supplier<Double> kD) {
+        return new TimedController() {
+            double prevError = 0;
+            boolean firstUpdate = true;
+
+            @Override
+            public double calculate(double target, double error) {
+                super.calculate(target, error);
+
+                if (dt < 1e-3 || firstUpdate) {
+                    firstUpdate = false;
+                    prevError = error;
+                    return 0;
+                }
+                double output = kD.get() * (error - prevError) / dt;
+                prevError = error;
+                return output;
+            }
+
+            @Override
+            public double calculate(double target, double error, double derivative) {
+                return kD.get() * -derivative;
+            }
+
+            @Override
+            public void reset() {
+                super.reset();
+                prevError = 0;
+                firstUpdate = true;
+            }
+        };
+    }
+
     default Controller plus(Controller other) {
         return new Controller() {
             @Override
             public double calculate(double target, double error) {
-                return Controller.this.calculate(target, error) + other.calculate(target, error);
+                return Controller.this.calculate(target, error)
+                        + other.calculate(target, error);
+            }
+
+            @Override
+            public double calculate(double target, double error, double derivative) {
+                return Controller.this.calculate(target, error, derivative)
+                        + other.calculate(target, error, derivative);
             }
 
             @Override
@@ -51,7 +201,14 @@ public interface Controller {
         return new Controller() {
             @Override
             public double calculate(double target, double error) {
-                return Controller.this.calculate(target, error) - other.calculate(target, error);
+                return Controller.this.calculate(target, error)
+                        - other.calculate(target, error);
+            }
+
+            @Override
+            public double calculate(double target, double error, double derivative) {
+                return Controller.this.calculate(target, error, derivative)
+                        - other.calculate(target, error, derivative);
             }
 
             @Override
@@ -70,9 +227,12 @@ public interface Controller {
             }
 
             @Override
-            public void reset() {
-                Controller.this.reset();
+            public double calculate(double target, double error, double derivative) {
+                return Controller.this.calculate(target, error, derivative) * scalar;
             }
+
+            @Override
+            public void reset() { Controller.this.reset(); }
         };
     }
 }
