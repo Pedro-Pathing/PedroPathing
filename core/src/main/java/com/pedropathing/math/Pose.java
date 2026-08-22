@@ -75,14 +75,14 @@ public class Pose {
     }
 
     public Pose exp(Twist twist, double time) {
-        if (twist.omega() < 1e-9) return exp(twist.toVelocity(heading), time);
+        if (Math.abs(twist.omega()) < 1e-9) return exp(twist.toVelocity(heading), time);
         double theta = twist.omega() * time;
         double sin = Math.sin(theta);
         double cos = Math.cos(theta);
         Vector2D localDeltas = Vector2D.cartesian(
                 (sin * twist.vx() - (1 - cos) * twist.vy()) / twist.omega(),
                 ((1 - cos) * twist.vx() + sin * twist.vy()) / twist.omega());
-        Vector2D globalDeltas = localDeltas.transform(Matrix.rotation(heading)); // TODO: Implement Matrix2D or smth
+        Vector2D globalDeltas = localDeltas.transform(Matrix.rotation(heading));
         return new Pose(x + globalDeltas.x(), y + globalDeltas.y(), heading + theta);
     }
 

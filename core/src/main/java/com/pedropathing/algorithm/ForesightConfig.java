@@ -90,6 +90,7 @@ public final class ForesightConfig {
 
     public final ConfigVar<Matrix> linearBrakeCoefficients = ConfigVar.required();
     public final ConfigVar<Matrix> quadraticBrakeCoefficients = ConfigVar.required();
+    public final ConfigVar<Vector2D> headingBrakeCoefficients = ConfigVar.required();
 
     public final ConfigVar<Boolean> cosineScale = ConfigVar.of(true);
     public final ConfigVar<Boolean> turnBeforeDriving = ConfigVar.of(false);
