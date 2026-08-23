@@ -1,8 +1,8 @@
 package com.pedropathing.algorithm;
 
 import static com.pedropathing.utils.Angle.normalizeSigned;
+import static com.pedropathing.utils.Angle.turnDirection;
 
-import com.pedropathing.controllers.Controller;
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.drivetrain.Drivetrain;
 import com.pedropathing.localization.MotionState;
@@ -31,38 +31,9 @@ public class Foresight implements Algorithm {
     private double headingError, translationalError, targetVelocity;
     private boolean busy = false;
 
-    public final Controller headingController;
-    public final Controller forwardTranslationalController;
-    public final Controller strafeTranslationalController;
-    public final Controller brakeController;
-    public final Controller coastController;
-
     public Foresight(ForesightConfig config) {
         this.config = config;
         this.allocator = new ForesightPowerAllocator(config);
-
-        this.headingController = Controller.sum(
-                Controller.proportional(config.headingProportional),
-                Controller.derivative(config.headingDerivative),
-                Controller.staticFeedforward(config.headingStatic)
-        );
-        this.forwardTranslationalController = Controller.sum(
-                Controller.proportional(config.forwardTranslationalProportional),
-                Controller.staticFeedforward(config.forwardTranslationalStatic)
-        );
-        this.strafeTranslationalController = Controller.sum(
-                Controller.proportional(config.strafeTranslationalProportional),
-                Controller.staticFeedforward(config.strafeTranslationalStatic)
-        );
-        this.brakeController = Controller.sum(
-                Controller.proportional(config.brakeProportional),
-                Controller.staticFeedforward(config.brakeStatic)
-        );
-        this.coastController = Controller.sum(
-                Controller.proportional(config.coastProportional),
-                Controller.proportionalFeedforward(config.coastFeedforward),
-                Controller.staticTargetFeedforward(config.coastStatic)
-        );
     }
 
     @Override
@@ -123,8 +94,9 @@ public class Foresight implements Algorithm {
         double velocityToBrakeInTime = velocityInversion.first();
         double targetAcceleration = velocityInversion.second();
 
-        double projectedHeadingPower = headingFeedback(state.pose().heading(), projectedTargetHeading, 0);
-        double currentHeadingPower = headingFeedback(state.pose().heading(), targetHeading, state.velocity().omega);
+        double projectedHeadingPower = headingFeedback(targetHeading, projectedTargetHeading, 0, false);
+        double currentHeadingPower = headingFeedback(state.pose().heading(), targetHeading, state.velocity().omega, false);
+        projectedHeadingPower += config.headingStaticFF.get().calculate(0, turnDirection(state.pose().heading(), projectedTargetHeading));
 
         Vector2D drive = projectedTangent.times(drive(isBraking, velocityToBrakeInTime, targetAcceleration, deltaTime,
                 remainingDistance, angleToTangent, tangentialSpeed));
@@ -181,7 +153,7 @@ public class Foresight implements Algorithm {
         closestPose = target;
         Matrix headingMatrix = Matrix.rotation(state.pose().heading());
         Pose projectedPose = state.pose().plus(getBrakeDisplacement(state.twist(), headingMatrix).toPose());
-        double headingCorrection = headingFeedback(state.pose().heading(), target.heading(), state.twist().omega());
+        double headingCorrection = headingFeedback(state.pose().heading(), target.heading(), state.twist().omega(), true);
         Vector2D displacement = target.minus(projectedPose).toVector2D();
 
         //TODO: Cache
@@ -240,9 +212,10 @@ public class Foresight implements Algorithm {
         return Pair.of(maxVel, -maxVel / (2 * maxVel * k1 + k2));
     }
 
-    private double headingFeedback(double currentHeading, double targetHeading, double angularVelocity) {
+    private double headingFeedback(double currentHeading, double targetHeading, double angularVelocity, boolean staticFF) {
         headingError = normalizeSigned(targetHeading - currentHeading);
-        return headingController.calculate(0, headingError, angularVelocity);
+        return config.headingFeedback.get().calculate(0, headingError, angularVelocity) +
+                (staticFF ? config.headingStaticFF.get().calculate(0, turnDirection(headingError)) : 0);
     }
 
     public double drive(boolean isBraking,
@@ -253,7 +226,7 @@ public class Foresight implements Algorithm {
         targetVelocity = Math.min(profiledTargetVelocity, maxAchievableVelocity);
 
         if (!isBraking) return coast(tangentialVel, remainingDistance, deltaTime, maxAchievableVelocity);
-        return brakeController.calculate(targetVelocity, 0);
+        return config.brake.get().calculate(targetVelocity, 0);
     }
 
     public Vector2D centripetalEffort(double speed, double curvature, Matrix headingMatrix) {
@@ -291,7 +264,7 @@ public class Foresight implements Algorithm {
 
         double error = Math.max(0, targetVel);
         targetVelocity = targetVel;
-        return coastController.calculate(feedforwardVelocity, error);
+        return config.coast.get().calculate(feedforwardVelocity, error);
     }
 
     private double excessVelAfterCoast(double remainingDistance, double theta) {
@@ -307,8 +280,8 @@ public class Foresight implements Algorithm {
 
         Vector2D bodyFrameError = displacement.transform(heading.transpose());
         return Vector2D.cartesian(
-                forwardTranslationalController.calculate(0, bodyFrameError.x()),
-                strafeTranslationalController.calculate(0, bodyFrameError.y())
+                config.forwardTranslational.get().calculate(0, bodyFrameError.x()),
+                config.strafeTranslational.get().calculate(0, bodyFrameError.y())
         ).projectOnto(bodyFrameError).transform(heading);
     }
 

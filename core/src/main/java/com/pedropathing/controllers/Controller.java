@@ -56,10 +56,24 @@ public interface Controller {
     }
 
     /**
+     * Provide a constant output in the direction of the error.
+     */
+    static Controller staticFeedforward(double kS) {
+        return (target, error) -> kS * Math.signum(error);
+    }
+
+    /**
      * Provide a constant output in the direction of the target.
      */
     static Controller staticTargetFeedforward(Supplier<Double> kS) {
         return (target, error) -> kS.get() * Math.signum(target);
+    }
+
+    /**
+     * Provide a constant output in the direction of the target.
+     */
+    static Controller staticTargetFeedforward(double kS) {
+        return (target, error) -> kS * Math.signum(target);
     }
 
     /**
@@ -70,10 +84,24 @@ public interface Controller {
     }
 
     /**
+     * Provide a constant output proportional to the target.
+     */
+    static Controller proportionalFeedforward(double kV) {
+        return (target, error) -> kV * target;
+    }
+
+    /**
      * Provide a constant output proportional to the error.
      */
     static Controller proportional(Supplier<Double> kP) {
         return (target, error) -> kP.get() * error;
+    }
+
+    /**
+     * Provide a constant output proportional to the error.
+     */
+    static Controller proportional(double kP) {
+        return (target, error) -> kP * error;
     }
 
     class TimedController implements Controller {
