@@ -56,4 +56,53 @@ public final class Utils {
         if (rhs.isEmpty()) return lhs;
         return Stream.concat(lhs.stream(), rhs.stream()).collect(toUnmodifiableList());
     }
+
+    public static double[] linearFit(Double[] x, Double[] y) {
+        int n = x.length;
+        double sumX = 0, sumXY = 0, sumY = 0, sumX2 = 0;
+
+        for (int i = 0; i < n; i++) {
+            sumX += x[i];
+            sumY += y[i];
+            sumXY += x[i] * y[i];
+            sumX2 += x[i] * x[i];
+        }
+
+        double m = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+        double b = (sumY - m * sumX) / n;
+        return new double[] {b, m};
+    }
+
+    public static double[] quadraticFit(List<double[]> samples) {
+        double s11 = 0.0;
+        double s12 = 0.0;
+        double s22 = 0.0;
+
+        double t1 = 0.0;
+        double t2 = 0.0;
+
+        for (double[] sample : samples) {
+            double x1 = sample[0];
+            double d = sample[1];
+
+            double x2 = x1 * x1;
+
+            s11 += x1 * x1;
+            s12 += x1 * x2;
+            s22 += x2 * x2;
+
+            t1 += x1 * d;
+            t2 += x2 * d;
+        }
+
+        double det = s11 * s22 - s12 * s12;
+        if (Math.abs(det) < 1e-12) {
+            throw new IllegalArgumentException("Regression matrix is singular.");
+        }
+
+        double b = (t1 * s22 - t2 * s12) / det;
+        double a = (s11 * t2 - s12 * t1) / det;
+
+        return new double[]{b, a};
+    }
 }
