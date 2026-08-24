@@ -48,6 +48,10 @@ public class Angle {
         return Math.min(normalize(one - two), normalize(two - one));
     }
 
+    public static double error(double current, double target) {
+        return normalizeSigned(target - current);
+    }
+
     /**
      * This gets the direction to turn between a start heading and an end heading. Positive is left
      * and negative is right. This operates in radians.

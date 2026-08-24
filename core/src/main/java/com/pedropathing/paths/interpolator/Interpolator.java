@@ -4,6 +4,8 @@
  */
 package com.pedropathing.paths.interpolator;
 
+import static com.pedropathing.utils.Angle.error;
+
 import com.pedropathing.math.Pose;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.paths.curves.Curve;
@@ -50,8 +52,7 @@ public interface Interpolator {
     static Interpolator linear(double start, double end) {
         double finalStart = Angle.normalize(start);
         double finalEnd = Angle.normalize(end);
-        double deltaHeading =
-                Angle.turnDirection(finalStart, finalEnd) * Angle.smallestDifference(finalStart, finalEnd);
+        double deltaHeading = error(finalStart, finalEnd);
 
         return new Interpolator() {
             @Override
