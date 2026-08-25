@@ -25,13 +25,11 @@ public abstract class Path {
 
     public abstract double heading(double t);
 
-    public abstract double headingDerivative(double t);
-
     protected abstract boolean hasHeading();
 
     public final List<PathSegment> getSegments() {
         if (!hasHeading()) throw new IllegalStateException("Cannot resolve segments: path has no heading.");
-        return getSegments(PathSegment.HeadingProvider.of(this::heading, this::headingDerivative), listOf());
+        return getSegments(PathSegment.HeadingProvider.of(this::heading), listOf());
     }
 
     public Pose endPose() {

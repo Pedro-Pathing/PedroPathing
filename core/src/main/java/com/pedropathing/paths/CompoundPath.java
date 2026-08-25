@@ -40,13 +40,6 @@ public class CompoundPath extends Path {
     }
 
     @Override
-    public double headingDerivative(double t) {
-        TValue.check(t);
-        if (interpolator != null) return interpolator.interpolate(curve, t);
-        return paths.get(t).heading(paths.localT(t));
-    }
-
-    @Override
     public boolean hasHeading() {
         if (interpolator != null) return true;
         return paths.segments().stream().map(Piecewise.Segment::value).allMatch(Path::hasHeading);
@@ -72,18 +65,7 @@ public class CompoundPath extends Path {
         double childLength = segment.value().curve.length();
         double segStart = segment.startT();
         double ratio = childLength / totalLength;
-
-        return new PathSegment.HeadingProvider() {
-            @Override
-            public double heading(double t) {
-                return parentHeading.heading(segStart + t * ratio);
-            }
-
-            @Override
-            public double derivative(double t) {
-                return parentHeading.derivative(segStart + t * ratio);
-            }
-        };
+        return t -> parentHeading.heading(segStart + t * ratio);
     }
 
     @Override

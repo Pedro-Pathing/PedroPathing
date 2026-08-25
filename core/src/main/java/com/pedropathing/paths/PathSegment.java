@@ -28,11 +28,6 @@ public final class PathSegment {
         return heading.heading(t);
     }
 
-    public double headingDerivative(double t) {
-        TValue.check(t);
-        return heading.derivative(t);
-    }
-
     public Pose get(double t) {
         TValue.check(t);
         return curve.get(t).toPose(heading(t));
@@ -49,20 +44,8 @@ public final class PathSegment {
     public interface HeadingProvider {
         double heading(double t);
 
-        double derivative(double t);
-
-        static HeadingProvider of(DoubleUnaryOperator heading, DoubleUnaryOperator derivative) {
-            return new HeadingProvider() {
-                @Override
-                public double heading(double t) {
-                    return heading.applyAsDouble(t);
-                }
-
-                @Override
-                public double derivative(double t) {
-                    return derivative.applyAsDouble(t);
-                }
-            };
+        static HeadingProvider of(DoubleUnaryOperator heading) {
+            return heading::applyAsDouble;
         }
     }
 }

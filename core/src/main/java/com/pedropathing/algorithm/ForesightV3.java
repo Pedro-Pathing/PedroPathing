@@ -190,7 +190,8 @@ public class ForesightV3 implements Algorithm {
         double headingDisp = twist.omega() * Math.abs(twist.omega()) * config.headingBrakeCoefficients.get().y() +
                 twist.omega() * config.headingBrakeCoefficients.get().x();
         Vector2D bodyDisp = quadratic.plus(linear);
-        return new Pose(0, 0, heading).exp(new Twist(bodyDisp.x(), bodyDisp.y(), headingDisp));
+        Pose worldPose = new Pose(0, 0, heading).exp(new Twist(bodyDisp.x(), bodyDisp.y(), headingDisp));
+        return new Pose(worldPose.x(), worldPose.y(), headingDisp);
     }
 
     public double getVelocityToBrakeInTime(double distanceRemaining, Vector2D closestTangent, double heading) {

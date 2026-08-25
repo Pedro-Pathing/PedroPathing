@@ -31,12 +31,4 @@ public class PiecewiseInterpolator implements Interpolator {
         if (t < 0.0 || t > 1.0) throw new IllegalArgumentException("t must be between 0.0 and 1.0.");
         return interpolators.ceilingEntry(t).getValue().interpolate(curve, t);
     }
-
-    @Override
-    public double differentiate(Curve curve, double t) {
-        if (greatestT < 1.0)
-            throw new IllegalStateException("piecewise interpolation must be fully defined before interpolating.");
-        if (t < 0.0 || t > 1.0) throw new IllegalArgumentException("t must be between 0.0 and 1.0.");
-        return interpolators.ceilingEntry(t).getValue().differentiate(curve, t);
-    }
 }

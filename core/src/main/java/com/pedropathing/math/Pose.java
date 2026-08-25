@@ -82,7 +82,7 @@ public class Pose {
         Vector2D localDeltas = Vector2D.cartesian(
                 (sin * twist.vx() - (1 - cos) * twist.vy()) / twist.omega(),
                 ((1 - cos) * twist.vx() + sin * twist.vy()) / twist.omega());
-        Vector2D globalDeltas = localDeltas.transform(Matrix.rotation(heading));
+        Vector2D globalDeltas = localDeltas.rotate(heading);
         return new Pose(x + globalDeltas.x(), y + globalDeltas.y(), heading + theta);
     }
 
