@@ -64,7 +64,7 @@ public class ForesightV3 implements Algorithm {
             closestNormal = pathTracker.current().curve.leftNormal(closestT);
             tangentialSpeed = state.velocity().toVector2D().dot(closestTangent);
             translationalError = state.pose().distance(closestPose);
-            headingError = normalizeSigned(targetHeading - state.pose().heading());
+            this.headingError = normalizeSigned(targetHeading - state.pose().heading());
         }
 
         Curve curve = pathTracker.current().curve;
@@ -88,10 +88,18 @@ public class ForesightV3 implements Algorithm {
             return calculatePath(drivetrain, pathTracker, state, deltaTime);
         }
 
-        double projectedHeadingPower = headingFeedback(closestPose.heading() + projectedPose.heading(),
-                projectedTargetHeading + state.pose().heading(), false).second();
-        double currentHeadingPower = headingFeedback(state.pose().heading(), targetHeading, false).second();
         double headingError = normalizeSigned(projectedTargetHeading - projectedPose.heading());
+        double currentHeadingError = normalizeSigned(targetHeading - state.pose().heading());
+
+        double totalHeadingPower = config.headingFeedback.get().calculate(0, headingError);
+        double headingFeedbackPower = config.headingFeedback.get().calculate(0, currentHeadingError);
+        double projectedHeadingPower = totalHeadingPower - headingFeedbackPower;
+
+        if (projectedHeadingPower * headingFeedbackPower < 0) {
+            projectedHeadingPower = totalHeadingPower;
+            headingFeedbackPower = 0;
+        }
+
         projectedHeadingPower += config.headingStaticFF.get().calculate(0, turnDirection(headingError));
 
         Vector2D drive = projectedTangent.times(drive(isBraking, velocityToBrakeInTime, deltaTime,
@@ -132,7 +140,7 @@ public class ForesightV3 implements Algorithm {
                 projectedHeadingPower,
                 translational,
                 drive,
-                currentHeadingPower,
+                headingFeedbackPower,
                 translationalError,
                 headingError
         );
