@@ -3,14 +3,13 @@ package com.pedropathing.revhub.drivetrains;
 import android.annotation.SuppressLint;
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.drivetrain.Drivetrain;
-import com.pedropathing.localization.MotionState;
-import com.pedropathing.math.Vector2D;
 import com.pedropathing.utils.Utils;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-import com.qualcomm.robotcore.util.RobotLog;
+
+import java.util.Arrays;
 
 public class Mecanum implements Drivetrain {
     private final boolean manualBrakeMode;
@@ -45,14 +44,20 @@ public class Mecanum implements Drivetrain {
 
     @SuppressLint("DefaultLocale")
     public void applyDrive(DrivePowers powers) {
-        System.arraycopy(computeWheelPowers(powers), 0, wheelPowers, 0, wheelPowers.length);
+        double[] wheelPowers = computeWheelPowersUnnormalized(powers);
+
+        double maxPower = 1.0;
+        for (double power : wheelPowers) {
+            maxPower = Math.max(maxPower, Math.abs(power));
+        }
 
         for (int i = 0; i < wheelPowers.length; i++) {
-            motors[i].setPower(wheelPowers[i]);
+            this.wheelPowers[i] = wheelPowers[i] / maxPower;
+            motors[i].setPower(this.wheelPowers[i]);
         }
     }
 
-    public double[] computeWheelPowers(DrivePowers powers) {
+    public double[] computeWheelPowersUnnormalized(DrivePowers powers) {
         double[] wheelPowers = new double[4];
         double forward = powers.forward();
         double strafe = powers.strafe();
@@ -63,14 +68,10 @@ public class Mecanum implements Drivetrain {
         double bl = forward + strafe - turn;
         double br = forward - strafe + turn;
 
-        double max = Math.max(1.0, Math.max(Math.abs(fl), Math.max(Math.abs(bl), Math.max(Math.abs(fr), Math.abs(br)))));
-
-        double scale = 1 / max;
-
-        wheelPowers[FL] = fl * scale;
-        wheelPowers[FR] = fr * scale;
-        wheelPowers[BL] = bl * scale;
-        wheelPowers[BR] = br * scale;
+        wheelPowers[FL] = fl;
+        wheelPowers[FR] = fr;
+        wheelPowers[BL] = bl;
+        wheelPowers[BR] = br;
 
         return wheelPowers;
     }
@@ -79,8 +80,8 @@ public class Mecanum implements Drivetrain {
     public double maxScaling(DrivePowers current, DrivePowers delta) {
         double lambda = 1.0;
 
-        double[] currentPowers = computeWheelPowers(current);
-        double[] deltaPowers = computeWheelPowers(delta);
+        double[] currentPowers = computeWheelPowersUnnormalized(current);
+        double[] deltaPowers = computeWheelPowersUnnormalized(delta);
 
         for (int i = 0; i < 4; i++) {
             double a = currentPowers[i];
