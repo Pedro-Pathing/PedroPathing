@@ -93,14 +93,22 @@ public class ForesightV3 implements Algorithm {
 
         double totalHeadingPower = config.headingFeedback.get().calculate(0, headingError);
         double headingFeedbackPower = config.headingFeedback.get().calculate(0, currentHeadingError);
-        double projectedHeadingPower = totalHeadingPower - headingFeedbackPower;
+        double headingFeedforwardPower;
 
-        if (projectedHeadingPower * headingFeedbackPower < 0) {
-            projectedHeadingPower = totalHeadingPower;
+        if (Math.abs(totalHeadingPower) <= 1e-3) {
             headingFeedbackPower = 0;
+            headingFeedforwardPower = 0;
+        } else if (totalHeadingPower * headingFeedbackPower < 0) {
+            headingFeedforwardPower = totalHeadingPower;
+            headingFeedbackPower = 0;
+        } else if (Math.abs(headingFeedbackPower) >= Math.abs(totalHeadingPower)) {
+            headingFeedforwardPower = 0;
+            headingFeedbackPower = totalHeadingPower;
+        } else {
+            headingFeedforwardPower = totalHeadingPower - headingFeedbackPower;
         }
 
-        projectedHeadingPower += config.headingStaticFF.get().calculate(0, turnDirection(headingError));
+        headingFeedforwardPower += config.headingStaticFF.get().calculate(0, turnDirection(headingError));
 
         Vector2D drive = projectedTangent.times(drive(isBraking, velocityToBrakeInTime, deltaTime,
                 projectedRemainingDist, angleToTangent, tangentialSpeed));
@@ -137,7 +145,7 @@ public class ForesightV3 implements Algorithm {
                 drivetrain,
                 state,
                 Vector2D.zero(),
-                projectedHeadingPower,
+                headingFeedforwardPower,
                 translational,
                 drive,
                 headingFeedbackPower,
