@@ -171,9 +171,8 @@ public class ForesightV3 implements Algorithm {
 
         Vector2D displacement = target.minus(projectedPose).toVector2D();
 
-        //TODO: Cache
         translationalError = target.distance(state.pose());
-        if (translationalError < 1e-9) {
+        if (displacement.isZero()) {
             tangentialSpeed = 0;
             closestTangent = Vector2D.zero();
         } else {
@@ -189,7 +188,6 @@ public class ForesightV3 implements Algorithm {
                 closestTangent
         );
         Vector2D translational = translationalResult.second();
-        translationalError = translationalResult.first();
 
         if (useScaling) {
             double translationalScale = config.holdPointTranslationalScaling.get();
