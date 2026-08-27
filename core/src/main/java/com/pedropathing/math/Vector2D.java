@@ -86,10 +86,6 @@ public class Vector2D {
         return x * other.x + y * other.y;
     }
 
-    public Vector2D cross(Vector2D other) {
-        return new Vector2D(x * other.y - y * other.x, x * other.x + y * other.y);
-    }
-
     public double det(Vector2D other) {
         return x * other.y - y * other.x;
     }
@@ -120,7 +116,12 @@ public class Vector2D {
     }
 
     public double angleTo(Vector2D other) {
-        return Math.acos(dot(other) / (magnitude() * other.magnitude()));
+        if (this.isZero() || other.isZero()) {
+            throw new IllegalArgumentException("Cannot calculate angle to or from a zero vector.");
+        }
+        double cosTheta = dot(other) / (magnitude() * other.magnitude());
+        cosTheta = Math.max(-1.0, Math.min(1.0, cosTheta));
+        return Math.acos(cosTheta);
     }
 
     public double distance(Vector2D other) {

@@ -153,7 +153,7 @@ public class Foresight implements Algorithm {
         closestPose = target;
         Matrix headingMatrix = Matrix.rotation(state.pose().heading());
         Pose projectedPose = state.pose().plus(getBrakeDisplacement(state.twist(), headingMatrix).toPose());
-        double headingCorrection = headingFeedback(state.pose().heading(), target.heading(), state.twist().omega(), true);
+        double headingCorrection = headingFeedback(state.pose().heading(), target.heading(), state.twist().omega, true);
         Vector2D displacement = target.minus(projectedPose).toVector2D();
 
         //TODO: Cache

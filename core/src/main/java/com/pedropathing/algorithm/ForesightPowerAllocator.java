@@ -96,9 +96,9 @@ public class ForesightPowerAllocator {
         Vector2D robotFrameDrivePower =
                 fieldRelativeDrivePower.rotate(-state.pose().heading());
         double forward = Control.clampBrakingPower(
-                robotFrameDrivePower.x(), state.twist().vx(), config.maxBrakingPower.get());
+                robotFrameDrivePower.x(), state.twist().vx, config.maxBrakingPower.get());
         double strafe = Control.clampBrakingPower(
-                robotFrameDrivePower.y(), state.twist().vy(), config.maxBrakingPower.get());
+                robotFrameDrivePower.y(), state.twist().vy, config.maxBrakingPower.get());
         return new DrivePowers(forward, strafe, headingPower);
     }
 

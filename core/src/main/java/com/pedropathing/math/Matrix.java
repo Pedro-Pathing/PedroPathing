@@ -36,6 +36,25 @@ public class Matrix {
         }
     }
 
+    public Matrix(double[] data, int rows, int cols) {
+        if (data == null) {
+            throw new IllegalArgumentException("Data array cannot be null");
+        }
+        if (rows <= 0 || cols <= 0) {
+            throw new IllegalArgumentException("Rows and columns must be positive integers");
+        }
+        if (data.length != rows * cols) {
+            throw new IllegalArgumentException(String.format(
+                    "Array length %d does not match specified dimensions %dx%d (expected %d elements)",
+                    data.length, rows, cols, rows * cols));
+        }
+
+        this.rows = rows;
+        this.cols = cols;
+        this.data = new double[rows * cols];
+        System.arraycopy(data, 0, this.data, 0, data.length);
+    }
+
     public static Matrix diag(double... eigenvalues) {
         double[][] data = new double[eigenvalues.length][eigenvalues.length];
         for (int i = 0; i < eigenvalues.length; i++) data[i][i] = eigenvalues[i];
@@ -43,7 +62,7 @@ public class Matrix {
     }
 
     public static Matrix diag(Vector vector) {
-        return diag(vector.elements());
+        return diag(vector.elements);
     }
 
     public static Matrix diag(Vector2D vector) {
@@ -178,7 +197,7 @@ public class Matrix {
      */
     public Matrix minus(Matrix other) {
         if (this.rows != other.rows || this.cols != other.cols)
-            throw new IllegalArgumentException("Matrix dimensions must match for addition.");
+            throw new IllegalArgumentException("Matrix dimensions must match for subtraction.");
         double[][] data = new double[rows][cols];
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
@@ -277,7 +296,7 @@ public class Matrix {
     public Vector[] getRows() {
         Vector[] rows = new Vector[this.rows];
 
-        for (int j = 0; j < rows.length; j++) rows[j] = new Vector(getCol(j));
+        for (int j = 0; j < rows.length; j++) rows[j] = new Vector(getRow(j));
 
         return rows;
     }
@@ -321,11 +340,12 @@ public class Matrix {
         double[][] data = new double[rows][cols];
 
         for (int i = 0; i < rows; i++) {
-            int j = i;
-            if (j == srcRow) j = destRow;
-            else if (j == destRow) j = srcRow;
-            data[j] = getRow(j);
+            data[i] = getRow(i);
         }
+
+        double[] temp = data[srcRow];
+        data[srcRow] = data[destRow];
+        data[destRow] = temp;
 
         return new Matrix(data);
     }
@@ -347,9 +367,12 @@ public class Matrix {
         double[][] data = new double[rows][cols];
 
         for (int i = 0; i < rows; i++) {
-            if (i != srcRow) data[i] = getRow(i);
-            else {
-                for (int j = 0; j < cols; j++) data[i][j] = get(i, j) + get(destRow, j) * scalar;
+            if (i == destRow) {
+                for (int j = 0; j < cols; j++) {
+                    data[i][j] = get(destRow, j) + get(srcRow, j) * scalar;
+                }
+            } else {
+                data[i] = getRow(i);
             }
         }
 
@@ -638,8 +661,8 @@ public class Matrix {
         Vector[] orthogonalBasis = Vector.gramSchmidt(colVectors);
 
         double[][] Q_vals = new double[rows][cols];
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
+        for (int j = 0; j < cols; j++) {
+            for (int i = 0; i < rows; i++) {
                 Q_vals[i][j] = orthogonalBasis[j].get(i);
             }
         }
@@ -647,8 +670,11 @@ public class Matrix {
 
         double[][] R_vals = new double[cols][cols];
         for (int i = 0; i < cols; i++) {
-            for (int j = 0; j < cols; j++) {
-                R_vals[i][j] = new Vector(Q.getCol(i)).dot(new Vector(getCol(j)));
+            Vector q_i = new Vector(Q.getCol(i));
+
+            for (int j = i; j < cols; j++) {
+                Vector a_j = new Vector(getCol(j));
+                R_vals[i][j] = q_i.dot(a_j);
             }
         }
         Matrix R = new Matrix(R_vals);
@@ -657,17 +683,26 @@ public class Matrix {
     }
 
     public Matrix choleskyDecomposition() {
+        if (rows != cols) {
+            throw new IllegalArgumentException("Cholesky decomposition requires a square matrix.");
+        }
+
         double[][] L_vals = new double[rows][rows];
 
         for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < rows; j++) {
+            for (int j = 0; j <= i; j++) {
                 double sum = get(i, j);
-                for (int k = 0; k < j; k++) sum -= L_vals[i][k] * L_vals[j][k];
+
+                for (int k = 0; k < j; k++) {
+                    sum -= L_vals[i][k] * L_vals[j][k];
+                }
 
                 if (i == j) {
-                    if (sum <= 0)
+                    if (sum <= 0) {
                         throw new IllegalArgumentException(
-                                "Cannot use Cholesky decomposition on matrix that isn't positive-definite.");
+                                "Cannot use Cholesky decomposition on matrix that isn't positive-definite."
+                        );
+                    }
 
                     L_vals[i][j] = Math.sqrt(sum);
                 } else {
@@ -684,7 +719,7 @@ public class Matrix {
             throw new IllegalArgumentException("LU Decomposition requires a square matrix");
         }
 
-        Matrix U = this;
+        Matrix U = new Matrix(this.data, rows, cols);
         Matrix P = Matrix.identity(rows);
         double[][] L_vals = new double[rows][rows];
 
@@ -693,37 +728,44 @@ public class Matrix {
             double maxVal = Math.abs(U.get(r, r));
 
             for (int i = r + 1; i < rows; i++) {
-                if (Math.abs(U.get(i, r)) > maxVal) {
-                    maxVal = Math.abs(U.get(i, r));
+                double absVal = Math.abs(U.get(i, r));
+                if (absVal > maxVal) {
+                    maxVal = absVal;
                     pivotRow = i;
                 }
             }
 
             if (maxVal < 1e-7) {
-                throw new ArithmeticException("Matrix is singular");
+                throw new ArithmeticException("Matrix is singular or near-singular");
             }
 
             if (pivotRow != r) {
                 U = U.rowSwap(r, pivotRow);
                 P = P.rowSwap(r, pivotRow);
 
-                double[] tempRow = L_vals[r];
-                L_vals[r] = L_vals[pivotRow];
-                L_vals[pivotRow] = tempRow;
+                for (int k = 0; k < r; k++) {
+                    double temp = L_vals[r][k];
+                    L_vals[r][k] = L_vals[pivotRow][k];
+                    L_vals[pivotRow][k] = temp;
+                }
             }
+
+            double pivotVal = U.get(r, r);
 
             for (int r2 = r + 1; r2 < rows; r2++) {
                 if (U.get(r2, r) != 0.0) {
-                    double scalar = -U.get(r2, r) / U.get(r, r);
+                    double scalar = -U.get(r2, r) / pivotVal;
                     U = U.rowAdd(r, r2, scalar);
                     L_vals[r2][r] = -scalar;
                 }
             }
         }
 
-        for (int i = 0; i < rows; i++) L_vals[i][i] = 1.0;
-        Matrix L = new Matrix(L_vals);
+        for (int i = 0; i < rows; i++) {
+            L_vals[i][i] = 1.0;
+        }
 
+        Matrix L = new Matrix(L_vals);
         return new Matrix[] {P, L, U};
     }
 
@@ -733,14 +775,17 @@ public class Matrix {
      */
     @Override
     public String toString() {
+        if (rows == 0 || cols == 0) return "[]";
         StringBuilder builder = new StringBuilder("[");
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
                 builder.append(String.format(Locale.getDefault(), "%.5f, ", get(i, j)));
             }
-            builder.append("\b\b; ");
+            builder.setLength(builder.length() - 2);
+            builder.append("; ");
         }
-        builder.append("\b\b]");
+        builder.setLength(builder.length() - 2);
+        builder.append("]");
         return builder.toString();
     }
 
