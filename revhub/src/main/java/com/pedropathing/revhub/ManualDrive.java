@@ -32,7 +32,7 @@ public class ManualDrive {
 
     public static DrivePowers headingLock(Follower follower, PIDController headingPID, DrivePowers powers, double targetHeading) {
         double headingError = normalizeSigned(targetHeading - follower.pose().heading());
-        double power = headingPID.calculate(targetHeading, headingError, follower.twist().omega());
+        double power = headingPID.calculate(targetHeading, headingError, follower.twist().omega);
         return new DrivePowers(powers.forward(), powers.strafe(), power);
     }
 }
