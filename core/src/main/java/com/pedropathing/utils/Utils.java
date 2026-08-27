@@ -35,6 +35,27 @@ public final class Utils {
         return result;
     }
 
+    public static double lerp(double a, double b, double t) {
+        return (1 - t) * a + t * b;
+    }
+
+    public static double[] linspace(double a, double b, int samples) {
+        if (samples < 2) {
+            throw new IllegalArgumentException("Samples must be >= 2");
+        }
+        double[] result = new double[samples];
+        result[0] = a;
+        result[result.length - 1] = b;
+
+        double t;
+        for (int i = 1; i < samples - 1; i++) {
+            t = i / (samples - 1d);
+            result[i] = lerp(a, b, t);
+        }
+
+        return result;
+    }
+
     @SafeVarargs
     public static <T> List<T> listOf(T... elements) {
         if (elements.length == 0) return Collections.emptyList();

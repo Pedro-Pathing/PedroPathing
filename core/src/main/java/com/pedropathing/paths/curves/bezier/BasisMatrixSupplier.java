@@ -8,13 +8,13 @@ import com.pedropathing.math.Matrix;
 import java.util.HashMap;
 
 /**
- * The CharacteristicMatrixSupplier handles supply the characteristic matrices for splines in their matrix representations.
+ * The BasisMatrixSupplier handles supply the characteristic matrices for splines in their matrix representations.
  *
  * @author William Phomphakdee - 7462 Not to Scale Alumni
  * @author Havish Sripada - 12808 RevAmped Robotics
  * @version 0.0.3, 11/29/2025
  */
-public class CharacteristicMatrixSupplier {
+public class BasisMatrixSupplier {
     private static final HashMap<Integer, Matrix> bezierMatrices = new HashMap<>();
     private static boolean initialized = false;
 
@@ -22,7 +22,7 @@ public class CharacteristicMatrixSupplier {
      * This method sets up this class and caches some commonly used Bézier curves,
      * such as the quadratic and cubic Béziers.
      */
-    public void initialize() {
+    public void initialize(){
         if (!initialized) {
             getBezierCharacteristicMatrix(2); // quadratic bezier
             getBezierCharacteristicMatrix(3); // cubic bezier
@@ -66,12 +66,12 @@ public class CharacteristicMatrixSupplier {
     /**
      * This method generates the characteristic matrix based on the degree of a requested Bézier curve.
      * 2 for quadratic, 3 for cubic, 4 for quartic, 5 for quintic... etc.
-     * @param degree bezier curve's degree
+     * @param controlPointCount bezier curve's control point count
      * @return characteristic matrix of the Matrix class
      */
-    public static Matrix generateBezierCharacteristicMatrix(int degree) {
+    public static Matrix generateBezierCharacteristicMatrix(int controlPointCount){
         // get a square matrix that contains Pascal's triangle
-        double[][] outputVals = generatePascalTriangle(degree + 1);
+        double[][] outputVals = generatePascalTriangle(controlPointCount);
 
         // sample the last row and multiply all other rows by the corresponding value
         double[] sampledRow = outputVals[outputVals.length - 1];
@@ -86,13 +86,10 @@ public class CharacteristicMatrixSupplier {
 
     /**
      * This method gets a characteristic matrix that is stored. If it doesn't exist, generate and return it.
-     * @param degree bezier curve's degree
+     * @param controlPointCount bezier curve's degree
      * @return characteristic matrix of the Matrix class
      */
-    public static Matrix getBezierCharacteristicMatrix(int degree) {
-        if (!bezierMatrices.containsKey(degree)) {
-            bezierMatrices.put(degree, generateBezierCharacteristicMatrix(degree));
-        }
-        return bezierMatrices.get(degree);
+    public static Matrix getBezierCharacteristicMatrix(int controlPointCount){
+        return bezierMatrices.computeIfAbsent(controlPointCount, BasisMatrixSupplier::generateBezierCharacteristicMatrix);
     }
 }

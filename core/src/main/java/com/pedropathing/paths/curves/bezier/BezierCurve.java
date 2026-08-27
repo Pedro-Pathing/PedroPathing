@@ -4,7 +4,6 @@
  */
 package com.pedropathing.paths.curves.bezier;
 
-import static com.pedropathing.utils.Utils.binomial;
 import static com.pedropathing.utils.Utils.clamp;
 
 import com.pedropathing.math.Matrix;
@@ -14,6 +13,8 @@ import com.pedropathing.math.Vector2D;
 import com.pedropathing.paths.TValue;
 import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.utils.BijectiveMap;
+import com.pedropathing.utils.Utils;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -41,8 +42,7 @@ public class BezierCurve implements Curve {
     protected final int SEARCH_LIMIT = 10;
     private double length;
     private Matrix cachedMatrix;
-    private int[][] diffPowers;
-    private int[][] diffCoefficients;
+    private PolynomialMatrix tMatrix;
     protected BijectiveMap completionMap = new BijectiveMap();
 
     /**
@@ -100,12 +100,12 @@ public class BezierCurve implements Curve {
             controlPointMatrix[i] = new double[] {p.x(), p.y()};
         }
         Matrix controlMatrix = new Matrix(controlPointMatrix);
-        cachedMatrix = controlMatrix
+        this.cachedMatrix = controlMatrix
                 .transpose()
-                .times(CharacteristicMatrixSupplier.getBezierCharacteristicMatrix(this.controlPoints.size() - 1)
+                .times(BasisMatrixSupplier.getBezierCharacteristicMatrix(this.controlPoints.size() - 1)
                         .transpose());
-        diffPowers = initializeDegreeArray(controlPoints.size() - 1);
-        diffCoefficients = initializeCoefficientArray(diffPowers, controlPoints.size() - 1);
+
+        this.tMatrix = new PolynomialMatrix(this.controlPoints.size());
     }
 
     /**
@@ -187,70 +187,6 @@ public class BezierCurve implements Curve {
     }
 
     /**
-     * This method gets the t-vector at the specified differentiation level.
-     * @param t t value of the parametric curve; [0, 1]
-     * @param diffLevel specifies how many differentiations are done
-     * @return t vector
-     */
-    public Vector getTVector(double t, int diffLevel) {
-        if (diffLevel == 0) return getTVector(t);
-        int[] degrees = this.diffPowers[diffLevel];
-        double[] powers = new double[this.controlPoints.size()];
-
-        powers[0] = 1;
-        for (int i = 1; i < powers.length; i++) {
-            powers[i] = t * powers[i - 1];
-        }
-
-        double[] output = new double[powers.length];
-
-        for (int i = 0; i < degrees.length; i++) {
-            output[i] = powers[degrees[i]] * this.diffCoefficients[diffLevel][i];
-        }
-
-        return new Vector(output);
-    }
-
-    private static Vector getTVector(int[][] diffPowers, int[][] diffCoefficients, double t, int diffLevel) {
-        if (diffLevel == 0) return getTVector(diffCoefficients[0].length, t);
-        int[] degrees = diffPowers[diffLevel];
-        double[] powers = new double[diffCoefficients[0].length];
-
-        powers[0] = 1;
-        for (int i = 1; i < powers.length; i++) {
-            powers[i] = t * powers[i - 1];
-        }
-
-        double[] output = new double[powers.length];
-
-        for (int i = 0; i < degrees.length; i++) {
-            output[i] = powers[degrees[i]] * diffCoefficients[diffLevel][i];
-        }
-
-        return new Vector(output);
-    }
-
-    public Vector getTVector(double t) {
-        double[] output = new double[controlPoints.size()];
-
-        for (int i = 0; i < output.length; i++) {
-            output[i] = Math.pow(t, i);
-        }
-
-        return new Vector(output);
-    }
-
-    private static Vector getTVector(int size, double t) {
-        double[] output = new double[size];
-
-        for (int i = 0; i < output.length; i++) {
-            output[i] = Math.pow(t, i);
-        }
-
-        return new Vector(output);
-    }
-
-    /**
      * This returns the point on the Bezier curve that is specified by the parametric t value. A
      * Bezier curve is a parametric function that returns points along it with t ranging from [0, 1],
      * with 0 being the beginning of the curve and 1 being at the end. The Follower will follow
@@ -304,7 +240,7 @@ public class BezierCurve implements Curve {
     }
 
     public Vector2D getDerivative(int n, double t) {
-        Vector outVel = cachedMatrix.times(getTVector(t, n));
+        Vector outVel = new Vector(this.cachedMatrix.times(this.tMatrix.getTMatrix(n, t)).getRow(0));
         return Vector2D.cartesian(outVel.get(0), outVel.get(1));
     }
 
@@ -391,40 +327,25 @@ public class BezierCurve implements Curve {
             throw new IllegalArgumentException("Too few control points");
         }
 
-        double[] tValues = new double[points.length];
-        tValues[0] = 0;
-        tValues[points.length - 1] = 1;
-        double increment = 1d / (points.length - 1);
+        double[] tValues = Utils.linspace(0, 1, points.length);
+        PolynomialMatrix polynomialMatrix = new PolynomialMatrix(points.length);
 
-        for (int i = 1; i < tValues.length - 1; i++) {
-            tValues[i] = tValues[i - 1] + increment;
-        }
+        Matrix bernstein = polynomialMatrix.getTMatrix(0, tValues).times(BasisMatrixSupplier.getBezierCharacteristicMatrix(points.length));
 
-        double[][] tVals = new double[points.length][points.length];
-        for (int i = 0; i < tVals.length; i++) {
-            for (int j = 0; j < tVals[i].length; j++) {
-                tVals[i][j] = bernstein(points.length - 1, j, tValues[i]);
-            }
-        }
-        Matrix tMatrix = new Matrix(tVals);
-
-        double[][] targetVals = new double[points.length][2];
+        double[][] targets = new double[points.length][2];
         for (int i = 0; i < points.length; i++) {
-            targetVals[i][0] = points[i].x();
-            targetVals[i][1] = points[i].y();
+            targets[i][0] = points[i].x();
+            targets[i][1] = points[i].y();
         }
-        Matrix targetMatrix = new Matrix(targetVals);
-        Matrix controlPointMatrix = tMatrix.solve(targetMatrix);
 
-        Vector2D[] controlPoints = new Vector2D[points.length];
-        for (int i = 0; i < controlPoints.length; i++) {
-            controlPoints[i] = Vector2D.cartesian(controlPointMatrix.get(i, 0), controlPointMatrix.get(i, 1));
+        Matrix result = bernstein.invert().times(new Matrix(targets));
+
+        List<Vector2D> controlPoints = new ArrayList<>();
+
+        for (int i = 0; i < points.length; i++) {
+            controlPoints.add(Vector2D.cartesian(result.get(i, 0), result.get(i, 1)));
         }
 
         return new BezierCurve(controlPoints);
-    }
-
-    private static double bernstein(int n, int k, double t) {
-        return binomial(n, k) * Math.pow(t, k) * Math.pow(1 - t, n - k);
     }
 }
