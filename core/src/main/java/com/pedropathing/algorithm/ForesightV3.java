@@ -21,7 +21,7 @@ public class ForesightV3 implements Algorithm {
     public final ForesightConfig config;
     public final ForesightPowerAllocator allocator;
     private double closestT, curvature;
-    private double projectedClosestT;
+    private double projectedClosestT, coastClosestT;
     private double curveCompletion, remainingDistance, tangentialSpeed;
     private Pose closestPose;
     private Vector2D closestTangent, closestNormal;
@@ -252,12 +252,12 @@ public class ForesightV3 implements Algorithm {
         double maxAchievableVelocity = DiamondDrivetrainModel.interpolateVelocity(config.maxAchievableForwardVelocity.get(), config.maxAchievableStrafeVelocity.get(), angleToTangent);
         targetVelocity = Math.min(profiledTargetVelocity, maxAchievableVelocity);
 
-        if (!isBraking) return coast(tangentialVel, remainingDistance, deltaTime, maxAchievableVelocity, state, curve);
+        if (!isBraking) return coast(tangentialVel, deltaTime, maxAchievableVelocity, state, curve, angleToTangent);
         return config.brake.get().calculate(targetVelocity, 0);
     }
 
-    public double coast(double tangentialVel, double remainingDistance, double deltaTime, double maxAchievableVelocity,
-                        MotionState state, Curve curve) {
+    public double coast(double tangentialVel, double deltaTime, double maxAchievableVelocity,
+                        MotionState state, Curve curve, double theta) {
         double maxAccelerationConstraint = config.maxAccelerationConstraint.get();
         double maxVelocityConstraint = config.maxVelocityConstraint.get();
         double maxDecelerationConstraint = config.maxDecelerationConstraint.get();
@@ -274,12 +274,18 @@ public class ForesightV3 implements Algorithm {
         double feedforwardVelocity = targetVel;
 
         if (maxDecelerationConstraint != ForesightConfig.Constraint.NONE) {
-            Pose projected = getCoastDisplacement(state.twist(), state.pose().heading());
-            double projectedT = curve.closestT(projected.toVector2D());
+            Pose projected = state.pose().plus(getCoastDisplacement(state.twist(), state.pose().heading()));
+            double projectedT = curve.closestT(projected.toVector2D(), coastClosestT);
+            Vector2D projectedTangent = curve.tangent(projectedT);
             double projectedRemainingDist = curve.remainingDistance(projectedT);
-            double velocityNeededToCoastInTime = Math.sqrt(coastDownToVelocity * coastDownToVelocity
-                    + 2 * maxDecelerationConstraint * projectedRemainingDist);
+            if (projectedRemainingDist <= 0.01)
+                projectedRemainingDist = projectedTangent.dot(curve.get(projectedT).minus(projected.toVector2D()));
+            double discrim = coastDownToVelocity * coastDownToVelocity + 2 * maxDecelerationConstraint * projectedRemainingDist;
+            double excessVel = excessVelAfterCoast(projectedRemainingDist, theta);
+            double velocityMomentumCannotProvide = Math.max(0, coastDownToVelocity - excessVel);
+            double velocityNeededToCoastInTime = Math.sqrt(Math.abs(discrim)) * Math.signum(discrim);
             targetVel = Math.min(targetVel, velocityNeededToCoastInTime);
+            feedforwardVelocity = Math.min(feedforwardVelocity, velocityMomentumCannotProvide);
         }
 
         if (targetVel >= maxAchievableVelocity) {
@@ -289,7 +295,7 @@ public class ForesightV3 implements Algorithm {
 
         double error = Math.max(0, targetVel);
         targetVelocity = targetVel;
-        return config.coast.get().calculate(feedforwardVelocity, error);
+        return Math.max(config.coast.get().calculate(feedforwardVelocity, error), 0);
     }
 
     private Pair<Double, Vector2D> translationalCorrection(Pose currentPose, Vector2D targetPos, Vector2D closestNormal) {
@@ -302,6 +308,12 @@ public class ForesightV3 implements Algorithm {
                 config.forwardTranslational.get().calculate(0, bodyFrameError.x()),
                 config.strafeTranslational.get().calculate(0, bodyFrameError.y())
         ).projectOnto(bodyFrameError).toWorldFrame(currentPose.heading()));
+    }
+
+    private double excessVelAfterCoast(double remainingDistance, double theta) {
+        double naturalDeceleration = DiamondDrivetrainModel.interpolateAcceleration(config.naturalForwardDeceleration.get(), config.naturalStrafeDeceleration.get(), theta);
+        double excessVelocitySquared = -2 * naturalDeceleration * remainingDistance;
+        return Math.signum(excessVelocitySquared) * Math.sqrt(Math.abs(excessVelocitySquared));
     }
 
     public double getHeadingError() {
@@ -382,6 +394,8 @@ public class ForesightV3 implements Algorithm {
         resetTimer = true;
         busy = true;
         closestT = 0.0;
+        projectedClosestT = 0.0;
+        coastClosestT = 0.0;
     }
 
     @Override
