@@ -1,4 +1,4 @@
-package com.pedropathing.math;
+package com.pedropathing.algorithm;
 
 public class DiamondDrivetrainModel {
     public static double interpolateVelocity(double xRadius, double yRadius, double theta) {

@@ -46,7 +46,7 @@ public class Twist {
     }
 
     public Matrix toMatrix() {
-        return new Matrix(new double[][] {
+        return new Matrix(new double[][]{
                 {0.0, -omega, vx},
                 {omega, 0.0, vy},
                 {0.0, 0.0, 0.0}
@@ -67,5 +67,14 @@ public class Twist {
 
     public Vector2D toVector2D() {
         return Vector2D.cartesian(vx, vy);
+    }
+
+    @Override
+    public String toString() {
+        return "Twist{" +
+                "vx=" + vx +
+                ", vy=" + vy +
+                ", omega=" + omega +
+                '}';
     }
 }

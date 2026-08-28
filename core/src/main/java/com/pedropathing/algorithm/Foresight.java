@@ -6,7 +6,6 @@ import static com.pedropathing.utils.Angle.turnDirection;
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.drivetrain.Drivetrain;
 import com.pedropathing.localization.MotionState;
-import com.pedropathing.math.DiamondDrivetrainModel;
 import com.pedropathing.math.Matrix;
 import com.pedropathing.math.Pose;
 import com.pedropathing.math.Twist;

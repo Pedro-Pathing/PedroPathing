@@ -1,11 +1,9 @@
-package com.pedropathing.revhub;
+package com.pedropathing.follower;
 
 import static com.pedropathing.utils.Angle.normalizeSigned;
 
 import com.pedropathing.controllers.PIDController;
 import com.pedropathing.drivetrain.DrivePowers;
-import com.pedropathing.follower.Follower;
-import com.pedropathing.math.Pose;
 import com.pedropathing.math.Vector2D;
 
 public class ManualDrive {
