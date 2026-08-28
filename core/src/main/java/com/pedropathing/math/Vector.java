@@ -263,4 +263,11 @@ public class Vector {
 
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "Vector{" +
+                "elements=" + Arrays.toString(elements) +
+                '}';
+    }
 }

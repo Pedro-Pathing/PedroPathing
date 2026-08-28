@@ -64,4 +64,13 @@ public class Velocity {
     public static Velocity fromPose(Pose pose) {
         return new Velocity(pose.x(), pose.y(), pose.heading());
     }
+
+    @Override
+    public String toString() {
+        return "Velocity{" +
+                "vx=" + vx +
+                ", vy=" + vy +
+                ", omega=" + omega +
+                '}';
+    }
 }
