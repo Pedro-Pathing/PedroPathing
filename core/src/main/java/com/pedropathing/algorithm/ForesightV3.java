@@ -170,9 +170,10 @@ public class ForesightV3 implements Algorithm {
         headingError = normalizeSigned(target.heading() - state.pose().heading());
 
         Vector2D displacement = target.minus(projectedPose).toVector2D();
+        double dist = displacement.magnitude();
 
         translationalError = target.distance(state.pose());
-        if (displacement.isZero()) {
+        if (dist < 1e-9) {
             tangentialSpeed = 0;
             closestTangent = Vector2D.zero();
         } else {
@@ -185,7 +186,7 @@ public class ForesightV3 implements Algorithm {
         Pair<Double, Vector2D> translationalResult = translationalCorrection(
                 projectedPose,
                 target.toVector2D(),
-                closestTangent
+                displacement.div(dist)
         );
         Vector2D translational = translationalResult.second();
 
