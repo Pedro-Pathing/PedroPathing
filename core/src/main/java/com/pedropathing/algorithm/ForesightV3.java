@@ -88,6 +88,7 @@ public class ForesightV3 implements Algorithm {
 
         if (isBraking && (pathTracker.remainingPaths() > 1 || !config.brakeAtEnd.get())) {
             pathTracker.advance();
+            reset();
             return calculatePath(drivetrain, pathTracker, state, deltaTime);
         }
 
@@ -173,22 +174,23 @@ public class ForesightV3 implements Algorithm {
         double dist = displacement.magnitude();
 
         translationalError = target.distance(state.pose());
+        Vector2D translational = Vector2D.zero();
         if (dist < 1e-9) {
             tangentialSpeed = 0;
             closestTangent = Vector2D.zero();
         } else {
             closestTangent = displacement.normalized();
             tangentialSpeed = closestTangent.dot(state.velocity().toVector2D());
+
+            Pair<Double, Vector2D> translationalResult = translationalCorrection(
+                    projectedPose,
+                    target.toVector2D(),
+                    displacement.div(dist)
+            );
+            translational = translationalResult.second();
         }
 
         if (busy && testTimeout() || (testHeading() && testTranslational() && testVelocity())) busy = false;
-
-        Pair<Double, Vector2D> translationalResult = translationalCorrection(
-                projectedPose,
-                target.toVector2D(),
-                displacement.div(dist)
-        );
-        Vector2D translational = translationalResult.second();
 
         if (useScaling) {
             double translationalScale = config.holdPointTranslationalScaling.get();
@@ -384,7 +386,7 @@ public class ForesightV3 implements Algorithm {
 
     @Override
     public boolean atParametricEnd(double t) {
-        return testParametric();
+        return config.parametricTConstraint.get() < t;
     }
 
     @Override
