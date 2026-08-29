@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.algorithm;
 
 import com.pedropathing.drivetrain.DrivePowers;
@@ -6,7 +10,6 @@ import com.pedropathing.localization.MotionState;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.utils.Control;
 import com.pedropathing.utils.Pair;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -95,10 +98,10 @@ public class ForesightPowerAllocator {
     public DrivePowers getDrivePowers(Vector2D fieldRelativeDrivePower, MotionState state, double headingPower) {
         Vector2D robotFrameDrivePower =
                 fieldRelativeDrivePower.rotate(-state.pose().heading());
-        double forward = Control.clampBrakingPower(
-                robotFrameDrivePower.x(), state.twist().vx, config.maxBrakingPower.get());
-        double strafe = Control.clampBrakingPower(
-                robotFrameDrivePower.y(), state.twist().vy, config.maxBrakingPower.get());
+        double forward =
+                Control.clampBrakingPower(robotFrameDrivePower.x(), state.twist().vx, config.maxBrakingPower.get());
+        double strafe =
+                Control.clampBrakingPower(robotFrameDrivePower.y(), state.twist().vy, config.maxBrakingPower.get());
         return new DrivePowers(forward, strafe, headingPower);
     }
 
