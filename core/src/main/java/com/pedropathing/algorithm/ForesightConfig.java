@@ -21,8 +21,8 @@ public final class ForesightConfig {
     public final ConfigVar<Controller> forwardTranslational = ConfigVar.of(Controller.proportional(0.07), nonnull());
     public final ConfigVar<Controller> strafeTranslational = ConfigVar.of(Controller.proportional(0.1), nonnull());
     public final ConfigVar<Controller> brake = ConfigVar.of(Controller.proportionalFeedforward(0.009), nonnull());
-    public final ConfigVar<Controller> coast = ConfigVar.of(Controller.proportional(0.025)
-            .plus(Controller.proportionalFeedforward(0.015)), nonnull());
+    public final ConfigVar<Controller> coast =
+            ConfigVar.of(Controller.proportional(0.025).plus(Controller.proportionalFeedforward(0.015)), nonnull());
 
     /**
      * This scales the translational error correction power when holding.

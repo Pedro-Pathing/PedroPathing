@@ -145,7 +145,8 @@ public interface Controller {
         };
     }
 
-    static Controller integral(Supplier<Double> kI, Supplier<Double> iZone, Supplier<Double> decay, Supplier<Double> maxI) {
+    static Controller integral(
+            Supplier<Double> kI, Supplier<Double> iZone, Supplier<Double> decay, Supplier<Double> maxI) {
         return new TimedController() {
             double integral = 0;
 
@@ -207,8 +208,7 @@ public interface Controller {
         return new Controller() {
             @Override
             public double calculate(double target, double error) {
-                return Controller.this.calculate(target, error)
-                        + other.calculate(target, error);
+                return Controller.this.calculate(target, error) + other.calculate(target, error);
             }
 
             @Override
@@ -229,8 +229,7 @@ public interface Controller {
         return new Controller() {
             @Override
             public double calculate(double target, double error) {
-                return Controller.this.calculate(target, error)
-                        - other.calculate(target, error);
+                return Controller.this.calculate(target, error) - other.calculate(target, error);
             }
 
             @Override
@@ -260,7 +259,9 @@ public interface Controller {
             }
 
             @Override
-            public void reset() { Controller.this.reset(); }
+            public void reset() {
+                Controller.this.reset();
+            }
         };
     }
 }

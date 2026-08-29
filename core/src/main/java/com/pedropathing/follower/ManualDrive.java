@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.follower;
 
 import static com.pedropathing.utils.Angle.normalizeSigned;
@@ -14,7 +18,8 @@ public class ManualDrive {
 
     /** Takes in robotCentric drive powers and uses the currentHeading to rotate them to fieldCentric drive powers with an offset heading. */
     public static DrivePowers fieldCentric(DrivePowers powers, double currentHeading, double offsetHeading) {
-        Vector2D fieldRelative = Vector2D.cartesian(powers.forward(), powers.strafe()).rotate(-(currentHeading + offsetHeading));
+        Vector2D fieldRelative =
+                Vector2D.cartesian(powers.forward(), powers.strafe()).rotate(-(currentHeading + offsetHeading));
         return new DrivePowers(fieldRelative.x(), fieldRelative.y(), powers.turn());
     }
 
@@ -24,11 +29,13 @@ public class ManualDrive {
     }
 
     /** Takes in robotCentric drive powers and uses the currentHeading to rotate them to fieldCentric drive powers with an offset heading. */
-    public static DrivePowers fieldCentric(double forward, double lateral, double turn, double currentHeading, double offsetHeading) {
+    public static DrivePowers fieldCentric(
+            double forward, double lateral, double turn, double currentHeading, double offsetHeading) {
         return fieldCentric(new DrivePowers(forward, lateral, turn), currentHeading, offsetHeading);
     }
 
-    public static DrivePowers headingLock(Follower follower, PIDController headingPID, DrivePowers powers, double targetHeading) {
+    public static DrivePowers headingLock(
+            Follower follower, PIDController headingPID, DrivePowers powers, double targetHeading) {
         double headingError = normalizeSigned(targetHeading - follower.pose().heading());
         double power = headingPID.calculate(targetHeading, headingError, follower.twist().omega);
         return new DrivePowers(powers.forward(), powers.strafe(), power);
