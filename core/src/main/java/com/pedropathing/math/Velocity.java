@@ -19,10 +19,7 @@ public class Velocity {
     public Twist toTwist(double heading) {
         double cos = Math.cos(heading);
         double sin = Math.sin(heading);
-        return new Twist(
-                vx * cos + vy * sin,
-                -vx * sin + vy * cos,
-                omega);
+        return new Twist(vx * cos + vy * sin, -vx * sin + vy * cos, omega);
     }
 
     public Vector toVector() {
@@ -31,9 +28,9 @@ public class Velocity {
 
     public Matrix toMatrix() {
         return new Matrix(new double[][] {
-                {0.0, -omega, vx},
-                {omega, 0.0, vy},
-                {0.0, 0.0, 0.0}
+            {0.0, -omega, vx},
+            {omega, 0.0, vy},
+            {0.0, 0.0, 0.0}
         });
     }
 
@@ -67,10 +64,6 @@ public class Velocity {
 
     @Override
     public String toString() {
-        return "Velocity{" +
-                "vx=" + vx +
-                ", vy=" + vy +
-                ", omega=" + omega +
-                '}';
+        return "Velocity{" + "vx=" + vx + ", vy=" + vy + ", omega=" + omega + '}';
     }
 }

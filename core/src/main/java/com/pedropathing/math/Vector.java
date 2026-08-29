@@ -150,8 +150,7 @@ public class Vector {
     }
 
     public Vector2D toVector2D() {
-        if (elements.length != 2)
-            throw new IllegalArgumentException("Vector must have exactly 2 elements.");
+        if (elements.length != 2) throw new IllegalArgumentException("Vector must have exactly 2 elements.");
         return Vector2D.cartesian(elements[0], elements[1]);
     }
 
@@ -250,7 +249,8 @@ public class Vector {
         for (int i = 0; i < k; i++) {
             double norm = result[i].magnitude();
             if (norm < 1e-10) {
-                throw new ArithmeticException("Vectors are linearly dependent (zero vector encountered during Gram-Schmidt).");
+                throw new ArithmeticException(
+                        "Vectors are linearly dependent (zero vector encountered during Gram-Schmidt).");
             }
 
             result[i] = result[i].normalized();
@@ -266,8 +266,6 @@ public class Vector {
 
     @Override
     public String toString() {
-        return "Vector{" +
-                "elements=" + Arrays.toString(elements) +
-                '}';
+        return "Vector{" + "elements=" + Arrays.toString(elements) + '}';
     }
 }
