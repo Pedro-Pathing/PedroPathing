@@ -4,6 +4,15 @@ import com.pedropathing.math.Matrix;
 
 import java.util.Arrays;
 
+/**
+ * A class for objects representing a matrix with each element containing the coefficients of a polynomial.
+ * Example:
+ * [1, t, t^2, t^3... t^n]
+ * [0, 1, 2t... nt^(n - 1)]
+ *
+ * @author William Phomphakdee
+ * @version 0.0.1 08/28/2026
+ */
 public class PolynomialMatrix {
     public static final int[][] COEFF_LUT = new int[4][100];
     static {

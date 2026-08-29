@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
  * @author Aaron Yang - 10158 Scott's Bots
  * @author Harrison Womack - 10158 Scott's Bots
  * @author William Phomphakdee - 7462 Not to Scale Alumni
- * @version 1.0, 3/5/2024
+ * @version 2.0, 08/28/2026
  */
 public class BezierCurve implements Curve {
     private static final double SUBDIVISION_TOLERANCE = 1e-5;

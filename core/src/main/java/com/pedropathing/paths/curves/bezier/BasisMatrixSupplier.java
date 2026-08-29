@@ -12,7 +12,7 @@ import java.util.HashMap;
  *
  * @author William Phomphakdee - 7462 Not to Scale Alumni
  * @author Havish Sripada - 12808 RevAmped Robotics
- * @version 0.0.3, 11/29/2025
+ * @version 0.1.0 08/28/2026
  */
 public class BasisMatrixSupplier {
     private static final HashMap<Integer, Matrix> bezierMatrices = new HashMap<>();
