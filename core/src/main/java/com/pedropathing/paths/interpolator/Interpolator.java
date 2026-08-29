@@ -41,6 +41,20 @@ public interface Interpolator {
         return linear(start.heading(), end.heading());
     }
 
+    static Interpolator longLinear(double start, double end) {
+        double finalStart = Angle.normalize(start);
+        double finalEnd = Angle.normalize(end);
+
+        double deltaHeading = -Angle.turnDirection(finalStart, finalEnd)
+                * Angle.smallestDifference(finalStart, finalEnd);
+
+        return (curve, t) -> Angle.normalize(finalStart + deltaHeading * t);
+    }
+
+    static Interpolator longLinear(Pose start, Pose end) {
+        return longLinear(start.heading(), end.heading());
+    }
+
     static Interpolator facingPoint(Vector2D point) {
         return (curve, t) -> point.minus(curve.get(t)).theta();
     }
