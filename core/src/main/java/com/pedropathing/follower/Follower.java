@@ -237,7 +237,7 @@ public class Follower {
         return pathTracker.path();
     }
 
-    public double getTangentialVelocity() {
+    public double tangentialVelocity() {
         return velocity().toVector2D().dot(closestTangent());
     }
 
