@@ -75,13 +75,13 @@ public class Pose {
     }
 
     public Pose exp(Twist twist, double time) {
-        if (Math.abs(twist.omega()) < 1e-9) return exp(twist.toVelocity(heading), time);
-        double theta = twist.omega() * time;
+        if (Math.abs(twist.omega) < 1e-9) return exp(twist.toVelocity(heading), time);
+        double theta = twist.omega * time;
         double sin = Math.sin(theta);
         double cos = Math.cos(theta);
         Vector2D localDeltas = Vector2D.cartesian(
-                (sin * twist.vx() - (1 - cos) * twist.vy()) / twist.omega(),
-                ((1 - cos) * twist.vx() + sin * twist.vy()) / twist.omega());
+                (sin * twist.vx - (1 - cos) * twist.vy) / twist.omega,
+                ((1 - cos) * twist.vx + sin * twist.vy) / twist.omega);
         Vector2D globalDeltas = localDeltas.rotate(heading);
         return new Pose(x + globalDeltas.x(), y + globalDeltas.y(), heading + theta);
     }
@@ -116,21 +116,15 @@ public class Pose {
     }
 
     public Pose invert() {
-        double c = Math.cos(heading);
-        double s = Math.sin(heading);
-
-        double x_inv = -x * c - y * s;
-        double y_inv = x * s - y * c;
-        double heading_inv = -heading;
-
-        return new Pose(x_inv, y_inv, heading_inv);
+        Vector2D invTrans = Vector2D.cartesian(-x, -y).rotate(-heading);
+        return new Pose(invTrans.x(), invTrans.y(), -heading);
     }
 
     public Twist log() {
         double eps = 1e-6;
         if (Math.abs(heading) < eps) {
             // Small-angle: Jacobian ≈ I
-            return new Twist(x, y, 0.0);
+            return new Twist(x, y, heading);
         }
 
         double A = Math.sin(heading) / heading;

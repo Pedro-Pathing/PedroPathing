@@ -6,7 +6,6 @@ import static com.pedropathing.utils.Angle.turnDirection;
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.drivetrain.Drivetrain;
 import com.pedropathing.localization.MotionState;
-import com.pedropathing.math.DiamondDrivetrainModel;
 import com.pedropathing.math.Pose;
 import com.pedropathing.math.Twist;
 import com.pedropathing.math.Vector2D;
@@ -88,6 +87,7 @@ public class ForesightV3 implements Algorithm {
 
         if (isBraking && (pathTracker.remainingPaths() > 1 || !config.brakeAtEnd.get())) {
             pathTracker.advance();
+            reset();
             return calculatePath(drivetrain, pathTracker, state, deltaTime);
         }
 
@@ -170,26 +170,26 @@ public class ForesightV3 implements Algorithm {
         headingError = normalizeSigned(target.heading() - state.pose().heading());
 
         Vector2D displacement = target.minus(projectedPose).toVector2D();
+        double dist = displacement.magnitude();
 
-        //TODO: Cache
         translationalError = target.distance(state.pose());
-        if (translationalError < 1e-9) {
+        Vector2D translational = Vector2D.zero();
+        if (dist < 1e-9) {
             tangentialSpeed = 0;
             closestTangent = Vector2D.zero();
         } else {
             closestTangent = displacement.normalized();
             tangentialSpeed = closestTangent.dot(state.velocity().toVector2D());
+
+            Pair<Double, Vector2D> translationalResult = translationalCorrection(
+                    projectedPose,
+                    target.toVector2D(),
+                    displacement.div(dist)
+            );
+            translational = translationalResult.second();
         }
 
         if (busy && testTimeout() || (testHeading() && testTranslational() && testVelocity())) busy = false;
-
-        Pair<Double, Vector2D> translationalResult = translationalCorrection(
-                projectedPose,
-                target.toVector2D(),
-                closestTangent
-        );
-        Vector2D translational = translationalResult.second();
-        translationalError = translationalResult.first();
 
         if (useScaling) {
             double translationalScale = config.holdPointTranslationalScaling.get();
@@ -206,8 +206,8 @@ public class ForesightV3 implements Algorithm {
         Vector2D linearTwist = twist.toVector2D();
         Vector2D quadratic = linearTwist.hadamardProduct(linearTwist.abs()).transform(config.quadraticBrakeCoefficients.get());
         Vector2D linear = linearTwist.transform(config.linearBrakeCoefficients.get());
-        double headingDisp = twist.omega() * Math.abs(twist.omega()) * config.headingBrakeCoefficients.get().y() +
-                twist.omega() * config.headingBrakeCoefficients.get().x();
+        double headingDisp = twist.omega * Math.abs(twist.omega) * config.headingBrakeCoefficients.get().y() +
+                twist.omega * config.headingBrakeCoefficients.get().x();
         Vector2D bodyDisp = quadratic.plus(linear);
         Pose worldPose = new Pose(0, 0, heading).exp(new Twist(bodyDisp.x(), bodyDisp.y(), headingDisp));
         return new Pose(worldPose.x(), worldPose.y(), headingDisp);
@@ -218,8 +218,8 @@ public class ForesightV3 implements Algorithm {
         Vector2D bodyDisp = linearTwist.hadamardProduct(linearTwist.abs())
                 .times(1.0 / 2.0)
                 .elementDivision(naturalDeceleration);
-        double headingDisp = twist.omega() * Math.abs(twist.omega()) * config.headingBrakeCoefficients.get().y() +
-                twist.omega() * config.headingBrakeCoefficients.get().x();
+        double headingDisp = twist.omega * Math.abs(twist.omega) * config.headingBrakeCoefficients.get().y() +
+                twist.omega * config.headingBrakeCoefficients.get().x();
         Pose worldPose = new Pose(0, 0, heading).exp(new Twist(bodyDisp.x(), bodyDisp.y(), headingDisp));
         return new Pose(worldPose.x(), worldPose.y(), headingDisp);
     }
@@ -385,7 +385,7 @@ public class ForesightV3 implements Algorithm {
 
     @Override
     public boolean atParametricEnd(double t) {
-        return testParametric();
+        return config.parametricTConstraint.get() < t;
     }
 
     @Override

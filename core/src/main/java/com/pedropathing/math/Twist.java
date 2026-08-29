@@ -6,9 +6,9 @@ package com.pedropathing.math;
 
 public class Twist {
     private static final Twist ZERO = new Twist(0, 0, 0);
-    private final double vx;
-    private final double vy;
-    private final double omega;
+    public final double vx;
+    public final double vy;
+    public final double omega;
 
     public Twist(double vx, double vy, double omega) {
         this.vx = vx;
@@ -32,22 +32,12 @@ public class Twist {
         return a.invert().compose(b).log();
     }
 
-    public double vx() {
-        return vx;
-    }
-
-    public double vy() {
-        return vy;
-    }
-
-    public double omega() {
-        return omega;
-    }
-
     public Velocity toVelocity(double heading) {
+        double cos = Math.cos(heading);
+        double sin = Math.sin(heading);
         return new Velocity(
-                vx * Math.cos(heading) + vy * -Math.sin(heading),
-                vx * Math.sin(heading) + vy * Math.cos(heading),
+                vx * cos - vy * sin,
+                vx * sin + vy * cos,
                 omega);
     }
 
@@ -56,10 +46,10 @@ public class Twist {
     }
 
     public Matrix toMatrix() {
-        return new Matrix(new double[][] {
-            {0.0, -omega, vx},
-            {omega, 0.0, vy},
-            {0.0, 0.0, 0.0}
+        return new Matrix(new double[][]{
+                {0.0, -omega, vx},
+                {omega, 0.0, vy},
+                {0.0, 0.0, 0.0}
         });
     }
 
@@ -77,5 +67,14 @@ public class Twist {
 
     public Vector2D toVector2D() {
         return Vector2D.cartesian(vx, vy);
+    }
+
+    @Override
+    public String toString() {
+        return "Twist{" +
+                "vx=" + vx +
+                ", vy=" + vy +
+                ", omega=" + omega +
+                '}';
     }
 }

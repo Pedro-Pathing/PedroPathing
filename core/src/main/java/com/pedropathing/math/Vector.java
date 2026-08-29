@@ -10,7 +10,7 @@ import java.util.Arrays;
  * A generic n-dimensional vector class.
  */
 public class Vector {
-    private final double[] elements;
+    public final double[] elements;
 
     /**
      * Constructs a vector from an existing array.
@@ -150,7 +150,8 @@ public class Vector {
     }
 
     public Vector2D toVector2D() {
-        if (elements.length != 2) throw new IllegalArgumentException("Vector must have exactly 2 elements.");
+        if (elements.length != 2)
+            throw new IllegalArgumentException("Vector must have exactly 2 elements.");
         return Vector2D.cartesian(elements[0], elements[1]);
     }
 
@@ -189,7 +190,12 @@ public class Vector {
     }
 
     public double angleTo(Vector other) {
-        return Math.acos(dot(other) / (magnitude() * other.magnitude()));
+        if (this.isZero() || other.isZero()) {
+            throw new IllegalArgumentException("Cannot calculate angle to or from a zero vector.");
+        }
+        double cosTheta = dot(other) / (magnitude() * other.magnitude());
+        cosTheta = Math.max(-1.0, Math.min(1.0, cosTheta));
+        return Math.acos(cosTheta);
     }
 
     public double distance(Vector other) {
@@ -197,7 +203,7 @@ public class Vector {
     }
 
     public Matrix toMatrix() {
-        double[][] data = new double[size()][size()];
+        double[][] data = new double[size()][1];
         for (int i = 0; i < size(); i++) {
             data[i][0] = elements[i];
         }
@@ -205,7 +211,7 @@ public class Vector {
     }
 
     public double[] elements() {
-        return elements;
+        return elements.clone();
     }
 
     public boolean isZero() {
@@ -216,7 +222,9 @@ public class Vector {
         double[][] result = new double[size()][other.size()];
 
         for (int i = 0; i < result.length; i++) {
-            for (int j = 0; j < result[0].length; j++) result[i][j] = elements[i] * other.elements[i];
+            for (int j = 0; j < result[0].length; j++) {
+                result[i][j] = elements[i] * other.elements[j];
+            }
         }
 
         return new Matrix(result);
@@ -232,15 +240,34 @@ public class Vector {
     }
 
     public static Vector[] gramSchmidt(Vector... vectors) {
-        for (int i = 0; i < vectors.length; i++) {
-            vectors[i] = vectors[i].normalized();
+        int k = vectors.length;
+        Vector[] result = new Vector[k];
 
-            for (int j = i + 1; j < vectors.length; j++) {
-                double comp = vectors[i].dot(vectors[j]);
-                vectors[j] = vectors[j].minus(vectors[i].times(comp));
+        for (int i = 0; i < k; i++) {
+            result[i] = new Vector(vectors[i].elements);
+        }
+
+        for (int i = 0; i < k; i++) {
+            double norm = result[i].magnitude();
+            if (norm < 1e-10) {
+                throw new ArithmeticException("Vectors are linearly dependent (zero vector encountered during Gram-Schmidt).");
+            }
+
+            result[i] = result[i].normalized();
+
+            for (int j = i + 1; j < k; j++) {
+                double comp = result[i].dot(result[j]);
+                result[j] = result[j].minus(result[i].times(comp));
             }
         }
 
-        return vectors;
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Vector{" +
+                "elements=" + Arrays.toString(elements) +
+                '}';
     }
 }

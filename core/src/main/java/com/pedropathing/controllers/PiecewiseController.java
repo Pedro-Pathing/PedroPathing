@@ -12,7 +12,7 @@ public class PiecewiseController implements Controller {
 
     PiecewiseController(Controller baseline) {
         this.controllers = new TreeMap<>();
-        this.controllers.put(Double.NEGATIVE_INFINITY, baseline);
+        this.controllers.put(0.0, baseline);
     }
 
     /**
@@ -22,13 +22,14 @@ public class PiecewiseController implements Controller {
      * @return this
      */
     public PiecewiseController put(double threshold, Controller controller) {
-        controllers.put(threshold, controller);
+        controllers.put(Math.abs(threshold), controller);
         return this;
     }
 
     @Override
     public double calculate(double target, double error) {
-        return controllers.floorEntry(error).getValue().calculate(target, error);
+        double absError = Math.abs(error);
+        return controllers.floorEntry(absError).getValue().calculate(target, absError);
     }
 
     @Override

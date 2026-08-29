@@ -1,11 +1,9 @@
-package com.pedropathing.revhub;
+package com.pedropathing.follower;
 
 import static com.pedropathing.utils.Angle.normalizeSigned;
 
 import com.pedropathing.controllers.PIDController;
 import com.pedropathing.drivetrain.DrivePowers;
-import com.pedropathing.follower.Follower;
-import com.pedropathing.math.Pose;
 import com.pedropathing.math.Vector2D;
 
 public class ManualDrive {
@@ -32,7 +30,7 @@ public class ManualDrive {
 
     public static DrivePowers headingLock(Follower follower, PIDController headingPID, DrivePowers powers, double targetHeading) {
         double headingError = normalizeSigned(targetHeading - follower.pose().heading());
-        double power = headingPID.calculate(targetHeading, headingError, follower.twist().omega());
+        double power = headingPID.calculate(targetHeading, headingError, follower.twist().omega);
         return new DrivePowers(powers.forward(), powers.strafe(), power);
     }
 }
