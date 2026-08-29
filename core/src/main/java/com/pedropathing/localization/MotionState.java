@@ -47,4 +47,13 @@ public class MotionState {
     public Twist twist() {
         return twist;
     }
+
+    @Override
+    public String toString() {
+        return "MotionState{" +
+                "pose=" + pose +
+                ", velocity=" + velocity +
+                ", twist=" + twist +
+                '}';
+    }
 }
