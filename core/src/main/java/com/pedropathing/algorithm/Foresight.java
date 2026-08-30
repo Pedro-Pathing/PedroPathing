@@ -50,7 +50,7 @@ public class Foresight implements Algorithm {
         currentState = state;
         closestT = pathTracker.current().curve.closestParameter(state.pose().toVector2D(), closestT);
 
-        if (testParametric()) { // End Constraint
+        if (parametricCondition()) { // End Constraint
             closestT = 1.0;
             double targetHeading = pathTracker.current().heading(closestT);
             closestPose = pathTracker.current().curve.get(closestT).toPose(targetHeading);
@@ -205,7 +205,8 @@ public class Foresight implements Algorithm {
             translational = translationalResult.second();
         }
 
-        if (busy && testTimeout() || (testHeading() && testTranslational() && testVelocity())) busy = false;
+        if (busy && timeoutCondition() || (headingCondition() && translationalCondition() && velocityCondition()))
+            busy = false;
 
         if (useScaling) {
             double translationalScale = config.holdPointTranslationalScaling.get();
@@ -355,35 +356,35 @@ public class Foresight implements Algorithm {
         return Math.signum(excessVelocitySquared) * Math.sqrt(Math.abs(excessVelocitySquared));
     }
 
-    public double getHeadingError() {
+    public double headingError() {
         return headingError;
     }
 
-    public double getTranslationalError() {
+    public double translationalError() {
         return translationalError;
     }
 
-    public boolean testVelocity() {
+    public boolean velocityCondition() {
         return tangentialSpeed < config.velocityConstraint.get();
     }
 
-    public boolean testTranslational() {
+    public boolean translationalCondition() {
         return Math.abs(translationalError) < config.translationalConstraint.get();
     }
 
-    public boolean testHeading() {
+    public boolean headingCondition() {
         return Math.abs(headingError) < config.headingConstraint.get();
     }
 
-    public boolean testParametric() {
+    public boolean parametricCondition() {
         return closestT >= (1 - config.parametricTConstraint.get());
     }
 
-    public boolean testTimeout() {
+    public boolean timeoutCondition() {
         return !resetTimer && timer.get(TimeUnit.MILLISECONDS) > config.timeoutConstraint.get();
     }
 
-    public double getTargetVelocity() {
+    public double targetVelocity() {
         return targetVelocity;
     }
 
@@ -425,7 +426,7 @@ public class Foresight implements Algorithm {
 
     @Override
     public boolean atParametricEnd() {
-        return testParametric();
+        return parametricCondition();
     }
 
     @Override
