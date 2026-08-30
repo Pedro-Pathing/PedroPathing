@@ -45,8 +45,8 @@ public interface Interpolator {
         double finalStart = Angle.normalize(start);
         double finalEnd = Angle.normalize(end);
 
-        double deltaHeading = -Angle.turnDirection(finalStart, finalEnd)
-                * Angle.smallestDifference(finalStart, finalEnd);
+        double deltaHeading =
+                -Angle.turnDirection(finalStart, finalEnd) * Angle.smallestDifference(finalStart, finalEnd);
 
         return (curve, t) -> Angle.normalize(finalStart + deltaHeading * curve.pathCompletion(t));
     }

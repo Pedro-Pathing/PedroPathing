@@ -6,7 +6,6 @@ package com.pedropathing.paths.interpolator;
 
 import com.pedropathing.paths.TValue;
 import com.pedropathing.paths.curves.Curve;
-
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
