@@ -42,7 +42,7 @@ public class Foresight implements Algorithm {
     @Override
     public DrivePowers calculatePath(
             Drivetrain drivetrain, PathTracker pathTracker, MotionState state, double deltaTime) {
-        closestT = pathTracker.current().curve.closestT(state.pose().toVector2D(), closestT);
+        closestT = pathTracker.current().curve.closestParameter(state.pose().toVector2D(), closestT);
 
         if (testParametric()) { // End Constraint
             closestT = 1.0;
@@ -77,7 +77,7 @@ public class Foresight implements Algorithm {
         Matrix headingMatrix = Matrix.rotation(state.pose().heading());
         Pose projectedPose = state.pose()
                 .plus(getBrakeDisplacement(state.twist(), headingMatrix).toPose());
-        projectedClosestT = curve.closestT(projectedPose.toVector2D(), projectedClosestT);
+        projectedClosestT = curve.closestParameter(projectedPose.toVector2D(), projectedClosestT);
         double targetHeading = pathTracker.current().heading(closestT);
         double projectedTargetHeading = pathTracker.current().heading(projectedClosestT);
         Vector2D projectedTangent = curve.tangent(projectedClosestT);
@@ -346,7 +346,7 @@ public class Foresight implements Algorithm {
     }
 
     @Override
-    public double closestT() {
+    public double completion() {
         return closestT;
     }
 
@@ -381,7 +381,7 @@ public class Foresight implements Algorithm {
     }
 
     @Override
-    public boolean atParametricEnd(double t) {
+    public boolean atParametricEnd() {
         return testParametric();
     }
 

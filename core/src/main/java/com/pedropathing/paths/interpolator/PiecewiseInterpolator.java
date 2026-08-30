@@ -33,11 +33,13 @@ public class PiecewiseInterpolator implements Interpolator {
             throw new IllegalStateException("piecewise interpolation must be fully defined before interpolating.");
         TValue.check(t);
 
-        Map.Entry<Double, Interpolator> entry = interpolators.ceilingEntry(t);
+        double completion = curve.pathCompletion(t);
+
+        Map.Entry<Double, Interpolator> entry = interpolators.ceilingEntry(completion);
         Map.Entry<Double, Interpolator> previous = interpolators.lowerEntry(entry.getKey());
 
-        double initialT = previous == null ? 0.0 : previous.getKey();
-        double finalT = entry.getKey();
+        double initialT = previous == null ? 0.0 : curve.parameter(previous.getKey());
+        double finalT = curve.parameter(entry.getKey());
 
         double normalizedT = (t - initialT) / (finalT - initialT);
         return entry.getValue().interpolate(curve, normalizedT);

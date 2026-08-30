@@ -33,6 +33,8 @@ public class ForesightV3 implements Algorithm {
     private double headingError, translationalError, targetVelocity;
     private boolean busy = false;
     private final Vector2D naturalDeceleration;
+    private PathTracker tracker;
+    private MotionState currentState;
 
     public ForesightV3(ForesightConfig config) {
         this.config = config;
@@ -44,7 +46,9 @@ public class ForesightV3 implements Algorithm {
     @Override
     public DrivePowers calculatePath(
             Drivetrain drivetrain, PathTracker pathTracker, MotionState state, double deltaTime) {
-        closestT = pathTracker.current().curve.closestT(state.pose().toVector2D(), closestT);
+        tracker = pathTracker;
+        currentState = state;
+        closestT = pathTracker.current().curve.closestParameter(state.pose().toVector2D(), closestT);
 
         if (testParametric()) { // End Constraint
             closestT = 1.0;
@@ -78,7 +82,7 @@ public class ForesightV3 implements Algorithm {
         Curve curve = pathTracker.current().curve;
         Pose projectedPose = state.pose()
                 .plus(getBrakeDisplacement(state.twist(), state.pose().heading()));
-        projectedClosestT = curve.closestT(projectedPose.toVector2D(), projectedClosestT);
+        projectedClosestT = curve.closestParameter(projectedPose.toVector2D(), projectedClosestT);
         double targetHeading = closestPose.heading();
         double projectedTargetHeading = pathTracker.current().heading(projectedClosestT);
         Vector2D projectedTangent = curve.tangent(projectedClosestT);
@@ -126,7 +130,6 @@ public class ForesightV3 implements Algorithm {
                 isBraking,
                 velocityToBrakeInTime,
                 deltaTime,
-                projectedRemainingDist,
                 angleToTangent,
                 tangentialSpeed,
                 state,
@@ -175,6 +178,10 @@ public class ForesightV3 implements Algorithm {
     @Override
     public DrivePowers calculateHold(
             Drivetrain drivetrain, Pose target, MotionState state, boolean useScaling, double deltaTime) {
+        tracker = null;
+        currentState = state;
+        closestT = 1.0;
+
         if (resetTimer) {
             timer.reset();
             resetTimer = false;
@@ -269,7 +276,6 @@ public class ForesightV3 implements Algorithm {
             boolean isBraking,
             double profiledTargetVelocity,
             double deltaTime,
-            double remainingDistance,
             double angleToTangent,
             double tangentialVel,
             MotionState state,
@@ -307,7 +313,7 @@ public class ForesightV3 implements Algorithm {
         if (maxDecelerationConstraint != ForesightConfig.Constraint.NONE) {
             Pose projected = state.pose()
                     .plus(getCoastDisplacement(state.twist(), state.pose().heading()));
-            double projectedT = curve.closestT(projected.toVector2D(), coastClosestT);
+            double projectedT = curve.closestParameter(projected.toVector2D(), coastClosestT);
             Vector2D projectedTangent = curve.tangent(projectedT);
             double projectedRemainingDist = curve.remainingDistance(projectedT);
             if (projectedRemainingDist <= 0.01)
@@ -388,8 +394,9 @@ public class ForesightV3 implements Algorithm {
     }
 
     @Override
-    public double closestT() {
-        return closestT;
+    public double completion() {
+        if (tracker == null) return 1.0;
+        return tracker.path().curve.pathCompletion(closestT);
     }
 
     @Override
@@ -423,8 +430,8 @@ public class ForesightV3 implements Algorithm {
     }
 
     @Override
-    public boolean atParametricEnd(double t) {
-        return config.parametricTConstraint.get() < t;
+    public boolean atParametricEnd() {
+        return testParametric();
     }
 
     @Override
@@ -435,6 +442,7 @@ public class ForesightV3 implements Algorithm {
         closestT = 0.0;
         projectedClosestT = 0.0;
         coastClosestT = 0.0;
+        tracker = null;
     }
 
     @Override

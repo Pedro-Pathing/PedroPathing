@@ -24,13 +24,13 @@ public class CompoundCurve implements Curve {
     }
 
     @Override
-    public double closestT(Vector2D position, double initialGuess) {
+    public double closestParameter(Vector2D position, double initialGuess) {
         double bestT = 0.0;
         double bestDistance = Double.POSITIVE_INFINITY;
 
         for (Piecewise.Segment<Curve> segment : curves.segments()) {
             Curve curve = segment.value();
-            double localT = curve.closestT(position, initialGuess);
+            double localT = curve.closestParameter(position, initialGuess);
 
             Vector2D point = curve.get(localT);
             double distance = point.distance(position);
@@ -56,7 +56,7 @@ public class CompoundCurve implements Curve {
     }
 
     @Override
-    public double getT(double pathCompletion) {
+    public double parameter(double pathCompletion) {
         return getTFromDistance(pathCompletion * length());
     }
 
@@ -99,7 +99,7 @@ public class CompoundCurve implements Curve {
             double curveLength = curve.length();
 
             if (remaining <= curveLength) {
-                double localT = curve.getT(remaining);
+                double localT = curve.parameter(remaining);
                 return curves.globalT(segment, localT);
             }
 

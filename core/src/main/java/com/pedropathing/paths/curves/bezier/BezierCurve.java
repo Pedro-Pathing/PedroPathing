@@ -266,7 +266,7 @@ public class BezierCurve implements Curve {
     }
 
     @Override
-    public double closestT(Vector2D position, double initialGuess) {
+    public double closestParameter(Vector2D position, double initialGuess) {
         double[] searchEstimates = new double[] {0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, initialGuess};
         double closestDist = 1e9;
         double bestGuess = 0;
@@ -373,7 +373,7 @@ public class BezierCurve implements Curve {
      * @return returns the t value corresponding to the path completion percentage.
      */
     @Override
-    public double getT(double pathCompletion) {
+    public double parameter(double pathCompletion) {
         return completionMap.interpolateValue(pathCompletion * length);
     }
 

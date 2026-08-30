@@ -190,11 +190,11 @@ public class Follower {
     }
 
     public boolean atParametricEnd() {
-        return !mode.equals(Mode.FOLLOW) || algorithm.atParametricEnd(closestT());
+        return !mode.equals(Mode.FOLLOW) || algorithm.atParametricEnd();
     }
 
-    public double closestT() {
-        return algorithm.closestT();
+    public double completion() {
+        return algorithm.completion();
     }
 
     public Vector2D closestTangent() {
