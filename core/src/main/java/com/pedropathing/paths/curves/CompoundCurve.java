@@ -96,7 +96,7 @@ public class CompoundCurve implements Curve {
             Curve curve = segment.value();
             double curveLength = curve.length();
             if (remaining <= curveLength) {
-                double localT = curve.parameter(remaining / curveLength);  // normalize to fraction
+                double localT = curve.parameter(remaining / curveLength); // normalize to fraction
                 return curves.globalT(segment, localT);
             }
             remaining -= curveLength;
