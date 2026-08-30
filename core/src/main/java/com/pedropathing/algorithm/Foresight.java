@@ -126,14 +126,8 @@ public class Foresight implements Algorithm {
 
         headingFeedforwardPower += config.headingStaticFF.get().calculate(0, turnDirection(headingError));
 
-        Vector2D drive = projectedTangent.times(drive(
-                isBraking,
-                velocityToBrakeInTime,
-                deltaTime,
-                angleToTangent,
-                tangentialSpeed,
-                state,
-                curve));
+        Vector2D drive = projectedTangent.times(
+                drive(isBraking, velocityToBrakeInTime, deltaTime, angleToTangent, tangentialSpeed, state, curve));
 
         Pair<Double, Vector2D> translationalResult =
                 translationalCorrection(projectedPose, projectedTargetPos, projectedNormal);
@@ -158,7 +152,7 @@ public class Foresight implements Algorithm {
             }
         } else {
             if (((Math.abs(headingError) > 2 * config.headingDeviationTolerance.get())
-                    || (Math.abs(translationalError) > 2 * config.translationalDeviationTolerance.get()))
+                            || (Math.abs(translationalError) > 2 * config.translationalDeviationTolerance.get()))
                     && config.cosineScale.get())
                 drive = drive.times(allocator.getDriveScalar(translationalError, headingError));
         }
@@ -230,8 +224,8 @@ public class Foresight implements Algorithm {
                 linearTwist.hadamardProduct(linearTwist.abs()).transform(config.quadraticBrakeCoefficients.get());
         Vector2D linear = linearTwist.transform(config.linearBrakeCoefficients.get());
         double headingDisp = twist.omega
-                * Math.abs(twist.omega)
-                * config.headingBrakeCoefficients.get().y()
+                        * Math.abs(twist.omega)
+                        * config.headingBrakeCoefficients.get().y()
                 + twist.omega * config.headingBrakeCoefficients.get().x();
         Vector2D bodyDisp = quadratic.plus(linear);
         Pose worldPose = new Pose(0, 0, heading).exp(new Twist(bodyDisp.x(), bodyDisp.y(), headingDisp));
@@ -243,8 +237,8 @@ public class Foresight implements Algorithm {
         Vector2D bodyDisp =
                 linearTwist.hadamardProduct(linearTwist.abs()).times(1.0 / 2.0).elementDivision(naturalDeceleration);
         double headingDisp = twist.omega
-                * Math.abs(twist.omega)
-                * config.headingBrakeCoefficients.get().y()
+                        * Math.abs(twist.omega)
+                        * config.headingBrakeCoefficients.get().y()
                 + twist.omega * config.headingBrakeCoefficients.get().x();
         Pose worldPose = new Pose(0, 0, heading).exp(new Twist(bodyDisp.x(), bodyDisp.y(), headingDisp));
         return new Pose(worldPose.x(), worldPose.y(), headingDisp);

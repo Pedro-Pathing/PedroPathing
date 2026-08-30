@@ -50,10 +50,6 @@ public class MotionState {
 
     @Override
     public String toString() {
-        return "MotionState{" +
-                "pose=" + pose +
-                ", velocity=" + velocity +
-                ", twist=" + twist +
-                '}';
+        return "MotionState{" + "pose=" + pose + ", velocity=" + velocity + ", twist=" + twist + '}';
     }
 }

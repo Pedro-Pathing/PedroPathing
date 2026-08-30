@@ -34,7 +34,7 @@ public interface Interpolator {
         double finalEnd = Angle.normalize(end);
         double deltaHeading = error(finalStart, finalEnd);
 
-        return (curve, t) -> Angle.normalize(finalStart + deltaHeading * t);
+        return (curve, t) -> Angle.normalize(finalStart + deltaHeading * curve.pathCompletion(t));
     }
 
     static Interpolator linear(Pose start, Pose end) {
@@ -45,10 +45,10 @@ public interface Interpolator {
         double finalStart = Angle.normalize(start);
         double finalEnd = Angle.normalize(end);
 
-        double deltaHeading = -Angle.turnDirection(finalStart, finalEnd)
-                * Angle.smallestDifference(finalStart, finalEnd);
+        double deltaHeading =
+                -Angle.turnDirection(finalStart, finalEnd) * Angle.smallestDifference(finalStart, finalEnd);
 
-        return (curve, t) -> Angle.normalize(finalStart + deltaHeading * t);
+        return (curve, t) -> Angle.normalize(finalStart + deltaHeading * curve.pathCompletion(t));
     }
 
     static Interpolator longLinear(Pose start, Pose end) {

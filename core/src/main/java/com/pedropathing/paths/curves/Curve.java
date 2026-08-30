@@ -21,16 +21,19 @@ public interface Curve {
     default double remainingDistance(double t) {
         TValue.check(t);
         return (1 - t) * length();
-    };
+    }
+    ;
 
     default double pathCompletion(double t) {
+        if (length() == 0) return 0.0;
         return remainingDistance(t) / length();
     }
 
     default double parameter(double pathCompletion) {
         TValue.check(pathCompletion);
         return pathCompletion;
-    };
+    }
+    ;
 
     Vector2D derivative(double t);
 

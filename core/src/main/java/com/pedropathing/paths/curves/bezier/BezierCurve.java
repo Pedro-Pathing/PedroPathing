@@ -341,7 +341,7 @@ public class BezierCurve implements Curve {
     @Override
     public double remainingDistance(double t) {
         TValue.check(t);
-        return (1 - getPathCompletion(t)) * length;
+        return (1 - pathCompletion(t)) * length;
     }
 
     @Override
@@ -355,14 +355,9 @@ public class BezierCurve implements Curve {
         return (derivative.det(secondDerivative)) / derivMag / derivMag / derivMag;
     }
 
-    /**
-     * Returns the path completion at a given t value.
-     * This is used to get the percentage of the path that has been completed.
-     *
-     * @param t the t value of the parametric curve; [0, 1]
-     * @return returns the path completion as a decimal on the range [0,1].
-     */
-    public double getPathCompletion(double t) {
+    @Override
+    public double pathCompletion(double t) {
+        TValue.check(t);
         if (length == 0) return 0.0;
         return completionMap.interpolateKey(t) / length;
     }
