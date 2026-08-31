@@ -16,7 +16,7 @@ import com.pedropathing.math.Matrix;
 import com.pedropathing.math.Vector2D;
 
 public final class ForesightConfig {
-    public final ConfigVar<Controller> headingFeedback = ConfigVar.of(Controller.proportional(1.5), nonnull());
+    public final ConfigVar<Controller> headingFeedback = ConfigVar.of(Controller.proportional(6), nonnull());
     public final ConfigVar<Controller> headingStaticFF = ConfigVar.of(Controller.staticFeedforward(0), nonnull());
     public final ConfigVar<Controller> forwardTranslational = ConfigVar.of(Controller.proportional(0.07), nonnull());
     public final ConfigVar<Controller> strafeTranslational = ConfigVar.of(Controller.proportional(0.1), nonnull());
