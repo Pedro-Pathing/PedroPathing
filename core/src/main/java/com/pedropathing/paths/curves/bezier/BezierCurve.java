@@ -5,6 +5,7 @@
 package com.pedropathing.paths.curves.bezier;
 
 import static com.pedropathing.utils.Utils.clamp;
+import static com.pedropathing.utils.Utils.solveQuadratic;
 
 import com.pedropathing.math.Matrix;
 import com.pedropathing.math.Pose;
@@ -14,6 +15,7 @@ import com.pedropathing.paths.TValue;
 import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.utils.BijectiveMap;
 import com.pedropathing.utils.Utils;
+import jdk.internal.classfile.impl.Util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -94,18 +96,18 @@ public class BezierCurve implements Curve {
      * point is a row vector.
      */
     private void generateBezierCurve() {
+
+
         double[][] controlPointMatrix = new double[this.controlPoints.size()][2];
         for (int i = 0; i < this.controlPoints.size(); i++) {
             Vector2D p = controlPoints.get(i);
             controlPointMatrix[i] = new double[] {p.x(), p.y()};
         }
         Matrix controlMatrix = new Matrix(controlPointMatrix);
-        this.cachedMatrix = controlMatrix
-                .transpose()
-                .times(BasisMatrixSupplier.getBezierCharacteristicMatrix(this.controlPoints.size() - 1)
-                        .transpose());
+        this.cachedMatrix = BasisMatrixSupplier.getBezierCharacteristicMatrix(this.controlPoints.size()).times(controlMatrix);
 
         this.tMatrix = new PolynomialMatrix(this.controlPoints.size());
+
     }
 
     /**
@@ -193,7 +195,7 @@ public class BezierCurve implements Curve {
     }
 
     public Vector2D getDerivative(int n, double t) {
-        Vector outVel = new Vector(this.cachedMatrix.times(this.tMatrix.getTMatrix(n, t)).getRow(0));
+        Vector outVel = new Vector(this.tMatrix.getTMatrix(n, t).times(this.cachedMatrix).getRow(0));
         return Vector2D.cartesian(outVel.get(0), outVel.get(1));
     }
 
