@@ -5,7 +5,6 @@
 package com.pedropathing.paths.curves.bezier;
 
 import static com.pedropathing.utils.Utils.clamp;
-import static com.pedropathing.utils.Utils.solveQuadratic;
 
 import com.pedropathing.math.Matrix;
 import com.pedropathing.math.Pose;
@@ -15,7 +14,6 @@ import com.pedropathing.paths.TValue;
 import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.utils.BijectiveMap;
 import com.pedropathing.utils.Utils;
-import jdk.internal.classfile.impl.Util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
