@@ -24,7 +24,7 @@ public class PinpointLocalizer implements Localizer {
     private final DistanceUnit globalDistanceUnit;
 
     private MotionState motionState;
-    private ResetMode resetMode;
+    private final ResetMode resetMode;
 
     public PinpointLocalizer(HardwareMap hardwareMap, PinpointConfig config) {
         this.globalDistanceUnit = config.globalDistanceUnit.get();
