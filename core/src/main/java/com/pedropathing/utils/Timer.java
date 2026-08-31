@@ -41,7 +41,7 @@ public class Timer {
 
     /** This returns the elapsed time in milliseconds */
     public double milliseconds() {
-        return get(TimeUnit.SECONDS);
+        return get(TimeUnit.MILLISECONDS);
     }
 
     /** This returns the elapsed time in seconds */

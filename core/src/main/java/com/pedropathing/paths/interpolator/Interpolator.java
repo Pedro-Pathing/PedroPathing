@@ -34,11 +34,25 @@ public interface Interpolator {
         double finalEnd = Angle.normalize(end);
         double deltaHeading = error(finalStart, finalEnd);
 
-        return (curve, t) -> Angle.normalize(finalStart + deltaHeading * t);
+        return (curve, t) -> Angle.normalize(finalStart + deltaHeading * curve.pathCompletion(t));
     }
 
     static Interpolator linear(Pose start, Pose end) {
         return linear(start.heading(), end.heading());
+    }
+
+    static Interpolator longLinear(double start, double end) {
+        double finalStart = Angle.normalize(start);
+        double finalEnd = Angle.normalize(end);
+
+        double deltaHeading =
+                -Angle.turnDirection(finalStart, finalEnd) * Angle.smallestDifference(finalStart, finalEnd);
+
+        return (curve, t) -> Angle.normalize(finalStart + deltaHeading * curve.pathCompletion(t));
+    }
+
+    static Interpolator longLinear(Pose start, Pose end) {
+        return longLinear(start.heading(), end.heading());
     }
 
     static Interpolator facingPoint(Vector2D point) {

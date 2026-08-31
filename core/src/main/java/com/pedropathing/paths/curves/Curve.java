@@ -5,25 +5,35 @@
 package com.pedropathing.paths.curves;
 
 import com.pedropathing.math.Vector2D;
+import com.pedropathing.paths.TValue;
 
 public interface Curve {
     Vector2D get(double t);
 
-    double closestT(Vector2D position, double initialGuess);
+    double closestParameter(Vector2D position, double initialGuess);
 
-    default double closestT(Vector2D position) {
-        return closestT(position, 0.5);
+    default double closestParameter(Vector2D position) {
+        return closestParameter(position, 0.5);
     }
 
     double length();
 
-    double remainingDistance(double t);
+    default double remainingDistance(double t) {
+        TValue.check(t);
+        return (1 - t) * length();
+    }
+    ;
 
-    default double remainingDistanceNormalized(double t) {
+    default double pathCompletion(double t) {
+        if (length() == 0) return 0.0;
         return remainingDistance(t) / length();
     }
 
-    double getT(double pathCompletion);
+    default double parameter(double pathCompletion) {
+        TValue.check(pathCompletion);
+        return pathCompletion;
+    }
+    ;
 
     Vector2D derivative(double t);
 

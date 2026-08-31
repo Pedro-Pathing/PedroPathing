@@ -700,8 +700,7 @@ public class Matrix {
                 if (i == j) {
                     if (sum <= 0) {
                         throw new IllegalArgumentException(
-                                "Cannot use Cholesky decomposition on matrix that isn't positive-definite."
-                        );
+                                "Cannot use Cholesky decomposition on matrix that isn't positive-definite.");
                     }
 
                     L_vals[i][j] = Math.sqrt(sum);

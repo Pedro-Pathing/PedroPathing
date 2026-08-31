@@ -190,11 +190,11 @@ public class Follower {
     }
 
     public boolean atParametricEnd() {
-        return !mode.equals(Mode.FOLLOW) || algorithm.atParametricEnd(closestT());
+        return !mode.equals(Mode.FOLLOW) || algorithm.atParametricEnd();
     }
 
-    public double closestT() {
-        return algorithm.closestT();
+    public double completion() {
+        return algorithm.completion();
     }
 
     public Vector2D closestTangent() {
@@ -222,26 +222,50 @@ public class Follower {
     }
 
     public int pathIndex() {
+        if (pathTracker == null) return -1;
         return pathTracker.currentIndex();
     }
 
     public PathSegment currentSegment() {
+        if (pathTracker == null) return null;
         return pathTracker.current();
     }
 
     public Curve currentCurve() {
+        if (pathTracker == null) return null;
         return currentSegment().curve;
     }
 
     public Path currentPath() {
+        if (pathTracker == null) return null;
         return pathTracker.path();
     }
 
-    public double getTangentialVelocity() {
+    public double tangentialVelocity() {
         return velocity().toVector2D().dot(closestTangent());
     }
 
     public Algorithm getAlgorithm() {
         return algorithm;
+    }
+
+    public Pose poseAt(double completion) {
+        if (pathTracker == null) return holdPose == null ? pose() : holdPose;
+        return currentSegment().get(currentCurve().parameter(completion));
+    }
+
+    public Vector2D tangentAt(double completion) {
+        if (pathTracker == null) return closestTangent();
+        return currentCurve().tangent(currentCurve().parameter(completion));
+    }
+
+    public Vector2D normalAt(double completion) {
+        if (pathTracker == null) return closestNormal();
+        return currentCurve().leftNormal(currentCurve().parameter(completion));
+    }
+
+    public double curvatureAt(double completion) {
+        if (pathTracker == null) return curvature();
+        return currentCurve().curvature(currentCurve().parameter(completion));
     }
 }

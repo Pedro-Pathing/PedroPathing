@@ -17,7 +17,7 @@ public interface Algorithm {
     DrivePowers calculateHold(
             Drivetrain drivetrain, Pose target, MotionState state, boolean useScaling, double deltaTime);
 
-    double closestT();
+    double completion();
 
     Pose closestPose();
 
@@ -31,7 +31,7 @@ public interface Algorithm {
 
     double pathCompletion();
 
-    boolean atParametricEnd(double t);
+    boolean atParametricEnd();
 
     void reset();
 

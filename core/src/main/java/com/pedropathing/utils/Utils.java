@@ -124,6 +124,6 @@ public final class Utils {
         double b = (t1 * s22 - t2 * s12) / det;
         double a = (s11 * t2 - s12 * t1) / det;
 
-        return new double[]{b, a};
+        return new double[] {b, a};
     }
 }

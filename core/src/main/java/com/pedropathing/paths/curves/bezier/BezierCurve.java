@@ -202,7 +202,7 @@ public class BezierCurve implements Curve {
     }
 
     @Override
-    public double closestT(Vector2D position, double initialGuess) {
+    public double closestParameter(Vector2D position, double initialGuess) {
         double[] searchEstimates = new double[] {0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, initialGuess};
         double closestDist = 1e9;
         double bestGuess = 0;
@@ -277,7 +277,7 @@ public class BezierCurve implements Curve {
     @Override
     public double remainingDistance(double t) {
         TValue.check(t);
-        return (1 - getPathCompletion(t)) * length;
+        return (1 - pathCompletion(t)) * length;
     }
 
     @Override
@@ -291,14 +291,9 @@ public class BezierCurve implements Curve {
         return (derivative.det(secondDerivative)) / derivMag / derivMag / derivMag;
     }
 
-    /**
-     * Returns the path completion at a given t value.
-     * This is used to get the percentage of the path that has been completed.
-     *
-     * @param t the t value of the parametric curve; [0, 1]
-     * @return returns the path completion as a decimal on the range [0,1].
-     */
-    public double getPathCompletion(double t) {
+    @Override
+    public double pathCompletion(double t) {
+        TValue.check(t);
         if (length == 0) return 0.0;
         return completionMap.interpolateKey(t) / length;
     }
@@ -309,7 +304,7 @@ public class BezierCurve implements Curve {
      * @return returns the t value corresponding to the path completion percentage.
      */
     @Override
-    public double getT(double pathCompletion) {
+    public double parameter(double pathCompletion) {
         return completionMap.interpolateValue(pathCompletion * length);
     }
 

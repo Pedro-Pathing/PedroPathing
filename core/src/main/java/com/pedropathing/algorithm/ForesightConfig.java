@@ -16,13 +16,12 @@ import com.pedropathing.math.Matrix;
 import com.pedropathing.math.Vector2D;
 
 public final class ForesightConfig {
-    public final ConfigVar<Controller> headingFeedback = ConfigVar.of(Controller.proportional(1.5), nonnull());
+    public final ConfigVar<Controller> headingFeedback = ConfigVar.required(nonnull());
     public final ConfigVar<Controller> headingStaticFF = ConfigVar.of(Controller.staticFeedforward(0), nonnull());
-    public final ConfigVar<Controller> forwardTranslational = ConfigVar.of(Controller.proportional(0.07), nonnull());
-    public final ConfigVar<Controller> strafeTranslational = ConfigVar.of(Controller.proportional(0.1), nonnull());
-    public final ConfigVar<Controller> brake = ConfigVar.of(Controller.proportionalFeedforward(0.009), nonnull());
-    public final ConfigVar<Controller> coast = ConfigVar.of(Controller.proportional(0.025)
-            .plus(Controller.proportionalFeedforward(0.015)), nonnull());
+    public final ConfigVar<Controller> forwardTranslational = ConfigVar.required(nonnull());
+    public final ConfigVar<Controller> strafeTranslational = ConfigVar.required(nonnull());
+    public final ConfigVar<Controller> brake = ConfigVar.required(nonnull());
+    public final ConfigVar<Controller> coast = ConfigVar.required(nonnull());
 
     /**
      * This scales the translational error correction power when holding.
@@ -33,11 +32,6 @@ public final class ForesightConfig {
      * This scales the heading error correction power when holding.
      */
     public final ConfigVar<Double> holdPointHeadingScaling = ConfigVar.of(0.35, nonnegative());
-
-    /**
-     * Centripetal force to power scaling.
-     */
-    public final ConfigVar<Vector2D> centripetalGains = ConfigVar.of(Vector2D.zero());
 
     /**
      * The maximum amount of power the robot can apply in the opposite direction of momentum. Default is 0.2. Too high of a value might burn out the control hub and too low of a value might not be able to stop quickly after back-emf is overcome.
@@ -82,7 +76,7 @@ public final class ForesightConfig {
     public final ConfigVar<Matrix> quadraticBrakeCoefficients = ConfigVar.required();
     public final ConfigVar<Vector2D> headingBrakeCoefficients = ConfigVar.required();
 
-    public final ConfigVar<Boolean> cosineScale = ConfigVar.of(true);
+    public final ConfigVar<Boolean> cosineScale = ConfigVar.of(false);
     public final ConfigVar<Boolean> turnBeforeDriving = ConfigVar.of(false);
 
     /**

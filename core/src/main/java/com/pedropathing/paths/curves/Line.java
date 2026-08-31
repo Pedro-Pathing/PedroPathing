@@ -62,7 +62,7 @@ public class Line implements Curve {
     }
 
     @Override
-    public double closestT(Vector2D position, double initialGuess) {
+    public double closestParameter(Vector2D position, double initialGuess) {
         Vector2D PA = position.minus(start);
         return Utils.clamp(displacement.dot(PA) / Math.pow(displacement.magnitude(), 2), 0, 1);
     }
@@ -70,17 +70,6 @@ public class Line implements Curve {
     @Override
     public double length() {
         return length;
-    }
-
-    @Override
-    public double remainingDistance(double t) {
-        TValue.check(t);
-        return (1 - t) * length();
-    }
-
-    @Override
-    public double getT(double pathCompletion) {
-        return pathCompletion;
     }
 
     @Override

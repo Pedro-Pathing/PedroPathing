@@ -4,7 +4,9 @@
  */
 package com.pedropathing.paths.interpolator;
 
+import com.pedropathing.paths.TValue;
 import com.pedropathing.paths.curves.Curve;
+import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
@@ -28,7 +30,17 @@ public class PiecewiseInterpolator implements Interpolator {
     public double interpolate(Curve curve, double t) {
         if (greatestT < 1.0)
             throw new IllegalStateException("piecewise interpolation must be fully defined before interpolating.");
-        if (t < 0.0 || t > 1.0) throw new IllegalArgumentException("t must be between 0.0 and 1.0.");
-        return interpolators.ceilingEntry(t).getValue().interpolate(curve, t);
+        TValue.check(t);
+
+        double completion = curve.pathCompletion(t);
+
+        Map.Entry<Double, Interpolator> entry = interpolators.ceilingEntry(completion);
+        Map.Entry<Double, Interpolator> previous = interpolators.lowerEntry(entry.getKey());
+
+        double initialT = previous == null ? 0.0 : curve.parameter(previous.getKey());
+        double finalT = curve.parameter(entry.getKey());
+
+        double normalizedT = (t - initialT) / (finalT - initialT);
+        return entry.getValue().interpolate(curve, normalizedT);
     }
 }

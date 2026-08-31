@@ -24,13 +24,15 @@ public class CompoundCurve implements Curve {
     }
 
     @Override
-    public double closestT(Vector2D position, double initialGuess) {
+    public double closestParameter(Vector2D position, double initialGuess) {
         double bestT = 0.0;
         double bestDistance = Double.POSITIVE_INFINITY;
+        Piecewise.Segment<Curve> guessSegment = curves.getSegment(initialGuess);
 
         for (Piecewise.Segment<Curve> segment : curves.segments()) {
             Curve curve = segment.value();
-            double localT = curve.closestT(position, initialGuess);
+            double localGuess = (segment == guessSegment) ? curves.localT(initialGuess) : 0.5;
+            double localT = curve.closestParameter(position, localGuess);
 
             Vector2D point = curve.get(localT);
             double distance = point.distance(position);
@@ -56,35 +58,32 @@ public class CompoundCurve implements Curve {
     }
 
     @Override
-    public double getT(double pathCompletion) {
+    public double parameter(double pathCompletion) {
         return getTFromDistance(pathCompletion * length());
     }
 
-    private double distanceAt(double t) { // TODO: verify
+    private double distanceAt(double t) {
         double distanceTraveled = 0.0;
-        double currentT = 0.0;
+        double cumulativeLength = 0.0;
+        double totalLength = curves.length();
 
         for (Piecewise.Segment<Curve> segment : curves.segments()) {
             Curve curve = segment.value();
             double curveLength = curve.length();
-            double nextT = currentT + curveLength;
+            double currentT = cumulativeLength / totalLength;
+            double nextT = (cumulativeLength + curveLength) / totalLength;
 
             if (t <= currentT) {
-                // t before segment
                 break;
             } else if (t >= nextT) {
-                // t after segment
                 distanceTraveled += curveLength;
             } else {
-                // t within segment
                 double localT = curves.localT(t);
                 distanceTraveled += curveLength - curve.remainingDistance(localT);
                 break;
             }
-
-            currentT = nextT;
+            cumulativeLength += curveLength;
         }
-
         return distanceTraveled;
     }
 
@@ -93,19 +92,15 @@ public class CompoundCurve implements Curve {
         if (distance >= length()) return 1;
 
         double remaining = distance;
-
         for (Piecewise.Segment<Curve> segment : curves.segments()) {
             Curve curve = segment.value();
             double curveLength = curve.length();
-
             if (remaining <= curveLength) {
-                double localT = curve.getT(remaining);
+                double localT = curve.parameter(remaining / curveLength); // normalize to fraction
                 return curves.globalT(segment, localT);
             }
-
             remaining -= curveLength;
         }
-
         return 1;
     }
 
