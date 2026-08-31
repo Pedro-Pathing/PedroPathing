@@ -140,53 +140,6 @@ public class BezierCurve implements Curve {
     }
 
     /**
-     * Initializes the degree/power array (for later processing) and cache them
-     */
-    private static int[][] initializeDegreeArray(int deg) {
-        int[][] diffPowers = new int[3][deg + 1];
-
-        for (int i = 0; i < diffPowers.length; i++) {
-            diffPowers[i] = BezierCurve.genDiff(deg, i);
-        }
-
-        return diffPowers;
-    }
-
-    /**
-     * Generate and return a polynomial's powers at the differentiation level
-     * @param deg degree of poly
-     * @param diffLevel number of differentiations
-     * @return powers of each term in integers
-     */
-    private static int[] genDiff(int deg, int diffLevel) {
-        int[] output = new int[deg + 1];
-
-        for (int i = diffLevel; i < output.length; i++) {
-            output[i] = i - diffLevel;
-        }
-
-        return output;
-    }
-
-    /**
-     * Initializes the coefficient array (for later processing) and cache them.
-     * Each row is a different level of differentiation.
-     */
-    private static int[][] initializeCoefficientArray(int[][] diffPowers, int deg) {
-        int[][] diffCoefficients = new int[3][deg + 1];
-
-        Arrays.fill(diffCoefficients[0], 1);
-
-        for (int row = 1; row < diffCoefficients.length; row++) {
-            for (int col = 0; col < diffCoefficients[0].length; col++) {
-                diffCoefficients[row][col] = diffCoefficients[row - 1][col] * diffPowers[row - 1][col];
-            }
-        }
-
-        return diffCoefficients;
-    }
-
-    /**
      * This returns the point on the Bezier curve that is specified by the parametric t value. A
      * Bezier curve is a parametric function that returns points along it with t ranging from [0, 1],
      * with 0 being the beginning of the curve and 1 being at the end. The Follower will follow
