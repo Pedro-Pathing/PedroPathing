@@ -2,6 +2,7 @@
 
 Follow the steps on our [website](https://pedropathing.com/) to setup your project and tune!  
 Feel free to reach out on the [Offical Pedro Pathing Discord Server](https://discord.gg/2GfC4qBP5s)!
+
 <!--
 ---
 
