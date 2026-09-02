@@ -58,7 +58,7 @@ public class Vector2D {
 
     public Vector2D normalized() {
         double magnitude = magnitude();
-        if (isZero()) throw new IllegalArgumentException("Cannot normalize 0 vector");
+        if (magnitude < 1e-9) throw new IllegalArgumentException("Cannot normalize 0 vector");
         return div(magnitude);
     }
 
