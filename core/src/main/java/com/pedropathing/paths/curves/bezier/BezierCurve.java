@@ -14,6 +14,8 @@ import com.pedropathing.math.Vector2D;
 import com.pedropathing.paths.TValue;
 import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.utils.BijectiveMap;
+import com.pedropathing.utils.Utils;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -85,7 +87,8 @@ public class BezierCurve implements Curve {
      */
     private void initialize() {
         generateBezierCurve();
-        length = approximateLength();
+        approximateLength();
+        length = completionMap.get(1.0);
     }
 
     /**
@@ -114,14 +117,14 @@ public class BezierCurve implements Curve {
      *
      * @return returns the approximated length of the BezierCurve.
      */
-    private double approximateLength() {
+    private void approximateLength() {
         completionMap.put(0.0, 0.0);
         Vector2D p0 = get(0.0);
         Vector2D p1 = get(1.0);
-        return subdivide(0.0, 1.0, p0, p1, 0);
+        subdivide(0.0, 1.0, p0, p1, 0);
     }
 
-    private double subdivide(double startT, double endT, Vector2D startPoint, Vector2D endPoint, int depth) {
+    private void subdivide(double startT, double endT, Vector2D startPoint, Vector2D endPoint, int depth) {
         double tMid = (startT + endT) / 2.0;
         Vector2D pMid = get(tMid);
         double length = startPoint.distance(endPoint);
@@ -131,12 +134,11 @@ public class BezierCurve implements Curve {
             double currentLength = completionMap.get(startT) + splitLength;
             completionMap.put(tMid, completionMap.get(startT) + startPoint.distance(pMid));
             completionMap.put(endT, currentLength);
-            return splitLength;
+            return;
         }
 
-        double leftLength = subdivide(startT, tMid, startPoint, pMid, depth + 1);
-        double rightLength = subdivide(tMid, endT, pMid, endPoint, depth + 1);
-        return leftLength + rightLength;
+        subdivide(startT, tMid, startPoint, pMid, depth + 1);
+        subdivide(tMid, endT, pMid, endPoint, depth + 1);
     }
 
     /**
@@ -359,7 +361,7 @@ public class BezierCurve implements Curve {
     public double pathCompletion(double t) {
         TValue.check(t);
         if (length == 0) return 0.0;
-        return completionMap.interpolateKey(t) / length;
+        return Utils.clamp(completionMap.interpolateKey(t) / length, 0, 1);
     }
 
     /**

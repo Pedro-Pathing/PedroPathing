@@ -193,16 +193,18 @@ public class Foresight implements Algorithm {
 
         translationalError = target.distance(state.pose());
         Vector2D translational = Vector2D.zero();
-        if (dist < 1e-9) {
+        if (dist < 1e-3) {
             tangentialSpeed = 0;
             closestTangent = Vector2D.zero();
+            closestNormal = closestTangent;
         } else {
-            closestTangent = displacement.normalized();
+            closestTangent = displacement.div(dist);
             tangentialSpeed = closestTangent.dot(state.velocity().toVector2D());
 
             Pair<Double, Vector2D> translationalResult =
-                    translationalCorrection(projectedPose, target.toVector2D(), displacement.div(dist));
+                    translationalCorrection(projectedPose, target.toVector2D(), closestTangent);
             translational = translationalResult.second();
+            closestNormal = closestTangent;
         }
 
         if (busy && timeoutCondition() || (headingCondition() && translationalCondition() && velocityCondition()))
@@ -365,7 +367,7 @@ public class Foresight implements Algorithm {
     }
 
     public boolean velocityCondition() {
-        return tangentialSpeed < config.velocityConstraint.get();
+        return Math.abs(tangentialSpeed) < config.velocityConstraint.get();
     }
 
     public boolean translationalCondition() {
