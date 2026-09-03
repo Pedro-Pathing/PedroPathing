@@ -33,17 +33,6 @@ public class PinpointLocalizer implements Localizer {
 
         pinpoint.setOffsets(config.xPodOffset.get(), config.yPodOffset.get(), config.offsetUnits.get());
 
-        if (pinpoint.getDeviceVersion() >= 2) {
-            pinpoint.setBulkReadScope(
-                    GoBildaPinpointDriver.Register.X_POSITION,
-                    GoBildaPinpointDriver.Register.Y_POSITION,
-                    GoBildaPinpointDriver.Register.X_VELOCITY,
-                    GoBildaPinpointDriver.Register.Y_VELOCITY,
-                    GoBildaPinpointDriver.Register.H_ORIENTATION,
-                    GoBildaPinpointDriver.Register.H_VELOCITY
-            );
-        }
-
         if (config.ticksPerUnit.get().isPresent()) {
             pinpoint.setEncoderResolution(config.ticksPerUnit.get().getAsDouble(), config.encoderResolutionUnit.get());
         } else {
