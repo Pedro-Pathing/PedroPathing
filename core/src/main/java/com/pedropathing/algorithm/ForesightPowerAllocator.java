@@ -20,7 +20,6 @@ public class ForesightPowerAllocator {
         this.config = config;
     }
 
-    @SuppressWarnings("unchecked")
     public DrivePowers allocatePowers(
             Drivetrain drivetrain,
             MotionState state,
