@@ -29,7 +29,7 @@ public class PiecewiseController implements Controller {
     @Override
     public double calculate(double target, double error) {
         double absError = Math.abs(error);
-        return controllers.floorEntry(absError).getValue().calculate(target, absError);
+        return controllers.floorEntry(absError).getValue().calculate(target, error);
     }
 
     @Override
