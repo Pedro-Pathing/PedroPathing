@@ -77,7 +77,6 @@ public final class ForesightConfig {
     public final ConfigVar<Vector2D> headingBrakeCoefficients = ConfigVar.required();
 
     public final ConfigVar<Boolean> cosineScale = ConfigVar.of(false);
-    public final ConfigVar<Boolean> turnBeforeDriving = ConfigVar.of(false);
 
     /**
      * Maximum achievable speed that the robot can move forward/backward at, in units per second.

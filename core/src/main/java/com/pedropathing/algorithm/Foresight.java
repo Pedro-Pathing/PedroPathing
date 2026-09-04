@@ -147,7 +147,6 @@ public class Foresight implements Algorithm {
                 drive = drive.times(tangentDisplacementToStart / translationalError);
 
             if (isHeadingBeforePath && config.cosineScale.get()) {
-                if (config.turnBeforeDriving.get()) drive = Vector2D.zero();
                 drive = drive.times(allocator.getDriveScalar(0, headingError));
             }
         } else {

@@ -19,6 +19,8 @@ public class FusionLocalizer implements Localizer {
         Velocity velocity;
         Pose relativeTransform;
         Matrix covariance;
+        Pose remainderTransform;
+        Long upperKey;
 
         public KalmanState(Pose pose, Velocity velocity, Pose relativeTransform, Matrix covariance) {
             this.pose = pose;
@@ -159,7 +161,7 @@ public class FusionLocalizer implements Localizer {
         Matrix measurementR = measurementVariance == null
                 ? R
                 : Matrix.diag(measurementVariance.x(), measurementVariance.y(), measurementVariance.heading())
-                        .clampDiagonals(EPSILON);
+                .clampDiagonals(EPSILON);
 
         // Reject if timestamp is outside our poseHistory time window
         if (history.isEmpty() || timestamp < history.firstKey() || timestamp > history.lastKey()) return;
@@ -192,6 +194,17 @@ public class FusionLocalizer implements Localizer {
         Matrix S_inv = S.invert();
         if (S_inv == null) return;
         Matrix K = Pm.times(S_inv);
+
+        if (interpolatedData.upperKey != null) {
+            KalmanState upperEntry = history.get(interpolatedData.upperKey);
+            history.put(
+                    interpolatedData.upperKey,
+                    new KalmanState(
+                            upperEntry.pose,
+                            upperEntry.velocity,
+                            interpolatedData.remainderTransform,
+                            upperEntry.covariance));
+        }
 
         // Apply mask
         K = M.times(K);
@@ -252,8 +265,14 @@ public class FusionLocalizer implements Localizer {
         Velocity upperVel = upper.velocity;
         Velocity interpolVel = lowerVel.plus(upperVel.minus(lowerVel).scale(ratio));
         Pose interpolPose = Pose.interpolate(lower.pose, upper.pose, ratio);
-        Pose interpolTransform = interpolateTransform(lower.relativeTransform, upper.relativeTransform, ratio);
-        return new KalmanState(interpolPose, interpolVel, interpolTransform, lower.covariance);
+
+        Pose toMeasurement = interpolateTransform(Pose.zero(), upper.relativeTransform, ratio);
+        Pose remainder = toMeasurement.invert().compose(upper.relativeTransform);
+
+        KalmanState result = new KalmanState(interpolPose, interpolVel, toMeasurement, lower.covariance);
+        result.remainderTransform = remainder;
+        result.upperKey = upperKey;
+        return result;
     }
 
     public static Pose interpolateTransform(Pose a, Pose b, double ratio) {
