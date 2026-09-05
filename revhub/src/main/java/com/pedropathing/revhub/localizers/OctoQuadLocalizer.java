@@ -22,7 +22,9 @@ public class OctoQuadLocalizer implements Localizer {
         octoQuad.setSingleEncoderDirection(config.xPodPort.get(), config.xPodDirection.get());
         octoQuad.setSingleEncoderDirection(config.yPodPort.get(), config.yPodDirection.get());
 
-        float ticksPerMM = (float) DistanceUnit.MM.fromUnit(config.encoderResolutionUnit.get(), config.ticksPerUnit.get());
+        double mmPerUnit = config.encoderResolutionUnit.get().toMm(1.0);
+        float ticksPerMM = (float) (config.ticksPerUnit.get() / mmPerUnit);
+
         octoQuad.setAllLocalizerParameters(
                 config.xPodPort.get(),
                 config.yPodPort.get(),
@@ -37,7 +39,9 @@ public class OctoQuadLocalizer implements Localizer {
 
         reset();
 
-        while (octoQuad.getLocalizerStatus() != com.qualcomm.hardware.digitalchickenlabs.OctoQuad.LocalizerStatus.RUNNING) {}
+        while (octoQuad.getLocalizerStatus() != com.qualcomm.hardware.digitalchickenlabs.OctoQuad.LocalizerStatus.RUNNING) {
+
+        }
 
         update();
     }
