@@ -18,12 +18,12 @@ public class DebugString {
     public String format() {
         StringBuilder output = new StringBuilder();
 
-        output.append("Localizer {\n")
-                .append(indent(debugString[0]))
-                .append("\n},\n");
-
         output.append("Follower {\n")
                 .append(indent(debugString[1]))
+                .append("\n},\n");
+
+        output.append("Localizer {\n")
+                .append(indent(debugString[0]))
                 .append("\n},\n");
 
         if (!mode.equals(Follower.Mode.MANUAL) && !mode.equals(Follower.Mode.IDLE)) {
