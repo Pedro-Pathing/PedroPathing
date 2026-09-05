@@ -37,6 +37,8 @@ public class Swerve implements Drivetrain {
     private double lastRotation = 0;
     private double lastAvgScaling = 0;
 
+    private double powerScaling;
+
     private final VoltageSensor voltageSensor;
 
     /**
@@ -62,6 +64,26 @@ public class Swerve implements Drivetrain {
             pod.move(pod.getAngle(), 0, true);
             pod.setToFloat();
         }
+    }
+
+    @Override
+    public String debugString() {
+        StringBuilder output = new StringBuilder();
+
+        output.append("Forward: ").append(lastForward).append("\n")
+                .append("Strafe: ").append(lastStrafe).append("\n")
+                .append("Rotation: ").append(lastRotation).append("\n")
+                .append("Power Scaling: ").append(powerScaling).append("\n")
+                .append("Average Angle Scaling: ").append(lastAvgScaling);
+
+        output.append("\nPods {");
+        for (SwervePod pod : pods) {
+            output.append("\n    ")
+                    .append(pod.debugString().replace("\n", "\n    "));
+        }
+        output.append("\n}");
+
+        return output.toString();
     }
 
     @Override
@@ -92,10 +114,12 @@ public class Swerve implements Drivetrain {
         for (Vector2D podVector : podVectors) {
             if (voltageCompensation) {
                 double voltageNormalized = getVoltageNormalized();
-                podVector.times(voltageNormalized);
+                podVector = podVector.times(voltageNormalized);
             }
             maxMagnitude = Math.max(maxMagnitude, podVector.magnitude());
         }
+
+        powerScaling = 1 / maxMagnitude;
 
         // Find the avg scaling constant (avg of cos(angle error))
         double avgScaling = 0;
@@ -182,7 +206,7 @@ public class Swerve implements Drivetrain {
             if (t2 >= 0.0 && t2 < lambda) lambda = t2;
         }
 
-        return lambda;
+        return Utils.clamp(lambda, 0.0, 1.0);
     }
 
     public void setZeroPowerBehavior(DcMotor.ZeroPowerBehavior behavior) {

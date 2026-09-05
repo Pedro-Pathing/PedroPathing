@@ -32,6 +32,7 @@ public class Foresight implements Algorithm {
     private boolean resetTimer = true;
     private double headingError, translationalError, targetVelocity;
     private boolean busy = false;
+    private boolean isBraking = false;
     private final Vector2D naturalDeceleration;
     private PathTracker tracker;
     private MotionState currentState;
@@ -95,7 +96,7 @@ public class Foresight implements Algorithm {
 
         double velocityToBrakeInTime =
                 getVelocityToBrakeInTime(projectedRemainingDist, projectedTangent, projectedPose.heading());
-        boolean isBraking = velocityToBrakeInTime <= 0 || projectedRemainingDist <= 0;
+        isBraking = (velocityToBrakeInTime <= 0 || projectedRemainingDist <= 0) && config.brakeAtEnd.get();
 
         if (isBraking && (pathTracker.remainingPaths() > 1 || !config.brakeAtEnd.get())) {
             pathTracker.advance();
@@ -174,6 +175,7 @@ public class Foresight implements Algorithm {
         tracker = null;
         currentState = state;
         closestT = 1.0;
+        isBraking = false;
 
         if (resetTimer) {
             timer.reset();
@@ -439,10 +441,34 @@ public class Foresight implements Algorithm {
         projectedClosestT = 0.0;
         coastClosestT = 0.0;
         tracker = null;
+        isBraking = false;
     }
 
     @Override
     public boolean isBusy() {
         return busy;
+    }
+
+    @Override
+    public String debugString() {
+        return "Closest Pose: " + closestPose + "\n" +
+                "Closest T: " + closestT + "\n" +
+                "Path Completion: " + curveCompletion + "\n" +
+                "Remaining Distance: " + remainingDistance + "\n" +
+                "Curvature: " + curvature + "\n" +
+                "Tangent: " + closestTangent + "\n" +
+                "Normal: " + closestNormal + "\n" +
+                "Tangential Speed: " + tangentialSpeed + "\n" +
+                "Target Velocity: " + targetVelocity + "\n" +
+                "Translational Error: " + translationalError + "\n" +
+                "Heading Error: " + headingError + "\n" +
+                "Projected T: " + projectedClosestT + "\n" +
+                "Busy: " + busy + "\n" +
+                "Braking: " + isBraking + "\n" +
+                "Velocity Condition: " + velocityCondition() + "\n" +
+                "Translational Condition: " + translationalCondition() + "\n" +
+                "Heading Condition: " + headingCondition() + "\n" +
+                "Parametric Condition: " + parametricCondition() + "\n" +
+                "Timeout Condition: " + timeoutCondition();
     }
 }

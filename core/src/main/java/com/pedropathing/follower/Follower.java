@@ -17,6 +17,9 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathSegment;
 import com.pedropathing.paths.PathTracker;
 import com.pedropathing.paths.curves.Curve;
+import com.pedropathing.utils.DebugInfo;
+
+import java.util.function.BiConsumer;
 
 public class Follower {
     public final Localizer localizer;
@@ -29,11 +32,18 @@ public class Follower {
     private Mode mode = Mode.IDLE;
     private long previousNanoTime = 0L;
     private boolean useHoldScaling;
+    private BiConsumer<String, DebugInfo> logger;
+    private DebugInfo info;
 
     public Follower(Localizer localizer, Drivetrain drivetrain, Algorithm algorithm) {
         this.localizer = localizer;
         this.algorithm = algorithm;
         this.drivetrain = drivetrain;
+    }
+
+    public Follower withLogger(BiConsumer<String, String> logger) {
+        this.logger = (s, d) -> logger.accept(s, "\n" + d.format());
+        return this;
     }
 
     public Mode mode() {
@@ -49,6 +59,7 @@ public class Follower {
     }
 
     public void update(double deltaTime) {
+        info = null;
         localizer.update();
 
         switch (mode) {
@@ -82,6 +93,27 @@ public class Follower {
                 break;
             }
         }
+
+        if (logger != null) {
+            DebugInfo logInfo = debugInfo();
+            logger.accept("Pedro Pathing Log", logInfo);
+        }
+    }
+
+    public DebugInfo debugInfo() {
+        if (info == null) {
+            String localizerString = localizer.debugString();
+            String followString = "Mode: " + mode;
+            if (mode == Mode.FOLLOW || mode == Mode.HOLD) {
+                followString += "\nisBusy: " + isBusy() + "\natParametricEnd: "
+                        + atParametricEnd() + "\npathIndex: " + pathIndex();
+            }
+            String algorithmInfo = algorithm.debugString();
+            String drivetrainInfo = drivetrain.debugString();
+            info = new DebugInfo(localizerString, followString, algorithmInfo, drivetrainInfo, mode);
+        }
+
+        return info;
     }
 
     private void clearState() {

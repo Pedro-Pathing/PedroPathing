@@ -36,4 +36,6 @@ public interface Algorithm {
     void reset();
 
     boolean isBusy();
+
+    String debugString();
 }
