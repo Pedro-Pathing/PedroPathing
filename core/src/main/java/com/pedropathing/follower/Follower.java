@@ -44,7 +44,9 @@ public class Follower {
     }
 
     public Follower withLogger(BiConsumer<String, String> logger) {
-        this.stringLoggers.add((s, d) -> logger.accept(s, "\n" + d.format()));
+        this.stringLoggers.add((s, d) ->
+                logger.accept(s, "{\n    " + d.format()
+                        .replace("\n", "\n    ") + "\n}"));
         return this;
     }
 
