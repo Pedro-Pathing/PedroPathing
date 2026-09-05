@@ -10,4 +10,6 @@ public interface Drivetrain {
     double maxScaling(DrivePowers current, DrivePowers delta);
 
     void stop();
+
+    String debugString();
 }

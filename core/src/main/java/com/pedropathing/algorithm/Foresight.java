@@ -18,7 +18,11 @@ import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.utils.Pair;
 import com.pedropathing.utils.Timer;
 import com.pedropathing.utils.Utils;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public class Foresight implements Algorithm {
     public final ForesightConfig config;
@@ -32,9 +36,11 @@ public class Foresight implements Algorithm {
     private boolean resetTimer = true;
     private double headingError, translationalError, targetVelocity;
     private boolean busy = false;
+    private boolean isBraking = false;
     private final Vector2D naturalDeceleration;
     private PathTracker tracker;
     private MotionState currentState;
+    private final List<Consumer<ForesightDebugData>> dataLoggers = new ArrayList<>();
 
     public Foresight(ForesightConfig config) {
         this.config = config;
@@ -95,7 +101,7 @@ public class Foresight implements Algorithm {
 
         double velocityToBrakeInTime =
                 getVelocityToBrakeInTime(projectedRemainingDist, projectedTangent, projectedPose.heading());
-        boolean isBraking = velocityToBrakeInTime <= 0 || projectedRemainingDist <= 0;
+        isBraking = (velocityToBrakeInTime <= 0 || projectedRemainingDist <= 0) && config.brakeAtEnd.get();
 
         if (isBraking && (pathTracker.remainingPaths() > 1 || !config.brakeAtEnd.get())) {
             pathTracker.advance();
@@ -156,7 +162,7 @@ public class Foresight implements Algorithm {
                 drive = drive.times(allocator.getDriveScalar(translationalError, headingError));
         }
 
-        return allocator.allocatePowers(
+        DrivePowers drivePowers = allocator.allocatePowers(
                 drivetrain,
                 state,
                 Vector2D.zero(),
@@ -166,6 +172,13 @@ public class Foresight implements Algorithm {
                 headingFeedbackPower,
                 translationalError,
                 headingError);
+
+        if (!dataLoggers.isEmpty()) {
+            ForesightDebugData data = debugData();
+            for (Consumer<ForesightDebugData> dataLogger : dataLoggers)
+                dataLogger.accept(data);
+        }
+        return drivePowers;
     }
 
     @Override
@@ -174,6 +187,7 @@ public class Foresight implements Algorithm {
         tracker = null;
         currentState = state;
         closestT = 1.0;
+        isBraking = false;
 
         if (resetTimer) {
             timer.reset();
@@ -217,7 +231,14 @@ public class Foresight implements Algorithm {
             headingCorrection *= headingScale;
         }
 
-        return allocator.getDrivePowers(translational, state, headingCorrection);
+        DrivePowers drivePowers = allocator.getDrivePowers(translational, state, headingCorrection);
+
+        if (!dataLoggers.isEmpty()) {
+            ForesightDebugData data = debugData();
+            for (Consumer<ForesightDebugData> dataLogger : dataLoggers)
+                dataLogger.accept(data);
+        }
+        return drivePowers;
     }
 
     public Pose getBrakeDisplacement(Twist twist, double heading) {
@@ -439,10 +460,60 @@ public class Foresight implements Algorithm {
         projectedClosestT = 0.0;
         coastClosestT = 0.0;
         tracker = null;
+        isBraking = false;
     }
 
     @Override
     public boolean isBusy() {
         return busy;
+    }
+
+    public ForesightDebugData debugData() {
+        return new ForesightDebugData(
+                currentState.pose(),
+                currentState.velocity(),
+                currentState.twist(),
+                translationalError,
+                headingError,
+                tangentialSpeed,
+                closestT,
+                projectedClosestT,
+                remainingDistance,
+                curveCompletion,
+                allocator.getNormalFeedforwardVector(),
+                allocator.getHeadingFeedforward(),
+                allocator.getTranslationalVector(),
+                allocator.getDriveVector(),
+                allocator.getHeadingPower()
+        );
+    }
+
+    @Override
+    public String debugString() {
+        return "Closest Pose: " + closestPose + "\n" +
+                "Closest T: " + closestT + "\n" +
+                "Path Completion: " + curveCompletion + "\n" +
+                "Remaining Distance: " + remainingDistance + "\n" +
+                "Curvature: " + curvature + "\n" +
+                "Tangent: " + closestTangent + "\n" +
+                "Normal: " + closestNormal + "\n" +
+                "Tangential Speed: " + tangentialSpeed + "\n" +
+                "Target Velocity: " + targetVelocity + "\n" +
+                "Translational Error: " + translationalError + "\n" +
+                "Heading Error: " + headingError + "\n" +
+                "Projected T: " + projectedClosestT + "\n" +
+                "Busy: " + busy + "\n" +
+                "Braking: " + isBraking + "\n" +
+                "Velocity Condition: " + velocityCondition() + "\n" +
+                "Translational Condition: " + translationalCondition() + "\n" +
+                "Heading Condition: " + headingCondition() + "\n" +
+                "Parametric Condition: " + parametricCondition() + "\n" +
+                "Timeout Condition: " + timeoutCondition() +
+                "Power Allocator {\n " + allocator.debugString().replace("\n", "\n ") + "\n}";
+    }
+
+    public Foresight addDataLogger(Consumer<ForesightDebugData> dataLogger) {
+        dataLoggers.add(dataLogger);
+        return this;
     }
 }

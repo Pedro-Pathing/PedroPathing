@@ -22,6 +22,9 @@ public class Mecanum implements Drivetrain {
     private static final int BL = 2;
     private static final int BR = 3;
 
+    private double powerScale = 1.0;
+    private DrivePowers drivePowers = DrivePowers.zero();
+
     public Mecanum(HardwareMap map, MecanumConfig config) {
         double powerDeadband = config.powerThreshold.get();
         
@@ -44,12 +47,16 @@ public class Mecanum implements Drivetrain {
 
     @SuppressLint("DefaultLocale")
     public void applyDrive(DrivePowers powers) {
+        drivePowers = powers;
+
         double[] wheelPowers = computeWheelPowersUnnormalized(powers);
 
         double maxPower = 1.0;
         for (double power : wheelPowers) {
             maxPower = Math.max(maxPower, Math.abs(power));
         }
+
+        powerScale = 1.0 / maxPower;
 
         for (int i = 0; i < wheelPowers.length; i++) {
             this.wheelPowers[i] = wheelPowers[i] / maxPower;
@@ -113,6 +120,19 @@ public class Mecanum implements Drivetrain {
         for (CachedMotor motor : motors) {
             motor.setPower(0);
         }
+    }
+
+    @Override
+    public String debugString() {
+        return "Forward: " + drivePowers.forward() + "\n" +
+                "Strafe: " + drivePowers.strafe() + "\n" +
+                "Turn: " + drivePowers.turn() + "\n" +
+                "Power Scale: " + powerScale + "\n" +
+                "Wheel Powers: [" +
+                wheelPowers[FL] + ", " +
+                wheelPowers[FR] + ", " +
+                wheelPowers[BL] + ", " +
+                wheelPowers[BR] + "]";
     }
 
     public void setZeroPowerBehavior(DcMotor.ZeroPowerBehavior behavior) {

@@ -17,6 +17,11 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathSegment;
 import com.pedropathing.paths.PathTracker;
 import com.pedropathing.paths.curves.Curve;
+import com.pedropathing.utils.DebugString;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BiConsumer;
 
 public class Follower {
     public final Localizer localizer;
@@ -29,11 +34,20 @@ public class Follower {
     private Mode mode = Mode.IDLE;
     private long previousNanoTime = 0L;
     private boolean useHoldScaling;
+    private final List<BiConsumer<String, DebugString>> stringLoggers = new ArrayList<>();
+    private DebugString info;
 
     public Follower(Localizer localizer, Drivetrain drivetrain, Algorithm algorithm) {
         this.localizer = localizer;
         this.algorithm = algorithm;
         this.drivetrain = drivetrain;
+    }
+
+    public Follower withLogger(BiConsumer<String, String> logger) {
+        this.stringLoggers.add((s, d) ->
+                logger.accept(s, "{\n    " + d.format()
+                        .replace("\n", "\n    ") + "\n}"));
+        return this;
     }
 
     public Mode mode() {
@@ -49,6 +63,7 @@ public class Follower {
     }
 
     public void update(double deltaTime) {
+        info = null;
         localizer.update();
 
         switch (mode) {
@@ -82,6 +97,25 @@ public class Follower {
                 break;
             }
         }
+
+        for (BiConsumer<String, DebugString> stringLogger : stringLoggers)
+            stringLogger.accept("Pedro Pathing Log", debugInfo());
+    }
+
+    public DebugString debugInfo() {
+        if (info == null) {
+            String localizerString = localizer.debugString();
+            String followString = "Mode: " + mode;
+            if (mode == Mode.FOLLOW || mode == Mode.HOLD) {
+                followString += "\nisBusy: " + isBusy() + "\natParametricEnd: "
+                        + atParametricEnd() + "\npathIndex: " + pathIndex();
+            }
+            String algorithmInfo = algorithm.debugString();
+            String drivetrainInfo = drivetrain.debugString();
+            info = new DebugString(localizerString, followString, algorithmInfo, drivetrainInfo, mode);
+        }
+
+        return info;
     }
 
     private void clearState() {

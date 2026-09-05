@@ -40,4 +40,12 @@ public interface Localizer {
     void update();
 
     void reset();
+
+    default String debugString() {
+        MotionState state = state();
+
+        return "Pose: " + state.pose() + "\n" +
+                "Twist: " + state.twist() + "\n" +
+                "Velocity: " + state.velocity();
+    }
 }
