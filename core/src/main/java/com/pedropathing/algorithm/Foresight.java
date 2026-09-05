@@ -37,9 +37,7 @@ public class Foresight implements Algorithm {
     private final Vector2D naturalDeceleration;
     private PathTracker tracker;
     private MotionState currentState;
-
     private Consumer<ForesightDebugData> dataLogger;
-    private ForesightDebugData data;
 
     public Foresight(ForesightConfig config) {
         this.config = config;
@@ -52,7 +50,6 @@ public class Foresight implements Algorithm {
     public DrivePowers calculatePath(
             Drivetrain drivetrain, PathTracker pathTracker, MotionState state, double deltaTime) {
         tracker = pathTracker;
-        data = null;
         currentState = state;
         closestT = pathTracker.current().curve.closestParameter(state.pose().toVector2D(), closestT);
 
@@ -181,7 +178,6 @@ public class Foresight implements Algorithm {
     public DrivePowers calculateHold(
             Drivetrain drivetrain, Pose target, MotionState state, boolean useScaling, double deltaTime) {
         tracker = null;
-        data = null;
         currentState = state;
         closestT = 1.0;
         isBraking = false;
@@ -461,8 +457,7 @@ public class Foresight implements Algorithm {
     }
 
     public ForesightDebugData debugData() {
-        if (data == null)
-            data = new ForesightDebugData(
+        return new ForesightDebugData(
                 currentState.pose(),
                 currentState.velocity(),
                 currentState.twist(),
@@ -478,8 +473,7 @@ public class Foresight implements Algorithm {
                 allocator.getTranslationalVector(),
                 allocator.getDriveVector(),
                 allocator.getHeadingPower()
-            );
-        return data;
+        );
     }
 
     @Override
