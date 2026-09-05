@@ -4,9 +4,8 @@ import com.pedropathing.math.Pose;
 import com.pedropathing.math.Twist;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.math.Velocity;
-import com.pedropathing.utils.DataInfo;
 
-public class ForesightDebugData implements DataInfo {
+public class ForesightDebugData {
     public final Pose pose;
     public final Velocity velocity;
     public final Twist twist;

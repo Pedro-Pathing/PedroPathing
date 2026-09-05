@@ -19,6 +19,8 @@ import com.pedropathing.paths.PathTracker;
 import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.utils.DebugString;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.BiConsumer;
 
 public class Follower {
@@ -32,7 +34,7 @@ public class Follower {
     private Mode mode = Mode.IDLE;
     private long previousNanoTime = 0L;
     private boolean useHoldScaling;
-    private BiConsumer<String, DebugString> logger;
+    private final List<BiConsumer<String, DebugString>> stringLoggers = new ArrayList<>();
     private DebugString info;
 
     public Follower(Localizer localizer, Drivetrain drivetrain, Algorithm algorithm) {
@@ -42,7 +44,7 @@ public class Follower {
     }
 
     public Follower withLogger(BiConsumer<String, String> logger) {
-        this.logger = (s, d) -> logger.accept(s, "\n" + d.format());
+        this.stringLoggers.add((s, d) -> logger.accept(s, "\n" + d.format()));
         return this;
     }
 
@@ -94,10 +96,8 @@ public class Follower {
             }
         }
 
-        if (logger != null) {
-            DebugString logInfo = debugInfo();
-            logger.accept("Pedro Pathing Log", logInfo);
-        }
+        for (BiConsumer<String, DebugString> stringLogger : stringLoggers)
+            stringLogger.accept("Pedro Pathing Log", debugInfo());
     }
 
     public DebugString debugInfo() {

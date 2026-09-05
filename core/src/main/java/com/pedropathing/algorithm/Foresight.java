@@ -18,6 +18,9 @@ import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.utils.Pair;
 import com.pedropathing.utils.Timer;
 import com.pedropathing.utils.Utils;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -37,7 +40,7 @@ public class Foresight implements Algorithm {
     private final Vector2D naturalDeceleration;
     private PathTracker tracker;
     private MotionState currentState;
-    private Consumer<ForesightDebugData> dataLogger;
+    private final List<Consumer<ForesightDebugData>> dataLoggers = new ArrayList<>();
 
     public Foresight(ForesightConfig config) {
         this.config = config;
@@ -170,7 +173,11 @@ public class Foresight implements Algorithm {
                 translationalError,
                 headingError);
 
-        if (dataLogger != null) dataLogger.accept(debugData());
+        if (!dataLoggers.isEmpty()) {
+            ForesightDebugData data = debugData();
+            for (Consumer<ForesightDebugData> dataLogger : dataLoggers)
+                dataLogger.accept(data);
+        }
         return drivePowers;
     }
 
@@ -225,7 +232,12 @@ public class Foresight implements Algorithm {
         }
 
         DrivePowers drivePowers = allocator.getDrivePowers(translational, state, headingCorrection);
-        if (dataLogger != null) dataLogger.accept(debugData());
+
+        if (!dataLoggers.isEmpty()) {
+            ForesightDebugData data = debugData();
+            for (Consumer<ForesightDebugData> dataLogger : dataLoggers)
+                dataLogger.accept(data);
+        }
         return drivePowers;
     }
 
@@ -501,7 +513,7 @@ public class Foresight implements Algorithm {
     }
 
     public Foresight addDataLogger(Consumer<ForesightDebugData> dataLogger) {
-        this.dataLogger = dataLogger;
+        dataLoggers.add(dataLogger);
         return this;
     }
 }
