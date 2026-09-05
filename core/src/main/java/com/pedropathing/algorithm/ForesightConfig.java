@@ -61,15 +61,25 @@ public final class ForesightConfig {
      */
     public final ConfigVar<Double> brakeAggression = ConfigVar.of(1.0, positive());
 
-    /**
-     * The velocity the robot coasts down to before it starts braking. Does nothing if the coastingConstraintScale is infinity.
-     */
+    /** The velocity the robot coasts down to before it starts braking. Does nothing if the coastingConstraintScale is infinity or not set. */
     public final ConfigVar<Double> coastDownToVelocity = ConfigVar.of(0.0, nonnegative());
 
-    public final ConfigVar<Double> headingDeviationTolerance = ConfigVar.of(Math.toRadians(11.25), positive());
-    public final ConfigVar<Double> translationalDeviationTolerance = ConfigVar.of(2.5, positive());
+    /** The tolerance where it starts prioritizing heading feedback correction over drive. */
+    public final ConfigVar<Double> headingDeviationTolerance = ConfigVar.of(Math.toRadians(11.25), nonnegative());
+
+    /** The tolerance where it starts prioritizing translational correction over drive. */
+    public final ConfigVar<Double> translationalDeviationTolerance = ConfigVar.of(2.5, nonnegative());
+
+    /** Whether the robot brakes at the end of the path. */
     public final ConfigVar<Boolean> brakeAtEnd = ConfigVar.of(true);
 
+    /** If true, continues momentum to the next path. If false, the robot will not advance until it has finished the path. */
+    public final ConfigVar<Boolean> pathSkip = ConfigVar.of(true);
+
+    /**
+     * How much heading feedback correction is prioritized before drive verse after drive. 1.0 means heading is completely prioritized over drive,
+     * 0.0 means drive is prioritized over heading feedback correction.
+     */
     public final ConfigVar<Double> headingDriveRatio = ConfigVar.of(0.5, nonnegative());
 
     public final ConfigVar<Matrix> linearBrakeCoefficients = ConfigVar.required();

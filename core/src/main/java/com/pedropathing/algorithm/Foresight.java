@@ -101,9 +101,9 @@ public class Foresight implements Algorithm {
 
         double velocityToBrakeInTime =
                 getVelocityToBrakeInTime(projectedRemainingDist, projectedTangent, projectedPose.heading());
-        isBraking = (velocityToBrakeInTime <= 0 || projectedRemainingDist <= 0) && config.brakeAtEnd.get();
+        isBraking = velocityToBrakeInTime <= 0 || projectedRemainingDist <= 0;
 
-        if (isBraking && (pathTracker.remainingPaths() > 1 || !config.brakeAtEnd.get())) {
+        if (isBraking && pathTracker.remainingPaths() > 1 && config.pathSkip.get()) {
             pathTracker.advance();
             reset();
             return calculatePath(drivetrain, pathTracker, state, deltaTime);
@@ -133,7 +133,7 @@ public class Foresight implements Algorithm {
         headingFeedforwardPower += config.headingStaticFF.get().calculate(0, turnDirection(headingError));
 
         Vector2D drive = projectedTangent.times(
-                drive(isBraking, velocityToBrakeInTime, deltaTime, angleToTangent, tangentialSpeed, state, curve, drivetrain));
+                drive(isBraking && config.brakeAtEnd.get(), velocityToBrakeInTime, deltaTime, angleToTangent, tangentialSpeed, state, curve, drivetrain));
 
         Pair<Double, Vector2D> translationalResult =
                 translationalCorrection(projectedPose, projectedTargetPos, projectedNormal);

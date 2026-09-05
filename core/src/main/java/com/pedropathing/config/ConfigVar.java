@@ -67,11 +67,11 @@ public class ConfigVar<T> implements Supplier<T> {
     @Override
     public T get() {
         require();
+        validate(value);
         return value;
     }
 
     public void set(T value) {
-        validate(value);
         this.value = value;
         this.hasValue = true;
     }
