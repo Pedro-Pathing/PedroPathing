@@ -17,7 +17,7 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathSegment;
 import com.pedropathing.paths.PathTracker;
 import com.pedropathing.paths.curves.Curve;
-import com.pedropathing.utils.DebugInfo;
+import com.pedropathing.utils.DebugString;
 
 import java.util.function.BiConsumer;
 
@@ -32,8 +32,8 @@ public class Follower {
     private Mode mode = Mode.IDLE;
     private long previousNanoTime = 0L;
     private boolean useHoldScaling;
-    private BiConsumer<String, DebugInfo> logger;
-    private DebugInfo info;
+    private BiConsumer<String, DebugString> logger;
+    private DebugString info;
 
     public Follower(Localizer localizer, Drivetrain drivetrain, Algorithm algorithm) {
         this.localizer = localizer;
@@ -95,12 +95,12 @@ public class Follower {
         }
 
         if (logger != null) {
-            DebugInfo logInfo = debugInfo();
+            DebugString logInfo = debugInfo();
             logger.accept("Pedro Pathing Log", logInfo);
         }
     }
 
-    public DebugInfo debugInfo() {
+    public DebugString debugInfo() {
         if (info == null) {
             String localizerString = localizer.debugString();
             String followString = "Mode: " + mode;
@@ -110,7 +110,7 @@ public class Follower {
             }
             String algorithmInfo = algorithm.debugString();
             String drivetrainInfo = drivetrain.debugString();
-            info = new DebugInfo(localizerString, followString, algorithmInfo, drivetrainInfo, mode);
+            info = new DebugString(localizerString, followString, algorithmInfo, drivetrainInfo, mode);
         }
 
         return info;

@@ -2,11 +2,11 @@ package com.pedropathing.utils;
 
 import com.pedropathing.follower.Follower;
 
-public class DebugInfo {
+public class DebugString {
     public String[] debugString;
     private final Follower.Mode mode;
 
-    public DebugInfo(String localizerInfo, String followInfo, String algorithmInfo, String drivetrainInfo, Follower.Mode mode) {
+    public DebugString(String localizerInfo, String followInfo, String algorithmInfo, String drivetrainInfo, Follower.Mode mode) {
         debugString = new String[] {localizerInfo, followInfo, algorithmInfo, drivetrainInfo};
         this.mode = mode;
     }

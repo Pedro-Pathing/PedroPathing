@@ -19,6 +19,7 @@ import com.pedropathing.utils.Pair;
 import com.pedropathing.utils.Timer;
 import com.pedropathing.utils.Utils;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public class Foresight implements Algorithm {
     public final ForesightConfig config;
@@ -37,6 +38,9 @@ public class Foresight implements Algorithm {
     private PathTracker tracker;
     private MotionState currentState;
 
+    private Consumer<ForesightDebugData> dataLogger;
+    private ForesightDebugData data;
+
     public Foresight(ForesightConfig config) {
         this.config = config;
         this.allocator = new ForesightPowerAllocator(config);
@@ -48,6 +52,7 @@ public class Foresight implements Algorithm {
     public DrivePowers calculatePath(
             Drivetrain drivetrain, PathTracker pathTracker, MotionState state, double deltaTime) {
         tracker = pathTracker;
+        data = null;
         currentState = state;
         closestT = pathTracker.current().curve.closestParameter(state.pose().toVector2D(), closestT);
 
@@ -157,7 +162,7 @@ public class Foresight implements Algorithm {
                 drive = drive.times(allocator.getDriveScalar(translationalError, headingError));
         }
 
-        return allocator.allocatePowers(
+        DrivePowers drivePowers = allocator.allocatePowers(
                 drivetrain,
                 state,
                 Vector2D.zero(),
@@ -167,12 +172,16 @@ public class Foresight implements Algorithm {
                 headingFeedbackPower,
                 translationalError,
                 headingError);
+
+        if (dataLogger != null) dataLogger.accept(debugData());
+        return drivePowers;
     }
 
     @Override
     public DrivePowers calculateHold(
             Drivetrain drivetrain, Pose target, MotionState state, boolean useScaling, double deltaTime) {
         tracker = null;
+        data = null;
         currentState = state;
         closestT = 1.0;
         isBraking = false;
@@ -219,7 +228,9 @@ public class Foresight implements Algorithm {
             headingCorrection *= headingScale;
         }
 
-        return allocator.getDrivePowers(translational, state, headingCorrection);
+        DrivePowers drivePowers = allocator.getDrivePowers(translational, state, headingCorrection);
+        if (dataLogger != null) dataLogger.accept(debugData());
+        return drivePowers;
     }
 
     public Pose getBrakeDisplacement(Twist twist, double heading) {
@@ -449,6 +460,28 @@ public class Foresight implements Algorithm {
         return busy;
     }
 
+    public ForesightDebugData debugData() {
+        if (data == null)
+            data = new ForesightDebugData(
+                currentState.pose(),
+                currentState.velocity(),
+                currentState.twist(),
+                translationalError,
+                headingError,
+                tangentialSpeed,
+                closestT,
+                projectedClosestT,
+                remainingDistance,
+                curveCompletion,
+                allocator.getNormalFeedforwardVector(),
+                allocator.getHeadingFeedforward(),
+                allocator.getTranslationalVector(),
+                allocator.getDriveVector(),
+                allocator.getHeadingPower()
+            );
+        return data;
+    }
+
     @Override
     public String debugString() {
         return "Closest Pose: " + closestPose + "\n" +
@@ -469,6 +502,12 @@ public class Foresight implements Algorithm {
                 "Translational Condition: " + translationalCondition() + "\n" +
                 "Heading Condition: " + headingCondition() + "\n" +
                 "Parametric Condition: " + parametricCondition() + "\n" +
-                "Timeout Condition: " + timeoutCondition();
+                "Timeout Condition: " + timeoutCondition() +
+                "Power Allocator {\n " + allocator.debugString().replace("\n", "\n ") + "\n}";
+    }
+
+    public Foresight addDataLogger(Consumer<ForesightDebugData> dataLogger) {
+        this.dataLogger = dataLogger;
+        return this;
     }
 }
