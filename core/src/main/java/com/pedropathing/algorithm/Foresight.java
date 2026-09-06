@@ -447,8 +447,8 @@ public class Foresight implements Algorithm {
     }
 
     @Override
-    public double pathCompletion() {
-        return curveCompletion;
+    public double parametricCompletion() {
+        return closestT;
     }
 
     @Override

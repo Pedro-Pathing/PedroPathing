@@ -29,7 +29,9 @@ public interface Algorithm {
 
     double remainingDistance();
 
-    double pathCompletion();
+    default double parametricCompletion() {
+        return completion();
+    }
 
     boolean atParametricEnd();
 

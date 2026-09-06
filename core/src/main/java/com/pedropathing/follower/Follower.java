@@ -253,8 +253,8 @@ public class Follower {
         return algorithm.closestPose();
     }
 
-    public double curveCompletion() {
-        return algorithm.pathCompletion();
+    public double parametricCompletion() {
+        return algorithm.parametricCompletion();
     }
 
     public double remainingDistance() {
