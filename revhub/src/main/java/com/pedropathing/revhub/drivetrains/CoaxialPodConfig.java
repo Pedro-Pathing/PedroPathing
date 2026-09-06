@@ -13,7 +13,7 @@ public class CoaxialPodConfig {
     public final ConfigVar<String> servoName = ConfigVar.required();
     public final ConfigVar<String> turnEncoderName = ConfigVar.required();
 
-    /** PIDF gains for turn servo control. */
+    /* PIDF gains for turn servo control. */
     public final ConfigVar<Double> turnP = ConfigVar.required();
     public final ConfigVar<Double> turnI = ConfigVar.required();
     public final ConfigVar<Double> turnD = ConfigVar.required();
@@ -36,6 +36,8 @@ public class CoaxialPodConfig {
 
     /** Smallest power change that triggers a hardware write. */
     public final ConfigVar<Double> motorCachingThreshold = ConfigVar.of(0.01, nonnegative());
+
+    /** Smallest position change that triggers a hardware write. */
     public final ConfigVar<Double> servoCachingThreshold = ConfigVar.of(0.01, nonnegative());
 
     public CoaxialPodConfig(Configuration<CoaxialPodConfig> config) {

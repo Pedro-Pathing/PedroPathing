@@ -22,15 +22,24 @@ public final class Memoize<T> implements Supplier<T> {
         this.dependencies = dependencies;
     }
 
+    /**
+     * Creates a memoized supplier that recomputes only when a dependency's value changes.
+     */
     public static <T> Memoize<T> memo(Supplier<T> supplier, List<Supplier<?>> dependencies) {
         if (dependencies.isEmpty()) throw new IllegalArgumentException("Memoize requires at least one dependency");
         return new Memoize<>(supplier, Collections.unmodifiableList(dependencies));
     }
 
+    /**
+     * Creates a memoized supplier that recomputes only when a dependency's value changes.
+     */
     public static <T> Memoize<T> memo(Supplier<T> supplier, Supplier<?>... dependencies) {
         return memo(supplier, listOf(dependencies));
     }
 
+    /**
+     * Returns the cached value, recomputing it if any dependency has changed.
+     */
     @Override
     public T get() {
         List<?> dependencies = this.dependencies.stream().map(Supplier::get).collect(Collectors.toList());

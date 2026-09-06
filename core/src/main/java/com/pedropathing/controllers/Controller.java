@@ -18,14 +18,23 @@ public interface Controller {
 
     default void reset() {}
 
+    /**
+     * Returns a PID controller with the given gains.
+     */
     static PIDController pid(double kP, double kI, double kD) {
         return new PIDController(kP, kI, kD);
     }
 
+    /**
+     * Returns a piecewise controller with a baseline controller
+     */
     static PiecewiseController piecewise(Controller baseline) {
         return new PiecewiseController(baseline);
     }
 
+    /**
+     * Returns a Controller that combines multiple controllers into one by summing their outputs.
+     */
     static Controller sum(Controller... controllers) {
         return new Controller() {
             @Override
@@ -49,28 +58,28 @@ public interface Controller {
     }
 
     /**
-     * Provide a constant output in the direction of the error.
+     * Returns a Controller that provides a constant output in the direction of the error.
      */
     static Controller staticFeedforward(Supplier<Double> kS) {
         return (target, error) -> kS.get() * Math.signum(error);
     }
 
     /**
-     * Provide a constant output in the direction of the error.
+     * Returns a Controller that provides a constant output in the direction of the error.
      */
     static Controller staticFeedforward(double kS) {
         return (target, error) -> kS * Math.signum(error);
     }
 
     /**
-     * Provide a constant output in the direction of the target.
+     * Returns a Controller that provides a constant output in the direction of the target.
      */
     static Controller staticTargetFeedforward(Supplier<Double> kS) {
         return (target, error) -> kS.get() * Math.signum(target);
     }
 
     /**
-     * Provide a constant output in the direction of the target.
+     * Returns a Controller that provides a constant output in the direction of the target.
      */
     static Controller staticTargetFeedforward(double kS) {
         return (target, error) -> kS * Math.signum(target);
@@ -104,6 +113,10 @@ public interface Controller {
         return (target, error) -> kP * error;
     }
 
+    /**
+     * A controller that keeps track of time between updates.
+     * This is useful for controllers that need to know the time between updates.
+     */
     class TimedController implements Controller {
         double previousTime;
         double dt;
@@ -126,6 +139,9 @@ public interface Controller {
         }
     }
 
+    /**
+     * Returns a Controller that provides an integral output based on the error over time.
+     */
     static Controller integral(Supplier<Double> kI) {
         return new TimedController() {
             double integral = 0;
@@ -145,6 +161,9 @@ public interface Controller {
         };
     }
 
+    /**
+     * Returns a Controller that provides an integral output based on the error over time.
+     */
     static Controller integral(
             Supplier<Double> kI, Supplier<Double> iZone, Supplier<Double> decay, Supplier<Double> maxI) {
         return new TimedController() {
@@ -171,6 +190,9 @@ public interface Controller {
         };
     }
 
+    /**
+     * Returns a Controller that provides a derivative output based on the error over time.
+     */
     static Controller derivative(Supplier<Double> kD) {
         return new TimedController() {
             double prevError = 0;
@@ -204,6 +226,9 @@ public interface Controller {
         };
     }
 
+    /**
+     * Returns a Controller that is the sum of this controller and another controller.
+     */
     default Controller plus(Controller other) {
         return new Controller() {
             @Override
@@ -225,6 +250,9 @@ public interface Controller {
         };
     }
 
+    /**
+     * Returns a Controller that is the difference of this controller and another controller.
+     */
     default Controller minus(Controller other) {
         return new Controller() {
             @Override
@@ -246,6 +274,9 @@ public interface Controller {
         };
     }
 
+    /**
+     * Returns a Controller that is the product of this controller and a scalar.
+     */
     default Controller times(double scalar) {
         return new Controller() {
             @Override

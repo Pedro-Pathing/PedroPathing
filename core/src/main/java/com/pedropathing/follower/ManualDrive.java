@@ -37,6 +37,7 @@ public class ManualDrive {
         return fieldCentric(new DrivePowers(forward, lateral, turn), currentHeading, offsetHeading);
     }
 
+    /** Implements a heading lock by using the headingPID to calculate a turn power based on the targetHeading and current heading. */
     public static DrivePowers headingLock(
             Follower follower, PIDController headingPID, DrivePowers powers, double targetHeading) {
         double headingError = normalizeSigned(targetHeading - follower.pose().heading());
@@ -44,13 +45,22 @@ public class ManualDrive {
         return new DrivePowers(powers.forward(), powers.strafe(), power);
     }
 
+    /** Implements a heading lock by using the headingController to calculate a turn power based on the targetHeading and current heading. */
+    public static DrivePowers headingLock(
+            Follower follower, Controller headingController, DrivePowers powers, double targetHeading) {
+        double headingError = normalizeSigned(targetHeading - follower.pose().heading());
+        double power = headingController.calculate(targetHeading, headingError, follower.twist().omega);
+        return new DrivePowers(powers.forward(), powers.strafe(), power);
+    }
+
+    /** Implements a heading lock using a predictive model of heading to calculate a turn power based on the targetHeading and current heading. */
     public static DrivePowers headingLock(
             Follower follower, Controller headingFeedback, DrivePowers powers, double targetHeading,
             double headingLinear, double headingQuadratic, double strength) {
         double angularVel = follower.velocity().omega;
         double brakeDist = headingLinear * angularVel +
                 headingQuadratic * angularVel * angularVel * Math.signum(angularVel);
-        double headingError = Angle.normalizeSigned(-follower.pose().heading());
+        double headingError = Angle.normalizeSigned(targetHeading - follower.pose().heading());
         double error = headingError - brakeDist;
         double power = Utils.clamp(headingFeedback.calculate(0, error), -0.3, 1.0) * strength;
         return new DrivePowers(powers.forward(), powers.strafe(), power);

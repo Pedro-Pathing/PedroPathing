@@ -16,6 +16,9 @@ public class ConfigVar<T> implements Supplier<T> {
     private T value;
     private boolean hasValue;
 
+    /**
+     * Creates a new ConfigVar with the given value and validators.
+     */
     private ConfigVar(T value, List<Validator<T>> validators) {
         this.value = value;
         this.hasValue = true;
@@ -23,59 +26,110 @@ public class ConfigVar<T> implements Supplier<T> {
         validate(value);
     }
 
+    /**
+     * Creates a new ConfigVar with no value and the given validators.
+     */
     private ConfigVar(List<Validator<T>> validators) {
         this.hasValue = false;
         this.validators = Collections.unmodifiableList(validators);
     }
 
+    /**
+     * Creates a new ConfigVar of given type with the given validators.
+     * The value must be set before it can be used in configurations.
+     */
     public static <T> ConfigVar<T> required(List<Validator<T>> validators) {
         return new ConfigVar<>(concat(validators, Collections.singletonList(Validator.nonnull())));
     }
 
+    /**
+     * Creates a new ConfigVar of given type with the given validators.
+     * The value must be set before it can be used in configurations.
+     */
     @SafeVarargs
     public static <T> ConfigVar<T> required(Validator<T>... validators) {
         return required(listOf(validators));
     }
 
+    /**
+     * Creates a new ConfigVar of given type with the given validators.
+     * The value may be null, but if it is not null, it must pass the validators.
+     */
     public static <T> ConfigVar<T> requiredNullable(List<Validator<T>> validators) {
         return new ConfigVar<>(validators);
     }
 
+    /**
+     * Creates a new ConfigVar of given type with the given validators.
+     * The value may be null, but if it is not null, it must pass the validators.
+     */
     @SafeVarargs
     public static <T> ConfigVar<T> requiredNullable(Validator<T>... validators) {
         return requiredNullable(listOf(validators));
     }
 
+    /**
+     * Creates a new ConfigVar of given type with the given value and validators.
+     * This value serves as a "default" value, and will be used if the value is not set in the configuration.
+     * The value must pass the validators and not be null.
+     */
     public static <T> ConfigVar<T> of(T value, List<Validator<T>> validators) {
         return new ConfigVar<>(value, concat(validators, Collections.singletonList(Validator.nonnull())));
     }
 
+    /**
+     * Creates a new ConfigVar of given type with the given value and validators.
+     * This value serves as a "default" value, and will be used if the value is not set in the configuration.
+     * The value must pass the validators and not be null.
+     */
     @SafeVarargs
     public static <T> ConfigVar<T> of(T value, Validator<T>... validators) {
         return of(value, listOf(validators));
     }
 
+    /**
+     * Creates a new ConfigVar of given type with the given value and validators.
+     * This value serves as a "default" value, and will be used if the value is not set in the configuration.
+     * The value may be null, but if it is not null, it must pass the validators.
+     */
     public static <T> ConfigVar<T> ofNullable(T value, List<Validator<T>> validators) {
         return new ConfigVar<>(value, validators);
     }
 
+    /**
+     * Creates a new ConfigVar of given type with the given value and validators.
+     * This value serves as a "default" value, and will be used if the value is not set in the configuration.
+     * The value may be null, but if it is not null, it must pass the validators.
+     */
     @SafeVarargs
     public static <T> ConfigVar<T> ofNullable(T value, Validator<T>... validators) {
         return ofNullable(value, listOf(validators));
     }
 
+    /**
+     * Returns the value of this ConfigVar.
+     * If the value has not been set, it will throw an IllegalStateException.
+     */
     @Override
     public T get() {
         require();
         return value;
     }
 
+    /**
+     * Sets the value of this ConfigVar.
+     * The value must pass the validators of this ConfigVar.
+     */
     public void set(T value) {
         validate(value);
         this.value = value;
         this.hasValue = true;
     }
 
+    /**
+     * Returns a Modifier that temporarily sets the value of this ConfigVar to the given value.
+     * The value must pass the validators of this ConfigVar.
+     */
     public Modifier at(T tempValue) {
         validate(tempValue);
         return new Modifier() {
@@ -95,6 +149,9 @@ public class ConfigVar<T> implements Supplier<T> {
         };
     }
 
+    /**
+     * Validates the given value against the validators of this ConfigVar, throwing an IllegalArgumentException if any validator fails.
+     */
     private void validate(T value) {
         for (Validator<T> validator : validators) {
             if (!validator.validate(value)) {
@@ -103,6 +160,9 @@ public class ConfigVar<T> implements Supplier<T> {
         }
     }
 
+    /**
+     * Throws an IllegalStateException if the value has not been set.
+     */
     private void require() {
         if (!hasValue) throw new IllegalStateException("Config variable has not been set");
     }

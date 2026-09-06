@@ -43,6 +43,9 @@ public class Follower {
         this.drivetrain = drivetrain;
     }
 
+    /**
+     * Adds a logger that will be called every update with the debug information.
+     */
     public Follower withLogger(BiConsumer<String, String> logger) {
         this.stringLoggers.add((s, d) ->
                 logger.accept(s, "{\n    " + d.format()
