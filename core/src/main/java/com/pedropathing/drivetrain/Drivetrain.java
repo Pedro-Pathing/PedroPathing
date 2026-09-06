@@ -4,6 +4,8 @@
  */
 package com.pedropathing.drivetrain;
 
+import java.util.Map;
+
 public interface Drivetrain {
     void drive(DrivePowers powers, boolean manual);
 
@@ -11,7 +13,7 @@ public interface Drivetrain {
 
     void stop();
 
-    String debugString();
+    Map<String, Object> debug();
 
     default double interpolateAcceleration(double xRadius, double yRadius, double theta) {
         double cos = Math.abs(Math.cos(theta));

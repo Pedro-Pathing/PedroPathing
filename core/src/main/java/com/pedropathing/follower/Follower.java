@@ -20,7 +20,9 @@ import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.utils.DebugString;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
 
 public class Follower {
@@ -35,7 +37,7 @@ public class Follower {
     private long previousNanoTime = 0L;
     private boolean useHoldScaling;
     private final List<BiConsumer<String, DebugString>> stringLoggers = new ArrayList<>();
-    private DebugString info;
+    private Map<String, Map<String, Object>> debug = new HashMap<>();
 
     public Follower(Localizer localizer, Drivetrain drivetrain, Algorithm algorithm) {
         this.localizer = localizer;
@@ -66,7 +68,6 @@ public class Follower {
     }
 
     public void update(double deltaTime) {
-        info = null;
         localizer.update();
 
         switch (mode) {
@@ -102,23 +103,30 @@ public class Follower {
         }
 
         for (BiConsumer<String, DebugString> stringLogger : stringLoggers)
-            stringLogger.accept("Pedro Pathing Log", debugInfo());
+            stringLogger.accept("Pedro Pathing Log", debug());
     }
 
-    public DebugString debugInfo() {
-        if (info == null) {
-            String localizerString = localizer.debugString();
-            String followString = "Mode: " + mode;
-            if (mode == Mode.FOLLOW || mode == Mode.HOLD) {
-                followString += "\nisBusy: " + isBusy() + "\natParametricEnd: "
-                        + atParametricEnd() + "\npathIndex: " + pathIndex();
-            }
-            String algorithmInfo = algorithm.debugString();
-            String drivetrainInfo = drivetrain.debugString();
-            info = new DebugString(localizerString, followString, algorithmInfo, drivetrainInfo, mode);
+    public Map<String, Map<String, Object>> debug() {
+        return debug;
+    }
+
+    public void createDebug() {
+        debug = new HashMap<>();
+
+        Map<String, Object> map = new HashMap<>();
+
+        map.put("mode", mode);
+
+        if (mode == Mode.FOLLOW || mode == Mode.HOLD) {
+            map.put("isBusy", isBusy());
+            map.put("atParametricEnd", atParametricEnd());
+            map.put("pathIndex", pathIndex());
         }
 
-        return info;
+        debug.put("follower", map);
+        debug.put("localizer", localizer.debug());
+        debug.put("drivetrain", drivetrain.debug());
+        debug.put("algorithm", algorithm.debug());
     }
 
     private void clearState() {

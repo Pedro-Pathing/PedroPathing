@@ -8,6 +8,9 @@ import com.pedropathing.math.Pose;
 import com.pedropathing.math.Twist;
 import com.pedropathing.math.Velocity;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public interface Localizer {
     void setPose(Pose pose);
 
@@ -41,11 +44,11 @@ public interface Localizer {
 
     void reset();
 
-    default String debugString() {
-        MotionState state = state();
-
-        return "Pose: " + state.pose() + "\n" +
-                "Twist: " + state.twist() + "\n" +
-                "Velocity: " + state.velocity();
+    default Map<String, Object> debug() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("pose", pose());
+        map.put("twist", twist());
+        map.put("velocity", velocity());
+        return map;
     }
 }

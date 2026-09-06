@@ -3,12 +3,15 @@ package com.pedropathing.revhub.drivetrains;
 
 import com.pedropathing.math.Pose;
 
+import java.util.Map;
+
 /**
  * Swerve pod interface so Swerve drivetrains can be constructed with coaxial or differential pods.
  * @author Kabir Goyal
  * @author Baron Henderson
  */
 public interface SwervePod {
+    String name();
 
     /**
      * The pod's offset from the robot center (pose offset). It uses the Odometry Coordinate System.
@@ -51,7 +54,7 @@ public interface SwervePod {
     void setToBreak();
 
     /**
-     * Returns a  string useful for debugging the pod state.
+     * Returns a debug map for the pod state.
      */
-    String debugString();
+    Map<String, Object> debug();
 }
