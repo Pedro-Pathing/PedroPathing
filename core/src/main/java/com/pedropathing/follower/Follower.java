@@ -285,7 +285,7 @@ public class Follower {
         return velocity().toVector2D().dot(closestTangent());
     }
 
-    public Algorithm getAlgorithm() {
+    public Algorithm algorithm() {
         return algorithm;
     }
 
