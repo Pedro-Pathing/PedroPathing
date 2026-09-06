@@ -162,6 +162,8 @@ public class Foresight implements Algorithm {
                 drive = drive.times(allocator.getDriveScalar(translationalError, headingError));
         }
 
+        isBraking = isBraking && config.brakeAtEnd.get();
+
         DrivePowers drivePowers = allocator.allocatePowers(
                 drivetrain,
                 state,
@@ -178,6 +180,7 @@ public class Foresight implements Algorithm {
             for (Consumer<ForesightDebugData> dataLogger : dataLoggers)
                 dataLogger.accept(data);
         }
+
         return drivePowers;
     }
 
@@ -469,7 +472,6 @@ public class Foresight implements Algorithm {
         config.headingStaticFF.get().reset();
         config.brake.get().reset();
         config.coast.get().reset();
-
     }
 
     @Override
@@ -495,6 +497,10 @@ public class Foresight implements Algorithm {
                 allocator.getDriveVector(),
                 allocator.getHeadingPower()
         );
+    }
+
+    public boolean isBraking() {
+        return isBraking;
     }
 
     @Override
