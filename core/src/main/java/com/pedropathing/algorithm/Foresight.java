@@ -463,6 +463,13 @@ public class Foresight implements Algorithm {
         coastClosestT = 0.0;
         tracker = null;
         isBraking = false;
+        config.forwardTranslational.get().reset();
+        config.strafeTranslational.get().reset();
+        config.headingFeedback.get().reset();
+        config.headingStaticFF.get().reset();
+        config.brake.get().reset();
+        config.coast.get().reset();
+
     }
 
     @Override
