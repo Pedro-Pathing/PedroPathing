@@ -133,7 +133,7 @@ public class Foresight implements Algorithm {
         headingFeedforwardPower += config.headingStaticFF.get().calculate(0, turnDirection(headingError));
 
         Vector2D drive = projectedTangent.times(
-                drive(isBraking, velocityToBrakeInTime, deltaTime, angleToTangent, tangentialSpeed, state, curve));
+                drive(isBraking, velocityToBrakeInTime, deltaTime, angleToTangent, tangentialSpeed, state, curve, drivetrain));
 
         Pair<Double, Vector2D> translationalResult =
                 translationalCorrection(projectedPose, projectedTargetPos, projectedNormal);
@@ -296,12 +296,13 @@ public class Foresight implements Algorithm {
             double angleToTangent,
             double tangentialVel,
             MotionState state,
-            Curve curve) {
-        double maxAchievableVelocity = DiamondDrivetrainModel.interpolateVelocity(
+            Curve curve,
+            Drivetrain drivetrain) {
+        double maxAchievableVelocity = drivetrain.interpolateVelocity(
                 config.maxAchievableForwardVelocity.get(), config.maxAchievableStrafeVelocity.get(), angleToTangent);
         targetVelocity = Math.min(profiledTargetVelocity, maxAchievableVelocity);
 
-        if (!isBraking) return coast(tangentialVel, deltaTime, maxAchievableVelocity, state, curve, angleToTangent);
+        if (!isBraking) return coast(tangentialVel, deltaTime, maxAchievableVelocity, state, curve, angleToTangent, drivetrain);
         return config.brake.get().calculate(targetVelocity, 0);
     }
 
@@ -311,7 +312,8 @@ public class Foresight implements Algorithm {
             double maxAchievableVelocity,
             MotionState state,
             Curve curve,
-            double theta) {
+            double theta,
+            Drivetrain drivetrain) {
         double maxAccelerationConstraint = config.maxAccelerationConstraint.get();
         double maxVelocityConstraint = config.maxVelocityConstraint.get();
         double maxDecelerationConstraint = config.maxDecelerationConstraint.get();
@@ -338,7 +340,7 @@ public class Foresight implements Algorithm {
                         projectedTangent.dot(curve.get(projectedT).minus(projected.toVector2D()));
             double discrim =
                     coastDownToVelocity * coastDownToVelocity + 2 * maxDecelerationConstraint * projectedRemainingDist;
-            double excessVel = excessVelAfterCoast(projectedRemainingDist, theta);
+            double excessVel = excessVelAfterCoast(projectedRemainingDist, theta, drivetrain);
             double velocityMomentumCannotProvide = Math.max(0, coastDownToVelocity - excessVel);
             double velocityNeededToCoastInTime = Math.sqrt(Math.abs(discrim)) * Math.signum(discrim);
             targetVel = Math.min(targetVel, velocityNeededToCoastInTime);
@@ -371,8 +373,8 @@ public class Foresight implements Algorithm {
                         .toWorldFrame(currentPose.heading()));
     }
 
-    private double excessVelAfterCoast(double remainingDistance, double theta) {
-        double naturalDeceleration = DiamondDrivetrainModel.interpolateAcceleration(
+    private double excessVelAfterCoast(double remainingDistance, double theta, Drivetrain drivetrain) {
+        double naturalDeceleration = drivetrain.interpolateAcceleration(
                 config.naturalForwardDeceleration.get(), config.naturalStrafeDeceleration.get(), theta);
         double excessVelocitySquared = -2 * naturalDeceleration * remainingDistance;
         return Math.signum(excessVelocitySquared) * Math.sqrt(Math.abs(excessVelocitySquared));

@@ -151,4 +151,9 @@ public class Mecanum implements Drivetrain {
         }
         return total;
     }
+
+    @Override
+    public double interpolateVelocity(double xRadius, double yRadius, double theta) {
+        return 1.0 / (Math.abs(Math.cos(theta)) / xRadius + Math.abs(Math.sin(theta)) / yRadius);
+    }
 }

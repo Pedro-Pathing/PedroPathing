@@ -74,6 +74,20 @@ public class Swerve implements Drivetrain {
     }
 
     @Override
+    public double interpolateVelocity(double xRadius, double yRadius, double theta) {
+        if (Math.abs(xRadius - yRadius) < 0.001) return xRadius;
+
+        //just using an ellipse here in case someone wanted to account for friction or something, but it should be a circle for most cases
+        double cos = Math.cos(theta);
+        double sin = Math.sin(theta);
+
+        return 1.0 / Math.sqrt(
+                (cos * cos) / (xRadius * xRadius) +
+                        (sin * sin) / (yRadius * yRadius)
+        );
+    }
+
+    @Override
     public void drive(DrivePowers powers, boolean manual) {
         if (manual && config.manualBrakeMode.get())
             setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
