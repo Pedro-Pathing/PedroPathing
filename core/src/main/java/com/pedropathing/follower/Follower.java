@@ -227,7 +227,10 @@ public class Follower {
     }
 
     public boolean atParametricEnd() {
-        return !mode.equals(Mode.FOLLOW) || algorithm.atParametricEnd();
+        if (!mode.equals(Mode.FOLLOW)) return true;
+        if (pathTracker == null) return true;
+        if (pathTracker.remainingPaths() > 1) return false;
+        return algorithm.atParametricEnd();
     }
 
     public double completion() {
