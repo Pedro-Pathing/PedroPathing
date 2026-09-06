@@ -19,8 +19,6 @@ public class CoaxialPod implements SwervePod {
     private final CRServo turnServo;
     private final DcMotorEx driveMotor;
 
-    private final Controller turnPID;
-
     private final CoaxialPodConfig config;
 
     private double lastDrivePower = 0;
@@ -31,10 +29,7 @@ public class CoaxialPod implements SwervePod {
 
         this.driveMotor = hardwareMap.get(DcMotorEx.class, config.motorName.get());
         this.turnServo = hardwareMap.get(CRServo.class, config.servoName.get());
-        this.turnEncoder = hardwareMap.get(AnalogInput.class, config.turnEncoderName.get());
-
-        this.turnPID = Controller.pid(config.turnP.get(), config.turnI.get(), config.turnD.get())
-                .plus(Controller.staticFeedforward(config.turnF.get()));
+        this.turnEncoder = hardwareMap.get(AnalogInput.class, config.servoEncoderName.get());
 
         setMotorToFloat();
 
@@ -181,13 +176,18 @@ public class CoaxialPod implements SwervePod {
         // Setpoint close to current so PID follows shortest path
         double setpointRad = actualRad + errorRad;
 
-//        if (Math.abs(errorRad) < (2.0 * Math.PI / 180.0)) {
-//            turnPID.updateFeedForwardInput(0);
-//        } else {
-//            turnPID.updateFeedForwardInput(MathFunctions.getTurnDirection(actualRad, desiredRad));
-//        }
-
-        double turnPower = Utils.clamp(turnPID.calculate(setpointRad, errorRad), -1.0, 1.0);
+        double turnPower;
+        if (Math.abs(errorRad) < (2.0 * Math.PI / 180.0)) {
+            turnPower = Utils.clamp(config.turnController.get().calculate(0, errorRad), -1.0, 1.0);
+        } else {
+            turnPower = Utils.clamp(
+                    config.turnController.get().calculate(
+                        Angle.turnDirection(actualRad, desiredRad), errorRad
+                    ),
+                    -1.0,
+                    1.0
+            );
+        }
 
         double servoCachingThreshold = config.servoCachingThreshold.get();
         double motorCachingThreshold = config.motorCachingThreshold.get();

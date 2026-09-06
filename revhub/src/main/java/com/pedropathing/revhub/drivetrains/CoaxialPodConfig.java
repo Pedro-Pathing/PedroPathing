@@ -2,6 +2,7 @@ package com.pedropathing.revhub.drivetrains;
 
 import com.pedropathing.config.ConfigVar;
 import com.pedropathing.config.Configuration;
+import com.pedropathing.controllers.Controller;
 import com.pedropathing.math.Pose;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -11,13 +12,10 @@ import static com.pedropathing.config.Validator.nonnegative;
 public class CoaxialPodConfig {
     public final ConfigVar<String> motorName = ConfigVar.required();
     public final ConfigVar<String> servoName = ConfigVar.required();
-    public final ConfigVar<String> turnEncoderName = ConfigVar.required();
+    public final ConfigVar<String> servoEncoderName = ConfigVar.required();
 
     /* PIDF gains for turn servo control. */
-    public final ConfigVar<Double> turnP = ConfigVar.required();
-    public final ConfigVar<Double> turnI = ConfigVar.required();
-    public final ConfigVar<Double> turnD = ConfigVar.required();
-    public final ConfigVar<Double> turnF = ConfigVar.of(0.0);
+    public final ConfigVar<Controller> turnController = ConfigVar.of(Controller.zero);
 
     public final ConfigVar<DcMotorSimple.Direction> driveDirection = ConfigVar.required();
     public final ConfigVar<CRServo.Direction> servoDirection = ConfigVar.required();
