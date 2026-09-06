@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class Follower {
     public final Localizer localizer;
@@ -36,7 +37,7 @@ public class Follower {
     private Mode mode = Mode.IDLE;
     private long previousNanoTime = 0L;
     private boolean useHoldScaling;
-    private final List<BiConsumer<String, DebugString>> stringLoggers = new ArrayList<>();
+    private final List<Consumer<Map<String, Map<String, Object>>>> loggers = new ArrayList<>();
     private Map<String, Map<String, Object>> debug = new HashMap<>();
 
     public Follower(Localizer localizer, Drivetrain drivetrain, Algorithm algorithm) {
@@ -48,10 +49,8 @@ public class Follower {
     /**
      * Adds a logger that will be called every update with the debug information.
      */
-    public Follower withLogger(BiConsumer<String, String> logger) {
-        this.stringLoggers.add((s, d) ->
-                logger.accept(s, "{\n    " + d.format()
-                        .replace("\n", "\n    ") + "\n}"));
+    public Follower withLogger(Consumer<Map<String, Map<String, Object>>> logger) {
+        loggers.add(logger);
         return this;
     }
 
@@ -102,8 +101,9 @@ public class Follower {
             }
         }
 
-        for (BiConsumer<String, DebugString> stringLogger : stringLoggers)
-            stringLogger.accept("Pedro Pathing Log", debug());
+        for (Consumer<Map<String, Map<String, Object>>> logger : loggers) {
+            logger.accept(debug());
+        }
     }
 
     public Map<String, Map<String, Object>> debug() {
