@@ -21,16 +21,8 @@ import java.util.List;
  * @author Baron Henderson
  */
 public class Swerve implements Drivetrain {
-
-    protected double lastHeading = 0;
-
-    private boolean manualBrakeMode, voltageCompensation;
-    private double staticFrictionCoefficient;
-    private double nominalVoltage;
-    private SwerveConfig.ZeroPowerBehavior zeroPowerBehavior;
-    private double epsilon;
-
-    private List<SwervePod> pods;
+    private final List<SwervePod> pods;
+    private final SwerveConfig config;
 
     private double lastForward = 0;
     private double lastStrafe = 0;
@@ -45,13 +37,8 @@ public class Swerve implements Drivetrain {
      * @param pods SwervePods, coaxial or differential
      */
     public Swerve(HardwareMap hardwareMap, SwerveConfig config, SwervePod... pods) {
+        this.config = config;
         this.voltageSensor = hardwareMap.voltageSensor.iterator().next();
-        manualBrakeMode = config.manualBrakeMode.get();
-        voltageCompensation = config.voltageCompensation.get();
-        zeroPowerBehavior = config.zeroPowerBehavior.get();
-        epsilon = config.epsilon.get();
-        staticFrictionCoefficient = config.staticFrictionCoefficient.get();
-        nominalVoltage = config.nominalVoltage.get();
         this.pods = Arrays.asList(pods);
     }
 
@@ -88,7 +75,7 @@ public class Swerve implements Drivetrain {
 
     @Override
     public void drive(DrivePowers powers, boolean manual) {
-        if (manual && manualBrakeMode)
+        if (manual && config.manualBrakeMode.get())
             setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         else
             setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -104,19 +91,19 @@ public class Swerve implements Drivetrain {
         lastStrafe = strafe;
         lastRotation = rotation;
 
-        boolean zeroTrans = Math.hypot(strafe, forward) < epsilon;
-        boolean zeroRotation = Math.abs(rotation) < epsilon;
+        boolean zeroTrans = Math.hypot(strafe, forward) < config.epsilon.get();
+        boolean zeroRotation = Math.abs(rotation) < config.epsilon.get();
 
         Vector2D[] podVectors = computePodPowers(powers);
 
         // finding if any vector has magnitude > maxPowerScaling
         double maxMagnitude = 1;
-        for (Vector2D podVector : podVectors) {
-            if (voltageCompensation) {
+        for (int i = 0; i < podVectors.length; i++) {
+            if (config.voltageCompensation.get()) {
                 double voltageNormalized = getVoltageNormalized();
-                podVector = podVector.times(voltageNormalized);
+                podVectors[i] = podVectors[i].times(voltageNormalized);
             }
-            maxMagnitude = Math.max(maxMagnitude, podVector.magnitude());
+            maxMagnitude = Math.max(maxMagnitude, podVectors[i].magnitude());
         }
 
         powerScaling = 1 / maxMagnitude;
@@ -146,7 +133,7 @@ public class Swerve implements Drivetrain {
             Vector2D finalVector = podVectors[podNum].times(1 / maxMagnitude);
 
             pods.get(podNum).move(finalVector.theta(), finalVector.magnitude() * avgScaling,
-                    zeroTrans && zeroRotation && zeroPowerBehavior == SwerveConfig.ZeroPowerBehavior.IGNORE_ANGLE_CHANGES);
+                    zeroTrans && zeroRotation && config.zeroPowerBehavior.get() == SwerveConfig.ZeroPowerBehavior.IGNORE_ANGLE_CHANGES);
         }
     }
 
@@ -158,8 +145,8 @@ public class Swerve implements Drivetrain {
         Vector2D[] podVectors = new Vector2D[pods.size()];
         Vector2D rawTrans = Vector2D.polar(Range.clip(Math.hypot(strafe, forward), 0, 1), Math.atan2(forward, strafe));
 
-        boolean zeroTrans = rawTrans.magnitude() < epsilon;
-        boolean zeroRotation = Math.abs(rotation) < epsilon;
+        boolean zeroTrans = rawTrans.magnitude() < config.epsilon.get();
+        boolean zeroRotation = Math.abs(rotation) < config.epsilon.get();
 
         double rotationScalar = (zeroRotation) ? 0 : rotation;
 
@@ -172,9 +159,9 @@ public class Swerve implements Drivetrain {
                     .rotate(Math.PI / 2);
 
             podVectors[i] = translationVector.plus(rotationVector);
-            if (zeroPowerBehavior == SwerveConfig.ZeroPowerBehavior.X_LOCK
+            if (config.zeroPowerBehavior.get() == SwerveConfig.ZeroPowerBehavior.X_LOCK
                     && zeroTrans && zeroRotation) {
-                rotationVector.rotate(-Math.PI / 2);
+                rotationVector = rotationVector.rotate(-Math.PI / 2);
                 podVectors[i] = rotationVector;
             }
         }
@@ -219,17 +206,12 @@ public class Swerve implements Drivetrain {
     }
 
     /**
-     * @return static friction coefficient used for voltage compensation
-     */
-    public double getStaticFrictionCoefficient() {
-        return staticFrictionCoefficient;
-    }
-
-    /**
      * @return normalized voltage for voltage compensation
      */
     private double getVoltageNormalized() {
         double voltage = voltageSensor.getVoltage();
+        double nominalVoltage = config.nominalVoltage.get();
+        double staticFrictionCoefficient = config.staticFrictionCoefficient.get();
         return (nominalVoltage - (nominalVoltage * staticFrictionCoefficient)) / (voltage
                 - ((nominalVoltage * nominalVoltage / voltage) * staticFrictionCoefficient));
     }

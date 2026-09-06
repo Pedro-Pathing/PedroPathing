@@ -10,7 +10,6 @@ import com.pedropathing.config.Configuration;
  * @author Baron Henderson
  */
 public class SwerveConfig {
-
     public final ConfigVar<Boolean> manualBrakeMode = ConfigVar.required();
     public final ConfigVar<Boolean> voltageCompensation = ConfigVar.required();
     public final ConfigVar<Double> nominalVoltage = ConfigVar.of(12.0);

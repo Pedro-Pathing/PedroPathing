@@ -20,66 +20,26 @@ public class CoaxialPod implements SwervePod {
     private final DcMotorEx driveMotor;
 
     private final Controller turnPID;
-    private final Pose offset;
 
-    // Angle offset in radians applied to raw encoder angle
-    private final double angleOffsetRad;
-
-    private final String servoLabel;
-
-    // analog encoder voltage range (min -> max), e.g. 0.0 -> 3.3 V
-    private final double analogMinVoltage;
-    private final double analogMaxVoltage;
-
-    private final boolean encoderReversed;
-
-    private double motorCachingThreshold = 0.01;
-    private double servoCachingThreshold = 0.01;
+    private final CoaxialPodConfig config;
 
     private double lastDrivePower = 0;
     private double lastTurnPower = 0;
 
-    /**
-     * @param motorName drive motor name
-     * @param servoName turn servo name
-     * @param turnEncoderName analog encoder name
-     * @param turnP proportional gain for servo control
-     * @param turnI integral gain for servo control
-     * @param turnD derivative gain for servo control
-     * @param driveDirection drive motor direction
-     * @param servoDirection turn servo direction
-     * @param angleOffsetRad offset applied to raw encoder angle, in radians. This is the raw angle
-     *                       in radians when the wheel is facing forward.
-     * @param podOffset pod position offset from robot center, using the same axes as odometry pods
-     * @param analogMinVoltage minimum encoder voltage (e.g. 0.0)
-     * @param analogMaxVoltage maximum encoder voltage (e.g. 3.3)
-     * @param encoderReversed true if encoder increases CCW (top-down)
-     */
-    public CoaxialPod(HardwareMap hardwareMap, String motorName, String servoName,
-                      String turnEncoderName, double turnP, double turnI, double turnD, double turnF,
-                      DcMotorSimple.Direction driveDirection, CRServo.Direction servoDirection,
-                      double angleOffsetRad, Pose podOffset, double analogMinVoltage, double analogMaxVoltage,
-                      boolean encoderReversed) {
+    public CoaxialPod(HardwareMap hardwareMap, CoaxialPodConfig config) {
+        this.config = config;
 
-        this.driveMotor = hardwareMap.get(DcMotorEx.class, motorName);
-        this.turnServo = hardwareMap.get(CRServo.class, servoName);
-        this.turnEncoder = hardwareMap.get(AnalogInput.class, turnEncoderName);
+        this.driveMotor = hardwareMap.get(DcMotorEx.class, config.motorName.get());
+        this.turnServo = hardwareMap.get(CRServo.class, config.servoName.get());
+        this.turnEncoder = hardwareMap.get(AnalogInput.class, config.turnEncoderName.get());
 
-        this.servoLabel = servoName;
-
-        this.turnPID = Controller.pid(turnP, turnI, turnD).plus(Controller.staticFeedforward(turnF));
-        this.angleOffsetRad = angleOffsetRad;
+        this.turnPID = Controller.pid(config.turnP.get(), config.turnI.get(), config.turnD.get())
+                .plus(Controller.staticFeedforward(config.turnF.get()));
 
         setMotorToFloat();
 
-        driveMotor.setDirection(driveDirection);
-        turnServo.setDirection(servoDirection);
-
-        this.analogMinVoltage = analogMinVoltage;
-        this.analogMaxVoltage = analogMaxVoltage;
-        this.encoderReversed = encoderReversed;
-
-        this.offset = podOffset;
+        driveMotor.setDirection(config.driveDirection.get());
+        turnServo.setDirection(config.servoDirection.get());
 
         turnServo.setPower(0);
     }
@@ -91,7 +51,7 @@ public class CoaxialPod implements SwervePod {
      */
     @Override
     public Pose getOffset() {
-        return offset;
+        return config.podOffset.get();
     }
 
     /**
@@ -158,7 +118,7 @@ public class CoaxialPod implements SwervePod {
      * @return encoder reversed status
      */
     public boolean isEncoderReversed() {
-        return encoderReversed;
+        return config.encoderReversed.get();
     }
 
     /**
@@ -171,7 +131,7 @@ public class CoaxialPod implements SwervePod {
     public double adjustThetaForEncoder(double wheelTheta) {
         // wheelTheta is in radians. If encoder is reversed, use wheelTheta directly; otherwise invert.
         //if encoder is reversed, ccw (top down) is positive, if unreversed than cw is positive
-        double t = encoderReversed ? wheelTheta : (2 * Math.PI - wheelTheta);
+        double t = config.encoderReversed.get() ? wheelTheta : (2 * Math.PI - wheelTheta);
         // servo zero offset: +90 degrees -> +pi/2 radians
         t += Math.PI / 2.0;
         return Angle.normalize(t);
@@ -186,6 +146,8 @@ public class CoaxialPod implements SwervePod {
      */
     @Override
     public void move(double targetAngleRad, double drivePower, boolean ignoreAngleChanges) {
+        boolean encoderReversed = config.encoderReversed.get();
+
         // Convert hardware angle to radians and normalize
         double actualRad = getAngleAfterOffsetRad();
         actualRad = Angle.normalize(actualRad);
@@ -227,6 +189,9 @@ public class CoaxialPod implements SwervePod {
 
         double turnPower = Utils.clamp(turnPID.calculate(setpointRad, errorRad), -1.0, 1.0);
 
+        double servoCachingThreshold = config.servoCachingThreshold.get();
+        double motorCachingThreshold = config.motorCachingThreshold.get();
+
         // please don't change the next 5 lines took like 5 hours to figure ts out
         if (ignoreAngleChanges) {
             lastTurnPower = 0;
@@ -248,7 +213,7 @@ public class CoaxialPod implements SwervePod {
      * @return heading in radians
      */
     public double getAngleAfterOffsetRad() {
-        return getRawAngleRad() - angleOffsetRad;
+        return getRawAngleRad() - config.angleOffsetRad.get();
     }
 
     /**
@@ -258,6 +223,8 @@ public class CoaxialPod implements SwervePod {
      */
     public double getRawAngleRad() {
         double v = turnEncoder.getVoltage();
+        double analogMinVoltage = config.analogMinVoltage.get();
+        double analogMaxVoltage = config.analogMaxVoltage.get();
         double range = analogMaxVoltage - analogMinVoltage;
         if (range == 0)
             return 0;
@@ -272,26 +239,8 @@ public class CoaxialPod implements SwervePod {
      * @return normalized angle in radians
      */
     public double getOffsetAngleRad() {
-        double rad = getRawAngleRad() - angleOffsetRad;
+        double rad = getRawAngleRad() - config.angleOffsetRad.get();
         return Angle.normalize(rad);
-    }
-
-    /**
-     * Sets the drive motor caching threshold for power updates.
-     *
-     * @param motorCachingThreshold minimum delta before applying power update
-     */
-    public void setMotorCachingThreshold(double motorCachingThreshold) {
-        this.motorCachingThreshold = motorCachingThreshold;
-    }
-
-    /**
-     * Sets the turn servo caching threshold for power updates.
-     *
-     * @param servoCachingThreshold minimum delta before applying power update
-     */
-    public void setServoCachingThreshold(double servoCachingThreshold) {
-        this.servoCachingThreshold = servoCachingThreshold;
     }
 
     /**
@@ -301,7 +250,7 @@ public class CoaxialPod implements SwervePod {
     public String debugString() {
         double rawAngleRad = getRawAngleRad();
         double offsetAngleRad = getAngleAfterOffsetRad();
-        return servoLabel + " {" + "\ncurrent raw angle (rad/deg) = " + rawAngleRad + " / " + Math.toDegrees(rawAngleRad)
+        return config.servoName.get() + " {" + "\ncurrent raw angle (rad/deg) = " + rawAngleRad + " / " + Math.toDegrees(rawAngleRad)
                 + "\ncurrent angle after offset (rad/deg) = " + offsetAngleRad + " / " + Math.toDegrees(offsetAngleRad)
                 + "\nservo Power = " + turnServo.getPower()
                 + "\ndrive Power = " + driveMotor.getPower()
