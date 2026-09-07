@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import static com.pedropathing.config.Validator.nonnegative;
 
 public class CoaxialPodConfig {
+    public final ConfigVar<String> name = ConfigVar.required();
     public final ConfigVar<String> motorName = ConfigVar.required();
     public final ConfigVar<String> servoName = ConfigVar.required();
     public final ConfigVar<String> servoEncoderName = ConfigVar.required();

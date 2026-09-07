@@ -11,7 +11,9 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.Range;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Swerve Drivetrain implementation.
@@ -66,23 +68,20 @@ public class Swerve implements Drivetrain {
     }
 
     @Override
-    public String debugString() {
-        StringBuilder output = new StringBuilder();
+    public Map<String, Object> debug() {
+        Map<String, Object> map = new HashMap<>();
 
-        output.append("Forward: ").append(lastForward).append("\n")
-                .append("Strafe: ").append(lastStrafe).append("\n")
-                .append("Rotation: ").append(lastRotation).append("\n")
-                .append("Power Scaling: ").append(powerScaling).append("\n")
-                .append("Average Angle Scaling: ").append(lastAvgScaling);
+        map.put("forward", lastForward);
+        map.put("strafe", lastStrafe);
+        map.put("rotation", lastRotation);
+        map.put("powerScaling", powerScaling);
+        map.put("averageAngleScaling", lastAvgScaling);
 
-        output.append("\nPods {");
         for (SwervePod pod : pods) {
-            output.append("\n    ")
-                    .append(pod.debugString().replace("\n", "\n    "));
+            map.put(pod.name(), pod.debug());
         }
-        output.append("\n}");
 
-        return output.toString();
+        return map;
     }
 
     @Override
