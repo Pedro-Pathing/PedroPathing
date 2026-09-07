@@ -17,7 +17,7 @@ public class MecanumConfig {
     public final ConfigVar<DcMotorSimple.Direction> backRightDirection = ConfigVar.required();
 
     /** Whether ZeroPowerBrake mode is enabled in manual mode. */
-    public final ConfigVar<Boolean> manualBrakeMode = ConfigVar.of(false);
+    public final ConfigVar<Boolean> manualBrakeMode = ConfigVar.of(true);
 
     /** Smallest power change that triggers a hardware write. */
     public final ConfigVar<Double> powerThreshold = ConfigVar.of(0.01, nonnegative());
