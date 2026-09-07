@@ -37,8 +37,8 @@ public class Follower {
     private Mode mode = Mode.IDLE;
     private long previousNanoTime = 0L;
     private boolean useHoldScaling;
-    private final List<Consumer<Map<String, Map<String, Object>>>> loggers = new ArrayList<>();
-    private Map<String, Map<String, Object>> debug = new HashMap<>();
+    private final List<Consumer<FollowerLog>> loggers = new ArrayList<>();
+    private FollowerLog debug;
 
     public Follower(Localizer localizer, Drivetrain drivetrain, Algorithm algorithm) {
         this.localizer = localizer;
@@ -49,7 +49,7 @@ public class Follower {
     /**
      * Adds a logger that will be called every update with the debug information.
      */
-    public Follower withLogger(Consumer<Map<String, Map<String, Object>>> logger) {
+    public Follower withLogger(Consumer<FollowerLog> logger) {
         loggers.add(logger);
         return this;
     }
@@ -101,18 +101,6 @@ public class Follower {
             }
         }
 
-        for (Consumer<Map<String, Map<String, Object>>> logger : loggers) {
-            logger.accept(debug());
-        }
-    }
-
-    public Map<String, Map<String, Object>> debug() {
-        return debug;
-    }
-
-    public void createDebug() {
-        debug = new HashMap<>();
-
         Map<String, Object> map = new HashMap<>();
 
         map.put("mode", mode);
@@ -123,10 +111,15 @@ public class Follower {
             map.put("pathIndex", pathIndex());
         }
 
-        debug.put("follower", map);
-        debug.put("localizer", localizer.debug());
-        debug.put("drivetrain", drivetrain.debug());
-        debug.put("algorithm", algorithm.debug());
+        debug = FollowerLog.of(map, localizer.debug(), drivetrain.debug(), algorithm.debug());
+
+        for (Consumer<FollowerLog> logger : loggers) {
+            logger.accept(debug());
+        }
+    }
+
+    public FollowerLog debug() {
+        return debug;
     }
 
     private void clearState() {
