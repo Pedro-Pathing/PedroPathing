@@ -38,16 +38,30 @@ public final class ForesightConfig {
      */
     public final ConfigVar<Double> maxBrakingPower = ConfigVar.of(0.2, positive());
 
+    /**
+     * Limits how fast the robot can speed up in unit/s^2.
+     */
     public final ConfigVar<Double> maxAccelerationConstraint = ConfigVar.of(Constraint.NONE, positive());
+
+    /**
+     * Limits the robot's speed in unit/s.
+     */
     public final ConfigVar<Double> maxVelocityConstraint = ConfigVar.of(Constraint.NONE, positive());
+
+    /**
+     * Limits the how fast the robot slows down in unit/s^2. Cannot exceed your robot's natural deceleration (if faster deceleration is necessary leave this as Constraint.NONE and use the default braking).
+     */
     public final ConfigVar<Double> maxDecelerationConstraint = ConfigVar.of(Constraint.NONE, positive());
 
     /**
-     * Set the maxVelocityConstraint to a fraction of the maxAchievableVelocity.
+     * Limits the robot's speed by a fraction of your robot's max speed.
      */
-    public Modifier setPathSpeed(double speed) {
-        return maxVelocityConstraint.at(maxAchievableForwardVelocity.get() * speed);
-    }
+    public final ConfigVar<Double> maxPathSpeed = ConfigVar.of(Constraint.NONE, positive());
+
+    /**
+     * Limits the robot's deceleration by a fraction of your robot's natural deceleration. Cannot be greater than 1. If faster deceleration is necessary leave this as Constraint.NONE and use the default braking.
+     */
+    public final ConfigVar<Double> maxDecelerationScale = ConfigVar.of(Constraint.NONE, positive());
 
     public static class Constraint {
         public static double NONE = Double.POSITIVE_INFINITY;
@@ -61,7 +75,7 @@ public final class ForesightConfig {
      */
     public final ConfigVar<Double> brakeAggression = ConfigVar.of(1.0, positive());
 
-    /** The velocity the robot coasts down to before it starts braking. Does nothing if the coastingConstraintScale is infinity or not set. */
+    /** The velocity the robot coasts down to before it starts braking. Does nothing if max deceleration is infinity or not set. */
     public final ConfigVar<Double> coastDownToVelocity = ConfigVar.of(0.0, nonnegative());
 
     /** The tolerance where it starts prioritizing heading feedback correction over drive. */
