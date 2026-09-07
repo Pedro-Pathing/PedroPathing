@@ -33,7 +33,7 @@ public class TwoWheelLocalizer implements Localizer {
         this.yPodOffset = config.yPodOffset.get();
 
         this.imu = config.imu.get();
-        this.imu.initialize(map, config.imuName.get(), config.imuOrientation.get());
+        this.imu.initialize(map, config.imuName.get());
 
         this.xPodEncoder = new Encoder(map.get(DcMotorEx.class, config.xPodName.get()));
         this.yPodEncoder = new Encoder(map.get(DcMotorEx.class, config.yPodName.get()));

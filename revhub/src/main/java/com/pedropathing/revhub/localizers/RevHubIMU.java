@@ -8,15 +8,19 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 public class RevHubIMU implements CustomIMU {
     private IMU imu;
+    private final RevHubOrientationOnRobot hubOrientation;
+
+    public RevHubIMU(RevHubOrientationOnRobot hubOrientation) {
+        this.hubOrientation = hubOrientation;
+    }
 
     /**
      * Initializes the IMU using the hardwareMap and hubOrientation.
      * @param hardwareMap the hardware map
      * @param hardwareMapName the name of the hardware map
-     * @param hubOrientation the hub orientation
      */
     @Override
-    public void initialize(HardwareMap hardwareMap, String hardwareMapName, RevHubOrientationOnRobot hubOrientation) {
+    public void initialize(HardwareMap hardwareMap, String hardwareMapName) {
         imu = hardwareMap.get(IMU.class, hardwareMapName);
         imu.initialize(new IMU.Parameters(hubOrientation));
     }

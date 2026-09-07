@@ -42,7 +42,7 @@ public class ThreeWheelIMULocalizer implements Localizer {
         this.strafePodX = config.strafePodX.get();
 
         this.imu = config.imu.get();
-        this.imu.initialize(map, config.imuName.get(), config.imuOrientation.get());
+        this.imu.initialize(map, config.imuName.get());
 
         this.leftEncoder = new Encoder(map.get(DcMotorEx.class, config.leftEncoderName.get()));
         this.rightEncoder = new Encoder(map.get(DcMotorEx.class, config.rightEncoderName.get()));
