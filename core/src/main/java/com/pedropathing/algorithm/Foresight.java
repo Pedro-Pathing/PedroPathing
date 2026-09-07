@@ -316,8 +316,19 @@ public class Foresight implements Algorithm {
         double maxVelocityConstraint = config.maxVelocityConstraint.get();
         double maxDecelerationConstraint = config.maxDecelerationConstraint.get();
         double coastDownToVelocity = config.coastDownToVelocity.get();
+        double maxPathSpeed = config.maxPathSpeed.get();
+        double maxDecelerationScale = config.maxDecelerationScale.get();
+
+        if (maxDecelerationScale != ForesightConfig.Constraint.NONE) {
+            double naturalDeceleration = drivetrain.interpolateAcceleration(
+                    config.naturalForwardDeceleration.get(), config.naturalStrafeDeceleration.get(), theta);
+            maxDecelerationConstraint = Math.min(maxDecelerationScale * naturalDeceleration, maxAccelerationConstraint);
+        }
 
         double targetVel = maxAchievableVelocity;
+
+        if (maxPathSpeed != ForesightConfig.Constraint.NONE)
+            targetVel = Math.min(targetVel, maxPathSpeed * maxAchievableVelocity);
 
         if (maxVelocityConstraint != ForesightConfig.Constraint.NONE)
             targetVel = Math.min(targetVel, maxVelocityConstraint);
