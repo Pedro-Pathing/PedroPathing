@@ -10,6 +10,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Mecanum implements Drivetrain {
     private final boolean manualBrakeMode;
@@ -123,16 +125,19 @@ public class Mecanum implements Drivetrain {
     }
 
     @Override
-    public String debugString() {
-        return "Forward: " + drivePowers.forward() + "\n" +
-                "Strafe: " + drivePowers.strafe() + "\n" +
-                "Turn: " + drivePowers.turn() + "\n" +
-                "Power Scale: " + powerScale + "\n" +
-                "Wheel Powers: [" +
-                wheelPowers[FL] + ", " +
-                wheelPowers[FR] + ", " +
-                wheelPowers[BL] + ", " +
-                wheelPowers[BR] + "]";
+    public Map<String, Object> debug() {
+        Map<String, Object> map = new HashMap<>();
+
+        map.put("forward", drivePowers.forward());
+        map.put("strafe", drivePowers.strafe());
+        map.put("turn", drivePowers.turn());
+        map.put("powerScale", powerScale);
+        map.put("leftFrontWheelPower", wheelPowers[FL]);
+        map.put("rightFrontWheelPower", wheelPowers[FR]);
+        map.put("leftBackWheelPower", wheelPowers[BL]);
+        map.put("rightBackWheelPower", wheelPowers[BR]);
+
+        return map;
     }
 
     public void setZeroPowerBehavior(DcMotor.ZeroPowerBehavior behavior) {

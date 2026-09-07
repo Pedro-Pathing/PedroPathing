@@ -11,6 +11,8 @@ import com.pedropathing.math.Pose;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.paths.PathTracker;
 
+import java.util.Map;
+
 public interface Algorithm {
     DrivePowers calculatePath(Drivetrain drivetrain, PathTracker pathTracker, MotionState state, double deltaTime);
 
@@ -39,5 +41,5 @@ public interface Algorithm {
 
     boolean isBusy();
 
-    String debugString();
+    Map<String, Object> debug();
 }

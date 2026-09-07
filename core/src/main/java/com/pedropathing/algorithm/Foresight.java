@@ -20,7 +20,9 @@ import com.pedropathing.utils.Timer;
 import com.pedropathing.utils.Utils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -40,7 +42,7 @@ public class Foresight implements Algorithm {
     private final Vector2D naturalDeceleration;
     private PathTracker tracker;
     private MotionState currentState;
-    private final List<Consumer<ForesightDebugData>> dataLoggers = new ArrayList<>();
+    private Map<String, Object> debug = new HashMap<>();
 
     public Foresight(ForesightConfig config) {
         this.config = config;
@@ -175,11 +177,7 @@ public class Foresight implements Algorithm {
                 translationalError,
                 headingError);
 
-        if (!dataLoggers.isEmpty()) {
-            ForesightDebugData data = debugData();
-            for (Consumer<ForesightDebugData> dataLogger : dataLoggers)
-                dataLogger.accept(data);
-        }
+        debug = debugData();
 
         return drivePowers;
     }
@@ -236,11 +234,8 @@ public class Foresight implements Algorithm {
 
         DrivePowers drivePowers = allocator.getDrivePowers(translational, state, headingCorrection);
 
-        if (!dataLoggers.isEmpty()) {
-            ForesightDebugData data = debugData();
-            for (Consumer<ForesightDebugData> dataLogger : dataLoggers)
-                dataLogger.accept(data);
-        }
+        debug = debugData();
+
         return drivePowers;
     }
 
@@ -479,24 +474,26 @@ public class Foresight implements Algorithm {
         return busy;
     }
 
-    public ForesightDebugData debugData() {
-        return new ForesightDebugData(
-                currentState.pose(),
-                currentState.velocity(),
-                currentState.twist(),
-                translationalError,
-                headingError,
-                tangentialSpeed,
-                closestT,
-                projectedClosestT,
-                remainingDistance,
-                curveCompletion,
-                allocator.getNormalFeedforwardVector(),
-                allocator.getHeadingFeedforward(),
-                allocator.getTranslationalVector(),
-                allocator.getDriveVector(),
-                allocator.getHeadingPower()
-        );
+    public Map<String, Object> debugData() {
+        Map<String, Object> map = new HashMap<>();
+
+        map.put("pose", currentState.pose());
+        map.put("velocity", currentState.velocity());
+        map.put("twist", currentState.twist());
+        map.put("translationalError", translationalError);
+        map.put("headingError", headingError);
+        map.put("tangentialSpeed", tangentialSpeed);
+        map.put("closestT", closestT);
+        map.put("projectedClosestT", projectedClosestT);
+        map.put("remainingDistance", remainingDistance);
+        map.put("curveCompletion", curveCompletion);
+        map.put("normalFeedforward", allocator.getNormalFeedforwardVector());
+        map.put("headingFeedforward", allocator.getHeadingFeedforward());
+        map.put("translationalVector", allocator.getTranslationalVector());
+        map.put("driveVector", allocator.getDriveVector());
+        map.put("headingPower", allocator.getHeadingPower());
+
+        return map;
     }
 
     public boolean isBraking() {
@@ -504,31 +501,7 @@ public class Foresight implements Algorithm {
     }
 
     @Override
-    public String debugString() {
-        return "Closest Pose: " + closestPose + "\n" +
-                "Closest T: " + closestT + "\n" +
-                "Path Completion: " + curveCompletion + "\n" +
-                "Remaining Distance: " + remainingDistance + "\n" +
-                "Curvature: " + curvature + "\n" +
-                "Tangent: " + closestTangent + "\n" +
-                "Normal: " + closestNormal + "\n" +
-                "Tangential Speed: " + tangentialSpeed + "\n" +
-                "Target Velocity: " + targetVelocity + "\n" +
-                "Translational Error: " + translationalError + "\n" +
-                "Heading Error: " + headingError + "\n" +
-                "Projected T: " + projectedClosestT + "\n" +
-                "Busy: " + busy + "\n" +
-                "Braking: " + isBraking + "\n" +
-                "Velocity Condition: " + velocityCondition() + "\n" +
-                "Translational Condition: " + translationalCondition() + "\n" +
-                "Heading Condition: " + headingCondition() + "\n" +
-                "Parametric Condition: " + parametricCondition() + "\n" +
-                "Timeout Condition: " + timeoutCondition() +
-                "Power Allocator {\n " + allocator.debugString().replace("\n", "\n ") + "\n}";
-    }
-
-    public Foresight addDataLogger(Consumer<ForesightDebugData> dataLogger) {
-        dataLoggers.add(dataLogger);
-        return this;
+    public Map<String, Object> debug() {
+        return debug;
     }
 }

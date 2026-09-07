@@ -7,6 +7,9 @@ import com.pedropathing.utils.Angle;
 import com.pedropathing.utils.Utils;
 import com.qualcomm.robotcore.hardware.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * CoaxialPod is a hardware-backed implementation of the core `SwervePod` interface. It owns the
  * drive motor, continuous rotation servo (turn), analog encoder and the PIDF controller used to
@@ -16,6 +19,7 @@ import com.qualcomm.robotcore.hardware.*;
  * @author Baron Henderson
  */
 public class CoaxialPod implements SwervePod {
+    private final String name;
     private final AnalogInput turnEncoder; // for rotation of servo
     private final CRServo turnServo;
     private final DcMotorEx driveMotor;
@@ -27,6 +31,8 @@ public class CoaxialPod implements SwervePod {
 
     public CoaxialPod(HardwareMap hardwareMap, CoaxialPodConfig config) {
         this.config = config;
+
+        this.name = config.name.get();
 
         this.driveMotor = hardwareMap.get(DcMotorEx.class, config.motorName.get());
         this.turnServo = hardwareMap.get(CRServo.class, config.servoName.get());
@@ -244,17 +250,28 @@ public class CoaxialPod implements SwervePod {
         return Angle.normalize(rad);
     }
 
+    public String name() {
+        return name;
+    }
+
     /**
-     * @return debug string for pod state
+     * @return debug for pod state
      */
     @Override
-    public String debugString() {
+    public Map<String, Object> debug() {
         double rawAngleRad = getRawAngleRad();
         double offsetAngleRad = getAngleAfterOffsetRad();
-        return config.servoName.get() + " {" + "\ncurrent raw angle (rad/deg) = " + rawAngleRad + " / " + Math.toDegrees(rawAngleRad)
-                + "\ncurrent angle after offset (rad/deg) = " + offsetAngleRad + " / " + Math.toDegrees(offsetAngleRad)
-                + "\nservo Power = " + turnServo.getPower()
-                + "\ndrive Power = " + driveMotor.getPower()
-                + "\n}";
+
+        Map<String, Object> map = new HashMap<>();
+
+        map.put("servoName", config.servoName.get());
+        map.put("rawAngleRad", rawAngleRad);
+        map.put("rawAngleDeg", Math.toDegrees(rawAngleRad));
+        map.put("angleAfterOffsetRad", offsetAngleRad);
+        map.put("angleAfterOffsetDeg", Math.toDegrees(offsetAngleRad));
+        map.put("servoPower", turnServo.getPower());
+        map.put("drivePower", driveMotor.getPower());
+
+        return map;
     }
 }
