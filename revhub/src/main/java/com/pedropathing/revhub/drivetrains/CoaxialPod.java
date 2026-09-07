@@ -2,6 +2,7 @@ package com.pedropathing.revhub.drivetrains;
 
 import com.pedropathing.controllers.Controller;
 import com.pedropathing.math.Pose;
+import com.pedropathing.math.Vector2D;
 import com.pedropathing.utils.Angle;
 import com.pedropathing.utils.Utils;
 import com.qualcomm.robotcore.hardware.*;
@@ -45,7 +46,7 @@ public class CoaxialPod implements SwervePod {
      * @return offset as a Pose
      */
     @Override
-    public Pose getOffset() {
+    public Vector2D getOffset() {
         return config.podOffset.get();
     }
 

@@ -2,6 +2,7 @@ package com.pedropathing.revhub.drivetrains;
 
 
 import com.pedropathing.math.Pose;
+import com.pedropathing.math.Vector2D;
 
 /**
  * Swerve pod interface so Swerve drivetrains can be constructed with coaxial or differential pods.
@@ -13,7 +14,7 @@ public interface SwervePod {
     /**
      * The pod's offset from the robot center (pose offset). It uses the Odometry Coordinate System.
      */
-    Pose getOffset();
+    Vector2D getOffset();
 
     /**
      * Returns the pod's current heading (angle after applying the configured offset), in radians.
