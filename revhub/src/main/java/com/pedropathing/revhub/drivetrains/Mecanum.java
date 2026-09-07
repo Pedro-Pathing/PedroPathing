@@ -12,8 +12,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import java.util.Arrays;
 
 public class Mecanum implements Drivetrain {
-    private final boolean manualBrakeMode;
-
+    public final MecanumConfig config;
     private final CachedMotor[] motors;
     public final double[] wheelPowers = new double[4];
 
@@ -26,6 +25,7 @@ public class Mecanum implements Drivetrain {
     private DrivePowers drivePowers = DrivePowers.zero();
 
     public Mecanum(HardwareMap map, MecanumConfig config) {
+        this.config = config;
         double powerDeadband = config.powerThreshold.get();
         
         motors = new CachedMotor[]{
@@ -41,8 +41,6 @@ public class Mecanum implements Drivetrain {
         motors[BR].setDirection(config.backRightDirection.get());
 
         setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-
-        manualBrakeMode = config.manualBrakeMode.get();
     }
 
     @SuppressLint("DefaultLocale")
@@ -108,7 +106,7 @@ public class Mecanum implements Drivetrain {
 
     @Override
     public void drive(DrivePowers powers, boolean manual) {
-        if (manual && manualBrakeMode)
+        if (manual && config.manualBrakeMode.get())
             setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         else
             setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
@@ -120,6 +118,16 @@ public class Mecanum implements Drivetrain {
         for (CachedMotor motor : motors) {
             motor.setPower(0);
         }
+    }
+
+    public void stop(boolean brake) {
+        if (brake) {
+            setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        } else {
+            setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        }
+
+        stop();
     }
 
     @Override

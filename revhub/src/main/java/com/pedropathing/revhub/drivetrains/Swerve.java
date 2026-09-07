@@ -40,6 +40,8 @@ public class Swerve implements Drivetrain {
         this.config = config;
         this.voltageSensor = hardwareMap.voltageSensor.iterator().next();
         this.pods = Arrays.asList(pods);
+
+        setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
     }
 
     /**
@@ -51,6 +53,16 @@ public class Swerve implements Drivetrain {
             pod.move(pod.getAngle(), 0, true);
             pod.setToFloat();
         }
+    }
+
+    public void stop(boolean brake) {
+        if (brake) {
+            setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        } else {
+            setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        }
+
+        stop();
     }
 
     @Override
