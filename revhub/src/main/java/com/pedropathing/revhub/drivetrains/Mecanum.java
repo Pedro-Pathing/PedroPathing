@@ -117,9 +117,7 @@ public class Mecanum implements Drivetrain {
 
     @Override
     public void stop() {
-        for (CachedMotor motor : motors) {
-            motor.setPower(0);
-        }
+        stop(config.manualBrakeMode.get());
     }
 
     public void stop(boolean brake) {
@@ -129,7 +127,9 @@ public class Mecanum implements Drivetrain {
             setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         }
 
-        stop();
+        for (CachedMotor motor : motors) {
+            motor.setPower(0);
+        }
     }
 
     @Override

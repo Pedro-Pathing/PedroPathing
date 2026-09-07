@@ -51,10 +51,7 @@ public class Swerve implements Drivetrain {
      */
     @Override
     public void stop() {
-        for (SwervePod pod : pods) {
-            pod.move(pod.getAngle(), 0, true);
-            pod.setToFloat();
-        }
+        stop(config.manualBrakeMode.get());
     }
 
     public void stop(boolean brake) {
@@ -64,7 +61,10 @@ public class Swerve implements Drivetrain {
             setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         }
 
-        stop();
+        for (SwervePod pod : pods) {
+            pod.move(pod.getAngle(), 0, true);
+            pod.setToFloat();
+        }
     }
 
     @Override
