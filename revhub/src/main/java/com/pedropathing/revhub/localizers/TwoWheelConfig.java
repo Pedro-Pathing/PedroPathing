@@ -17,9 +17,8 @@ public class TwoWheelConfig {
 
     public final ConfigVar<Double> xPodDirection = ConfigVar.required();
     public final ConfigVar<Double> yPodDirection = ConfigVar.required();
-    public final ConfigVar<RevHubOrientationOnRobot> imuOrientation = ConfigVar.required();
 
-    public final ConfigVar<CustomIMU> imu = ConfigVar.of(new RevHubIMU());
+    public final ConfigVar<CustomIMU> imu = ConfigVar.required();
 
     public TwoWheelConfig(Configuration<TwoWheelConfig> config) {
         config.configure(this);

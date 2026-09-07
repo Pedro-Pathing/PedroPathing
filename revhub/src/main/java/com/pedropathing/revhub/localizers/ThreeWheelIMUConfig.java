@@ -4,6 +4,8 @@ import com.pedropathing.config.ConfigVar;
 import com.pedropathing.config.Configuration;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 
+import java.util.Optional;
+
 public class ThreeWheelIMUConfig {
     public final ConfigVar<String> leftEncoderName = ConfigVar.required();
     public final ConfigVar<String> rightEncoderName = ConfigVar.required();
@@ -22,8 +24,7 @@ public class ThreeWheelIMUConfig {
     public final ConfigVar<Double> rightEncoderDirection = ConfigVar.required();
     public final ConfigVar<Double> strafeEncoderDirection = ConfigVar.required();
 
-    public final ConfigVar<RevHubOrientationOnRobot> imuOrientation = ConfigVar.required();
-    public final ConfigVar<CustomIMU> imu = ConfigVar.of(new RevHubIMU());
+    public final ConfigVar<CustomIMU> imu = ConfigVar.required();
 
     public ThreeWheelIMUConfig(Configuration<ThreeWheelIMUConfig> config) {
         config.configure(this);
