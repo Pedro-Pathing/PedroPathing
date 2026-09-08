@@ -67,6 +67,8 @@ public class Follower {
     }
 
     public void update(double deltaTime) {
+        debug = null;
+
         localizer.update();
 
         switch (mode) {
@@ -101,6 +103,21 @@ public class Follower {
             }
         }
 
+        if (debug != null && !loggers.isEmpty()) {
+            createDebug();
+        }
+
+        for (Consumer<FollowerLog> logger : loggers) {
+            logger.accept(debug());
+        }
+    }
+
+    public FollowerLog debug() {
+        if (debug == null) createDebug();
+        return debug;
+    }
+
+    public void createDebug() {
         Map<String, Object> map = new HashMap<>();
 
         map.put("mode", mode);
@@ -112,14 +129,6 @@ public class Follower {
         }
 
         debug = FollowerLog.of(map, localizer.debug(), drivetrain.debug(), algorithm.debug());
-
-        for (Consumer<FollowerLog> logger : loggers) {
-            logger.accept(debug());
-        }
-    }
-
-    public FollowerLog debug() {
-        return debug;
     }
 
     private void clearState() {
