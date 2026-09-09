@@ -4,18 +4,20 @@ import com.pedropathing.localization.Localizer;
 import com.pedropathing.localization.MotionState;
 import com.pedropathing.math.Pose;
 import com.pedropathing.math.Velocity;
+import com.qualcomm.hardware.digitalchickenlabs.OctoQuad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import com.qualcomm.hardware.digitalchickenlabs.OctoQuad.*;
 
 public class OctoQuadLocalizer implements Localizer {
-    private final com.qualcomm.hardware.digitalchickenlabs.OctoQuad.LocalizerDataBlock localizer = new com.qualcomm.hardware.digitalchickenlabs.OctoQuad.LocalizerDataBlock();
-    private final com.qualcomm.hardware.digitalchickenlabs.OctoQuad octoQuad;
+    private final LocalizerDataBlock localizer = new LocalizerDataBlock();
+    public final OctoQuad octoQuad;
     private final DistanceUnit globalDistanceUnit;
 
     private MotionState motionState;
 
     public OctoQuadLocalizer(HardwareMap hardwareMap, OctoQuadConfig config) {
-        octoQuad = hardwareMap.get(com.qualcomm.hardware.digitalchickenlabs.OctoQuad.class, config.name.get());
+        octoQuad = hardwareMap.get(OctoQuad.class, config.name.get());
 
         globalDistanceUnit = config.globalDistanceUnit.get();
 
@@ -39,9 +41,7 @@ public class OctoQuadLocalizer implements Localizer {
 
         reset();
 
-        while (octoQuad.getLocalizerStatus() != com.qualcomm.hardware.digitalchickenlabs.OctoQuad.LocalizerStatus.RUNNING) {
-
-        }
+        while (octoQuad.getLocalizerStatus() != LocalizerStatus.RUNNING) {}
 
         update();
     }
