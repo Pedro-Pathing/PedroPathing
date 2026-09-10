@@ -1,0 +1,52 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+package com.pedropathing.config;
+
+import static com.pedropathing.utils.Utils.listOf;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+public final class Memoize<T> implements Supplier<T> {
+    private final Supplier<T> supplier;
+    private final List<Supplier<?>> dependencies;
+    private T cachedValue;
+    private List<?> cachedDependencies;
+
+    private Memoize(Supplier<T> supplier, List<Supplier<?>> dependencies) {
+        this.supplier = supplier;
+        this.dependencies = dependencies;
+    }
+
+    /**
+     * Creates a memoized supplier that recomputes only when a dependency's value changes.
+     */
+    public static <T> Memoize<T> memo(Supplier<T> supplier, List<Supplier<?>> dependencies) {
+        if (dependencies.isEmpty()) throw new IllegalArgumentException("Memoize requires at least one dependency");
+        return new Memoize<>(supplier, Collections.unmodifiableList(dependencies));
+    }
+
+    /**
+     * Creates a memoized supplier that recomputes only when a dependency's value changes.
+     */
+    public static <T> Memoize<T> memo(Supplier<T> supplier, Supplier<?>... dependencies) {
+        return memo(supplier, listOf(dependencies));
+    }
+
+    /**
+     * Returns the cached value, recomputing it if any dependency has changed.
+     */
+    @Override
+    public T get() {
+        List<?> dependencies = this.dependencies.stream().map(Supplier::get).collect(Collectors.toList());
+        if (cachedDependencies == null || !cachedDependencies.equals(dependencies)) {
+            cachedValue = supplier.get();
+            cachedDependencies = dependencies;
+        }
+        return cachedValue;
+    }
+}

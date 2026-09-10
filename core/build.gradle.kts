@@ -2,11 +2,14 @@ plugins {
     id("java-library")
     id("io.deepmedia.tools.deployer")
     id("org.jetbrains.dokka")
+    id("com.diffplug.spotless")
 }
 
 dependencies {
-    compileOnly(libs.annotations)
     dokkaPlugin(libs.dokka.java.plugin)
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
+    testImplementation("com.google.truth:truth:1.4.5")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.9.3")
 }
 
 java {
@@ -14,17 +17,23 @@ java {
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
-val dokkaJar = tasks.register<Jar>("dokkaJar") {
-    dependsOn(tasks.named("dokkaGenerate"))
-    from(dokka.basePublicationsDirectory.dir("html"))
-    archiveClassifier = "html-docs"
+tasks.test {
+    useJUnitPlatform()
 }
+
+val dokkaJar =
+    tasks.register<Jar>("dokkaJar") {
+        description = "Generates a Dokka Jar"
+        dependsOn(tasks.named("dokkaGenerate"))
+        from(dokka.basePublicationsDirectory.dir("html"))
+        archiveClassifier = "html-docs"
+    }
 
 deployer {
     projectInfo {
         name = "Pedro Pathing Core"
         description = "A path follower designed to revolutionize autonomous pathing in robotics"
-        url = "https://github.com/Pedro-Pathing/PedroPathing"
+        url = "https://pedropathing.com"
         scm {
             fromGithub("Pedro-Pathing", "PedroPathing")
         }
@@ -32,6 +41,7 @@ deployer {
 
         developer("Baron Henderson", "baron@pedropathing.com")
         developer("Havish Sripada", "havish@pedropathing.com")
+        developer("Davis Luxenberg", "davis@pedropathing.com")
     }
 
     content {
@@ -66,4 +76,28 @@ deployer {
     }
 
     localSpec()
+}
+
+spotless {
+    java {
+        target("src/**/*.java")
+
+        palantirJavaFormat()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+
+        licenseHeaderFile(rootProject.file("notice.txt"))
+    }
+
+    kotlinGradle {
+        ktlint("1.2.1")
+        target("*.gradle.kts")
+    }
+
+    format("misc") {
+        target("*.md", "*.yaml", "*.yml", "*.json", ".gitignore")
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
 }
