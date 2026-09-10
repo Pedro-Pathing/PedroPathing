@@ -1,288 +1,271 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.math;
 
-import com.pedropathing.geometry.Pose;
+import java.util.Arrays;
 
 /**
- * This is the Vector class. This class handles storing information about vectors, which are
- * basically Points but using polar coordinates as the default. The main reason this class exists
- * is because some vector math needs to be done in the Follower, and dot products and cross
- * products of Points just don't seem right. Also, there are a few more methods in here that make
- * using Vectors a little easier than using a Point in polar coordinates.
- *
- * @author Anyi Lin - 10158 Scott's Bots
- * @author Aaron Yang - 10158 Scott's Bots
- * @author Harrison Womack - 10158 Scott's Bots
- * @version 1.0, 3/11/2024
+ * A generic n-dimensional vector class.
  */
 public class Vector {
-    /**
-     * The magnitude (length) of the vector.
-     */
-    private double magnitude;
-    /**
-     * The direction (angle in radians) of the vector.
-     */
-    private double theta;
-    /**
-     * The x component of the vector in Cartesian coordinates.
-     */
-    private double xComponent;
-    /**
-     * The y component of the vector in Cartesian coordinates.
-     */
-    private double yComponent;
+    public final double[] elements;
 
     /**
-     * Constructs a new Vector with zero magnitude and direction.
+     * Constructs a vector from an existing array.
+     *
+     * @param elements The values to store.
      */
-    public Vector() {
-        setComponents(0, 0);
+    public Vector(double... elements) {
+        this.elements = Arrays.copyOf(elements, elements.length);
     }
 
     /**
-     * Constructs a new Vector from a given Pose's x and y coordinates.
-     *
-     * @param pose the Pose object to extract x and y from
+     * @return The dimensionality (length) of the vector.
      */
-    public Vector(Pose pose) {
-        setOrthogonalComponents(pose.getX(), pose.getY());
+    public int size() {
+        return elements.length;
     }
 
     /**
-     * Constructs a new Vector with a specified magnitude and direction.
+     * Gets a value at a specific index.
      *
-     * @param magnitude the magnitude (length) of the vector
-     * @param theta     the direction (angle in radians) of the vector
+     * @param i 0-based index.
      */
-    public Vector(double magnitude, double theta) {
-        setComponents(magnitude, theta);
+    public double get(int i) {
+        return elements[i];
     }
 
     /**
-     * Sets the vector's magnitude and direction (polar coordinates).
-     * Updates the Cartesian components accordingly.
-     *
-     * @param magnitude the magnitude to set
-     * @param theta     the direction (angle in radians) to set
+     * Calculates the Euclidean norm (magnitude).
      */
-    public void setComponents(double magnitude, double theta) {
-        double[] orthogonalComponents;
-        if (magnitude < 0) {
-            this.magnitude = -magnitude;
-            this.theta = MathFunctions.normalizeAngle(theta + Math.PI);
-        } else {
-            this.magnitude = magnitude;
-            this.theta = MathFunctions.normalizeAngle(theta);
-        }
-        orthogonalComponents = Pose.polarToCartesian(magnitude, theta);
-        xComponent = orthogonalComponents[0];
-        yComponent = orthogonalComponents[1];
+    public double magnitude() {
+        return Math.sqrt(magnitudeSquared());
+    }
+
+    public double magnitudeSquared() {
+        return this.dot(this);
+    }
+
+    public Vector normalized() {
+        double magnitude = magnitude();
+        if (magnitude < 1e-6) throw new IllegalArgumentException("Cannot normalize 0 vector");
+        return div(magnitude);
     }
 
     /**
-     * Sets only the magnitude of the vector, keeping the direction unchanged.
-     *
-     * @param magnitude the new magnitude
-     */
-    public void setMagnitude(double magnitude) {
-        setComponents(magnitude, theta);
-    }
-
-    /**
-     * Sets only the direction (theta) of the vector, keeping the magnitude unchanged.
-     *
-     * @param theta the new direction (angle in radians)
-     */
-    public void setTheta(double theta) {
-        setComponents(magnitude, theta);
-    }
-
-    /**
-     * Rotates the vector by a given angle (in radians).
-     *
-     * @param theta2 the angle to add to the current direction
-     */
-    public void rotateVector(double theta2) {
-        setTheta(theta + theta2);
-    }
-
-    /**
-     * Sets the vector's Cartesian components (x, y).
-     * Updates the polar representation accordingly.
-     *
-     * @param xComponent the x component to set
-     * @param yComponent the y component to set
-     */
-    public void setOrthogonalComponents(double xComponent, double yComponent) {
-        double[] polarComponents;
-        this.xComponent = xComponent;
-        this.yComponent = yComponent;
-        polarComponents = Pose.cartesianToPolar(xComponent, yComponent);
-        magnitude = polarComponents[0];
-        theta = polarComponents[1];
-    }
-
-    /**
-     * This multiplies the current Vector by a scalar and returns the result as a Vector.
-     *
-     * @param scalar the scalar multiplying into the Vector.
-     * @return returns the scaled Vector.
+     * Multiplies this vector by a scalar.
      */
     public Vector times(double scalar) {
-        return new Vector(getMagnitude() * scalar, getTheta());
+        double[] result = Arrays.stream(elements).map(e -> e * scalar).toArray();
+        return new Vector(result);
     }
 
     /**
-     * This normalizes this Vector to be of magnitude 1, unless this Vector is the zero Vector.
-     * In that case, it just returns back the zero Vector but with a different memory location.
-     *
-     * @return returns the normalized (or zero) Vector.
+     * Multiplies this vector by a scalar.
      */
-    public Vector normalize() {
-        if (getMagnitude() == 0) {
-            return new Vector(0.0, getTheta());
-        } else {
-            return new Vector(getMagnitude() / Math.abs(getMagnitude()), getTheta());
-        }
+    public Vector div(double scalar) {
+        if (scalar == 0) throw new ArithmeticException("Cannot divide Vector by 0");
+        double[] result = Arrays.stream(elements).map(e -> e / scalar).toArray();
+        return new Vector(result);
     }
 
     /**
-     * This returns a Vector that is the sum of the this vector and the other input Vector.
-     *
-     * @param other the other Vector.
-     * @return returns the sum of the Vectors.
+     * Adds another vector to this one.
      */
     public Vector plus(Vector other) {
-        Vector returnVector = new Vector();
-        returnVector.setOrthogonalComponents(getXComponent() + other.getXComponent(), getYComponent() + other.getYComponent());
-        return returnVector;
+        if (this.size() != other.size()) {
+            throw new IllegalArgumentException("Vector sizes must match.");
+        }
+        double[] result = new double[size()];
+        for (int i = 0; i < size(); i++) {
+            result[i] = this.elements[i] + other.elements[i];
+        }
+        return new Vector(result);
     }
 
     /**
-     * This subtracts the other Vector from the current Vector and returns the result as a Vector.
-     * Do note that order matters here.
-     *
-     * @param other the other Vector.
-     * @return returns the second Vector subtracted from the first Vector.
+     * Adds another vector to this one.
      */
     public Vector minus(Vector other) {
-        Vector returnVector = new Vector();
-        returnVector.setOrthogonalComponents(getXComponent() - other.getXComponent(), getYComponent() - other.getYComponent());
-        return returnVector;
+        if (this.size() != other.size()) {
+            throw new IllegalArgumentException("Vector sizes must match.");
+        }
+        double[] result = new double[size()];
+        for (int i = 0; i < size(); i++) {
+            result[i] = this.elements[i] - other.elements[i];
+        }
+        return new Vector(result);
     }
 
     /**
-     * This computes the dot product of the current Vector and the other Vector.
-     *
-     * @param other the Other Vector.
-     * @return returns the dot product of the two Vectors.
+     * Computes the dot product of two vectors.
      */
     public double dot(Vector other) {
-        return getXComponent() * other.getXComponent() + getYComponent() * other.getYComponent();
+        if (this.size() != other.size()) {
+            throw new IllegalArgumentException("Vector sizes must match.");
+        }
+        double sum = 0;
+        for (int i = 0; i < size(); i++) {
+            sum += this.elements[i] * other.elements[i];
+        }
+        return sum;
+    }
+
+    public Vector hadamard(Vector other) {
+        if (this.size() != other.size()) {
+            throw new IllegalArgumentException("Vector sizes must match.");
+        }
+
+        double[] elements = new double[size()];
+        for (int i = 0; i < size(); i++) {
+            elements[i] = this.elements[i] * other.elements[i];
+        }
+        return new Vector(elements);
     }
 
     /**
-     * This computes the current Vector crossed with the other Vector, so a cross product.
-     * Do note that order matters here.
+     * Transforms this vector by a matrix (Matrix * Vector).
+     * In linear algebra, this is the standard way to apply rotations, scales, or shears.
+     * * @param m The transformation matrix.
      *
-     * @param other the other Vector.
-     * @return returns the cross product of the two Vectors.
+     * @return A new Vector resulting from the transformation.
+     * @throws IllegalArgumentException if the matrix columns do not match vector size.
      */
-    public double cross(Vector other) {
-        return getXComponent() * other.getYComponent() - getYComponent() * other.getXComponent();
+    public Vector transform(Matrix m) {
+        if (m.cols != this.size()) {
+            throw new IllegalArgumentException("Matrix columns must match vector size for transformation.");
+        }
+
+        double[] result = new double[m.rows];
+        for (int i = 0; i < m.rows; i++) {
+            double sum = 0;
+            for (int j = 0; j < m.cols; j++) {
+                sum += m.get(i, j) * this.get(j);
+            }
+            result[i] = sum;
+        }
+        return new Vector(result);
+    }
+
+    public Vector2D toVector2D() {
+        if (elements.length != 2) throw new IllegalArgumentException("Vector must have exactly 2 elements.");
+        return Vector2D.cartesian(elements[0], elements[1]);
+    }
+
+    public Vector abs() {
+        double[] elements = new double[size()];
+        for (int i = 0; i < size(); i++) {
+            elements[i] = Math.abs(get(i));
+        }
+        return new Vector(elements);
     }
 
     /**
-     * This returns a Vector that is the linear combination of the current vector and another vector.
-     * @param other the other vector
-     * @param scaleThis the coefficient for the current vector
-     * @param scaleOther the second coefficient for the other vector
-     * @return the resulting vector
-     */
-    public Vector linearCombination(Vector other, double scaleThis, double scaleOther) {
-        return times(scaleThis).plus(other.times(scaleOther));
-    }
-
-    /**
-     * Returns the magnitude (length) of the vector.
+     * Creates a unit vector of the specified dimensionality with a value of 1 at the specified index.
      *
-     * @return the magnitude
+     * @param i   The index at which the value is set to 1 (0-based indexing).
+     * @param dim The total number of dimensions in the vector.
+     * @return A unit vector with 1 at the specified index and 0 elsewhere.
+     * @throws ArrayIndexOutOfBoundsException if the specified index {@code i} is out of bounds.
      */
-    public double getMagnitude() {
-        return magnitude;
+    public static Vector e(int i, int dim) {
+        double[] data = new double[dim];
+        data[i] = 1;
+        return new Vector(data);
     }
 
-    /**
-     * Returns the direction (angle in radians) of the vector.
-     *
-     * @return the theta value
-     */
-    public double getTheta() {
-        return theta;
+    public static Vector zero(int dim) {
+        return new Vector(new double[dim]);
     }
 
-    /**
-     * Returns the x component of the vector.
-     *
-     * @return the x component
-     */
-    public double getXComponent() {
-        return xComponent;
+    public Vector projectOnto(Vector other) {
+        return other.times(dot(other) / other.dot(other));
     }
 
-    /**
-     * Returns the y component of the vector.
-     *
-     * @return the y component
-     */
-    public double getYComponent() {
-        return yComponent;
+    public double quadraticForm(Matrix m) {
+        return dot(transform(m));
     }
 
-    /**
-     * Returns a copy of this vector.
-     *
-     * @return a new Vector with the same magnitude and direction
-     */
-    public Vector copy() {
-        return new Vector(this.magnitude, this.theta);
+    public double angleTo(Vector other) {
+        if (this.isZero() || other.isZero()) {
+            throw new IllegalArgumentException("Cannot calculate angle to or from a zero vector.");
+        }
+        double cosTheta = dot(other) / (magnitude() * other.magnitude());
+        cosTheta = Math.max(-1.0, Math.min(1.0, cosTheta));
+        return Math.acos(cosTheta);
     }
 
-    /**
-     * Returns a string representation of the vector, including magnitude, theta, x, and y components.
-     *
-     * @return a string describing the vector
-     */
+    public double distance(Vector other) {
+        return minus(other).magnitude();
+    }
+
+    public Matrix toMatrix() {
+        double[][] data = new double[size()][1];
+        for (int i = 0; i < size(); i++) {
+            data[i][0] = elements[i];
+        }
+        return new Matrix(data);
+    }
+
+    public double[] elements() {
+        return elements.clone();
+    }
+
+    public boolean isZero() {
+        return magnitudeSquared() < 1e-9;
+    }
+
+    public Matrix outer(Vector other) {
+        double[][] result = new double[size()][other.size()];
+
+        for (int i = 0; i < result.length; i++) {
+            for (int j = 0; j < result[0].length; j++) {
+                result[i][j] = elements[i] * other.elements[j];
+            }
+        }
+
+        return new Matrix(result);
+    }
+
+    public Vector cross(Vector other) {
+        if (size() != 3 || other.size() != 3)
+            throw new UnsupportedOperationException("Cross product only implemented in 3D");
+        return new Vector(
+                elements[1] * other.elements[2] - elements[2] * other.elements[1],
+                elements[2] * other.elements[0] - elements[0] * other.elements[2],
+                elements[0] * other.elements[1] - elements[1] * other.elements[0]);
+    }
+
+    public static Vector[] gramSchmidt(Vector... vectors) {
+        int k = vectors.length;
+        Vector[] result = new Vector[k];
+
+        for (int i = 0; i < k; i++) {
+            result[i] = new Vector(vectors[i].elements);
+        }
+
+        for (int i = 0; i < k; i++) {
+            double norm = result[i].magnitude();
+            if (norm < 1e-10) {
+                throw new ArithmeticException(
+                        "Vectors are linearly dependent (zero vector encountered during Gram-Schmidt).");
+            }
+
+            result[i] = result[i].normalized();
+
+            for (int j = i + 1; j < k; j++) {
+                double comp = result[i].dot(result[j]);
+                result[j] = result[j].minus(result[i].times(comp));
+            }
+        }
+
+        return result;
+    }
+
     @Override
     public String toString() {
-        return "Vector{" +
-                "magnitude=" + magnitude +
-                ", theta=" + theta +
-                ", xComponent=" + xComponent +
-                ", yComponent=" + yComponent +
-                '}';
-    }
-
-    /**
-     * Transforms the vector by multiplying it with a matrix
-     *
-     * @param matrix the matrix transformation
-     * @return the resulting vector after applying the transformation
-     */
-    public Vector transform(Matrix matrix) {
-        double[] multiply = matrix.multiply(new Matrix(new double[][]{{xComponent}, {yComponent}})).getCol(0);
-        return new Vector(multiply[0], multiply[1]);
-    }
-
-    /**
-     * Projects this vector onto another vector.
-     *
-     * @param other the vector to project onto
-     * @return a new vector that is the projection of this vector onto the other vector
-     */
-    public Vector projectOnto(Vector other) {
-        if (other.getMagnitude() == 0) return new Vector();
-        double scale = this.dot(other) / other.dot(other);
-        return other.times(scale);
+        return "Vector{" + "elements=" + Arrays.toString(elements) + '}';
     }
 }

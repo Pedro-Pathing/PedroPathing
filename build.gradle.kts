@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.dokka) apply false
     alias(libs.plugins.deployer) apply false
     alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.spotless) apply false
 }
 
 subprojects {

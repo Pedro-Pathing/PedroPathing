@@ -12,10 +12,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven("https://maven.pedropathing.com/")
     }
 }
 
-rootProject.name = "Pedro Pathing"
-include(":core")
-include(":ftc")
+rootProject.name = "PedroPathing"
+include(":core", ":revhub")
