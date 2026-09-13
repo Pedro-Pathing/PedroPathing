@@ -30,6 +30,10 @@ public class Follower {
     public final Localizer localizer;
     public final Drivetrain drivetrain;
     public final ConfigVar<Boolean> holdEnd = ConfigVar.of(true);
+    public final ConfigVar<Boolean> autoHold = ConfigVar.of(true);
+    public final ConfigVar<Double> holdInputThreshold = ConfigVar.of(0.1);
+    public final ConfigVar<Double> holdVelocityThreshold = ConfigVar.of(0.2);
+
     private Algorithm algorithm;
     private PathTracker pathTracker = null;
     private Pose holdPose = null;
@@ -70,6 +74,7 @@ public class Follower {
         debug = null;
 
         localizer.update();
+        checkAutoHoldTransition();
 
         switch (mode) {
             case FOLLOW: {
@@ -109,6 +114,18 @@ public class Follower {
 
         for (Consumer<FollowerLog> logger : loggers) {
             logger.accept(debug());
+        }
+    }
+
+    private void checkAutoHoldTransition() {
+        if (!autoHold.get()) return;
+
+        boolean inputActive = hasInput(manualPowers);
+
+        if (mode == Mode.MANUAL && !inputActive && velocity().toVector2D().magnitude() < holdVelocityThreshold.get()) {
+            hold(pose());
+        } else if (mode == Mode.HOLD && inputActive) {
+            mode = Mode.MANUAL;
         }
     }
 
@@ -158,13 +175,28 @@ public class Follower {
     }
 
     public void manual(DrivePowers powers) {
-        clearState();
-        mode = Mode.MANUAL;
-        manualPowers = powers;
+        if (mode == Mode.HOLD && autoHold.get() && !hasInput(powers)) {
+            this.manualPowers = powers;
+            return;
+        }
+
+        if (mode != Mode.MANUAL && mode != Mode.HOLD) {
+            clearState();
+            mode = Mode.MANUAL;
+        }
+
+        this.manualPowers = powers;
     }
 
     public void manual(double forward, double lateral, double heading) {
         manual(new DrivePowers(forward, lateral, heading));
+    }
+
+    private boolean hasInput(DrivePowers powers) {
+        if (powers == null) return false;
+        return Math.abs(powers.forward()) > holdInputThreshold.get() ||
+                Math.abs(powers.strafe()) > holdInputThreshold.get() ||
+                Math.abs(powers.turn()) > holdInputThreshold.get();
     }
 
     public void stop() {
