@@ -61,21 +61,34 @@ public final class PoseFactory {
     }
 
     public PoseFactory map(Operation operator) {
+        return mapInPedro(pose -> {
+            Pose converted = operator.apply(axesConvention.fromPedro(pose));
+            return axesConvention.toPedro(converted.x(), converted.y(), converted.heading());
+        });
+    }
+
+    /**
+     * Returns a new PoseFactory that applies the given operation to the created Pose in Pedro's
+     * axes convention, regardless of what convention the PoseFactory itself uses.
+     */
+    public PoseFactory mapInPedro(Operation operator) {
         return new PoseFactory(operation.andThen(operator), angleUnit, axesConvention);
     }
 
     /**
-     * Returns a new PoseFactory that mirrors the x-coordinate of the Pose across the specified axis and inverts the heading.
+     * Returns a new PoseFactory that reflects the Pose across the vertical line at the specified
+     * x-coordinate, mirroring the x-coordinate and the heading.
      */
     public PoseFactory mirrorX(double axis) {
-        return map(pose -> pose.withX(2 * axis - pose.x()).withHeading(-pose.heading()));
+        return map(pose -> pose.withX(2 * axis - pose.x()).withHeading(Math.PI - pose.heading()));
     }
 
     /**
-     * Returns a new PoseFactory that mirrors the y-coordinate of the Pose across the specified axis and keeps the heading unchanged.
+     * Returns a new PoseFactory that reflects the Pose across the horizontal line at the specified
+     * y-coordinate, mirroring the y-coordinate and the heading.
      */
     public PoseFactory mirrorY(double axis) {
-        return map(pose -> pose.withY(2 * axis - pose.y()).withHeading(pose.heading()));
+        return map(pose -> pose.withY(2 * axis - pose.y()).withHeading(-pose.heading()));
     }
 
     public PoseFactory mapX(DoubleUnaryOperator operator) {
