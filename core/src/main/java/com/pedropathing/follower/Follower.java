@@ -17,13 +17,10 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathSegment;
 import com.pedropathing.paths.PathTracker;
 import com.pedropathing.paths.curves.Curve;
-import com.pedropathing.utils.DebugString;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class Follower {

@@ -87,8 +87,8 @@ public final class PoseFactory {
     }
 
     public PoseFactory mapHeading(DoubleUnaryOperator operator) {
-        return map(pose -> pose.withHeading(
-                angleUnit.toRadians(operator.applyAsDouble(angleUnit.fromRadians(pose.heading())))));
+        return map(pose ->
+                pose.withHeading(angleUnit.toRadians(operator.applyAsDouble(angleUnit.fromRadians(pose.heading())))));
     }
 
     public enum AngleUnit {
@@ -153,10 +153,7 @@ public final class PoseFactory {
 
             @Override
             public Pose fromPedro(Pose pose) {
-                return new Pose(
-                        pose.y() - FIELD_CENTER,
-                        FIELD_CENTER - pose.x(),
-                        pose.heading() - Math.PI / 2);
+                return new Pose(pose.y() - FIELD_CENTER, FIELD_CENTER - pose.x(), pose.heading() - Math.PI / 2);
             }
         };
 

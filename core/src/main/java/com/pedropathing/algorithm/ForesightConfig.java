@@ -10,7 +10,6 @@ import static com.pedropathing.config.Validator.positive;
 
 import com.pedropathing.config.ConfigVar;
 import com.pedropathing.config.Configuration;
-import com.pedropathing.config.Modifier;
 import com.pedropathing.controllers.Controller;
 import com.pedropathing.math.Matrix;
 import com.pedropathing.math.Vector2D;

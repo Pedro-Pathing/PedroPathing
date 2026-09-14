@@ -14,7 +14,6 @@ import com.pedropathing.paths.TValue;
 import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.utils.BijectiveMap;
 import com.pedropathing.utils.Utils;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -96,17 +95,16 @@ public class BezierCurve implements Curve {
      */
     private void generateBezierCurve() {
 
-
         double[][] controlPointMatrix = new double[this.controlPoints.size()][2];
         for (int i = 0; i < this.controlPoints.size(); i++) {
             Vector2D p = controlPoints.get(i);
             controlPointMatrix[i] = new double[] {p.x(), p.y()};
         }
         Matrix controlMatrix = new Matrix(controlPointMatrix);
-        this.cachedMatrix = BasisMatrixSupplier.getBezierCharacteristicMatrix(this.controlPoints.size()).times(controlMatrix);
+        this.cachedMatrix = BasisMatrixSupplier.getBezierCharacteristicMatrix(this.controlPoints.size())
+                .times(controlMatrix);
 
         this.tMatrix = new PolynomialMatrix(this.controlPoints.size());
-
     }
 
     /**
@@ -193,7 +191,8 @@ public class BezierCurve implements Curve {
     }
 
     public Vector2D getDerivative(int n, double t) {
-        Vector outVel = new Vector(this.tMatrix.getTMatrix(n, t).times(this.cachedMatrix).getRow(0));
+        Vector outVel = new Vector(
+                this.tMatrix.getTMatrix(n, t).times(this.cachedMatrix).getRow(0));
         return Vector2D.cartesian(outVel.get(0), outVel.get(1));
     }
 
@@ -278,7 +277,9 @@ public class BezierCurve implements Curve {
         double[] tValues = Utils.linspace(0, 1, points.length);
         PolynomialMatrix polynomialMatrix = new PolynomialMatrix(points.length);
 
-        Matrix bernstein = polynomialMatrix.getTMatrix(0, tValues).times(BasisMatrixSupplier.getBezierCharacteristicMatrix(points.length));
+        Matrix bernstein = polynomialMatrix
+                .getTMatrix(0, tValues)
+                .times(BasisMatrixSupplier.getBezierCharacteristicMatrix(points.length));
 
         double[][] targets = new double[points.length][2];
         for (int i = 0; i < points.length; i++) {

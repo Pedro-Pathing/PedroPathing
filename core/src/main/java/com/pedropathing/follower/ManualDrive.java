@@ -55,20 +55,30 @@ public class ManualDrive {
 
     /** Implements a heading lock using a predictive model of heading to calculate a turn power based on the targetHeading and current heading. */
     public static DrivePowers headingLock(
-            Follower follower, Controller headingFeedback, DrivePowers powers, double targetHeading,
-            double headingLinear, double headingQuadratic, double strength) {
+            Follower follower,
+            Controller headingFeedback,
+            DrivePowers powers,
+            double targetHeading,
+            double headingLinear,
+            double headingQuadratic,
+            double strength) {
         double angularVel = follower.velocity().omega;
-        double brakeDist = headingLinear * angularVel +
-                headingQuadratic * angularVel * angularVel * Math.signum(angularVel);
-        double headingError = Angle.normalizeSigned(targetHeading - follower.pose().heading());
+        double brakeDist =
+                headingLinear * angularVel + headingQuadratic * angularVel * angularVel * Math.signum(angularVel);
+        double headingError =
+                Angle.normalizeSigned(targetHeading - follower.pose().heading());
         double error = headingError - brakeDist;
         double power = Utils.clamp(headingFeedback.calculate(0, error), -0.3, 1.0) * strength;
         return new DrivePowers(powers.forward(), powers.strafe(), power);
     }
 
     public static DrivePowers headingLock(
-            Follower follower, Controller headingFeedback, DrivePowers powers, double targetHeading,
-            double headingLinear, double headingQuadratic) {
+            Follower follower,
+            Controller headingFeedback,
+            DrivePowers powers,
+            double targetHeading,
+            double headingLinear,
+            double headingQuadratic) {
         return headingLock(follower, headingFeedback, powers, targetHeading, headingLinear, headingQuadratic, 0.5);
     }
 }

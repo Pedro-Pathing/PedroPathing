@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2026 Pedro Pathing
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 package com.pedropathing.paths.curves.bezier;
 
 import com.pedropathing.math.Matrix;
@@ -35,7 +39,7 @@ public class PolynomialMatrix {
             output[i] = tInput * fallingFactorial(i, diffLevel);
             tInput *= t;
         }
-        return new Matrix(new double[][]{output});
+        return new Matrix(new double[][] {output});
     }
 
     public Matrix getTMatrix(int diffLevel, double[] tValues) {

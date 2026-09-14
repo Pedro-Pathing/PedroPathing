@@ -18,13 +18,9 @@ import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.utils.Pair;
 import com.pedropathing.utils.Timer;
 import com.pedropathing.utils.Utils;
-
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 public class Foresight implements Algorithm {
     public final ForesightConfig config;
@@ -134,8 +130,15 @@ public class Foresight implements Algorithm {
 
         headingFeedforwardPower += config.headingStaticFF.get().calculate(0, turnDirection(headingError));
 
-        Vector2D drive = projectedTangent.times(
-                drive(isBraking && config.brakeAtEnd.get(), velocityToBrakeInTime, deltaTime, angleToTangent, tangentialSpeed, state, curve, drivetrain));
+        Vector2D drive = projectedTangent.times(drive(
+                isBraking && config.brakeAtEnd.get(),
+                velocityToBrakeInTime,
+                deltaTime,
+                angleToTangent,
+                tangentialSpeed,
+                state,
+                curve,
+                drivetrain));
 
         Pair<Double, Vector2D> translationalResult =
                 translationalCorrection(projectedPose, projectedTargetPos, projectedNormal);
@@ -300,7 +303,8 @@ public class Foresight implements Algorithm {
                 config.maxAchievableForwardVelocity.get(), config.maxAchievableStrafeVelocity.get(), angleToTangent);
         targetVelocity = Math.min(profiledTargetVelocity, maxAchievableVelocity);
 
-        if (!isBraking) return coast(tangentialVel, deltaTime, maxAchievableVelocity, state, curve, angleToTangent, drivetrain);
+        if (!isBraking)
+            return coast(tangentialVel, deltaTime, maxAchievableVelocity, state, curve, angleToTangent, drivetrain);
         return config.brake.get().calculate(targetVelocity, 0);
     }
 
