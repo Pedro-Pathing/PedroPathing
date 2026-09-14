@@ -63,6 +63,15 @@ public final class PoseFactory {
         return map(pose -> pose.withY(2 * axis - pose.y()).withHeading(-pose.heading()));
     }
 
+    public PoseFactory mirrorAroundPoint(double centerX, double centerY) {
+        return map(pose ->
+                pose.withX(2 * centerX - pose.x()).withY(2 * centerY - pose.y()).withHeading(pose.heading() + Math.PI));
+    }
+
+    public PoseFactory mirrorAroundPoint(Pose center) {
+        return mirrorAroundPoint(center.x(), center.y());
+    }
+
     public PoseFactory mapX(DoubleUnaryOperator operator) {
         return map(pose -> pose.withX(operator.applyAsDouble(pose.x())));
     }
