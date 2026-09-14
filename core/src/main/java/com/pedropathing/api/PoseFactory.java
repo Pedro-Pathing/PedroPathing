@@ -16,6 +16,10 @@ public final class PoseFactory {
         this(operation, angleUnit, AxesConvention.PEDRO);
     }
 
+    public PoseFactory(Operation operation, boolean useDegrees) {
+        this(operation, useDegrees ? AngleUnit.DEGREES : AngleUnit.RADIANS, AxesConvention.PEDRO);
+    }
+
     public PoseFactory(Operation operation, AngleUnit angleUnit, AxesConvention axesConvention) {
         this.operation = operation;
         this.angleUnit = angleUnit;
