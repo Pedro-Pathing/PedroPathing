@@ -26,14 +26,13 @@ public interface Curve {
 
     default double pathCompletion(double t) {
         if (length() == 0) return 0.0;
-        return remainingDistance(t) / length();
+        return 1 - remainingDistance(t) / length();
     }
 
     default double parameter(double pathCompletion) {
         TValue.check(pathCompletion);
         return pathCompletion;
     }
-    ;
 
     Vector2D derivative(double t);
 
