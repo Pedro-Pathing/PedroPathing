@@ -10,7 +10,6 @@ import com.pedropathing.localization.MotionState;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.utils.Control;
 import com.pedropathing.utils.Pair;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -45,10 +44,8 @@ public class ForesightPowerAllocator {
         this.driveVector = driveVector;
         this.headingPower = headingPower;
 
-        boolean translationalPriority =
-                Math.abs(translationalError) > config.translationalDeviationTolerance.get();
-        boolean headingPriority =
-                Math.abs(headingError) > config.headingDeviationTolerance.get();
+        boolean translationalPriority = Math.abs(translationalError) > config.translationalDeviationTolerance.get();
+        boolean headingPriority = Math.abs(headingError) > config.headingDeviationTolerance.get();
 
         headingFeedforward += headingPower * config.headingDriveRatio.get();
         headingPower *= (1 - config.headingDriveRatio.get());
@@ -94,15 +91,13 @@ public class ForesightPowerAllocator {
                 double deltaHeading =
                         headingVector.dot(Vector2D.polar(1.0, state.pose().heading()));
 
-                double scalingFactor =
-                        maxScaling(pathing, heading, Vector2D.zero(), deltaHeading, state, drivetrain);
+                double scalingFactor = maxScaling(pathing, heading, Vector2D.zero(), deltaHeading, state, drivetrain);
 
                 heading += scalingFactor * deltaHeading;
             } else {
                 Vector2D vector = power.first();
 
-                double scalingFactor =
-                        maxScaling(pathing, heading, vector, 0.0, state, drivetrain);
+                double scalingFactor = maxScaling(pathing, heading, vector, 0.0, state, drivetrain);
 
                 Vector2D scaled = vector.times(scalingFactor);
                 pathing = pathing.plus(scaled);
@@ -112,22 +107,15 @@ public class ForesightPowerAllocator {
         return Pair.of(pathing, heading);
     }
 
-    public DrivePowers getDrivePowers(
-            Vector2D fieldRelativeDrivePower, MotionState state, double headingPower) {
+    public DrivePowers getDrivePowers(Vector2D fieldRelativeDrivePower, MotionState state, double headingPower) {
         Vector2D robotFrameDrivePower =
                 fieldRelativeDrivePower.rotate(-state.pose().heading());
 
         double forward =
-                Control.clampBrakingPower(
-                        robotFrameDrivePower.x(),
-                        state.twist().vx,
-                        config.maxBrakingPower.get());
+                Control.clampBrakingPower(robotFrameDrivePower.x(), state.twist().vx, config.maxBrakingPower.get());
 
         double strafe =
-                Control.clampBrakingPower(
-                        robotFrameDrivePower.y(),
-                        state.twist().vy,
-                        config.maxBrakingPower.get());
+                Control.clampBrakingPower(robotFrameDrivePower.y(), state.twist().vy, config.maxBrakingPower.get());
 
         return new DrivePowers(forward, strafe, headingPower);
     }
@@ -151,15 +139,9 @@ public class ForesightPowerAllocator {
      * is deviating a lot from the path or facing the wrong direction.
      */
     public double getDriveScalar(double normalError, double headingError) {
-        double trackDeviationScale =
-                Control.cosineScale(
-                        normalError,
-                        config.translationalDeviationTolerance.get());
+        double trackDeviationScale = Control.cosineScale(normalError, config.translationalDeviationTolerance.get());
 
-        double headingScale =
-                Control.cosineScale(
-                        headingError,
-                        config.headingDeviationTolerance.get());
+        double headingScale = Control.cosineScale(headingError, config.headingDeviationTolerance.get());
 
         return trackDeviationScale * headingScale;
     }

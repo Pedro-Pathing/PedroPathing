@@ -10,7 +10,6 @@ import com.pedropathing.localization.MotionState;
 import com.pedropathing.math.Pose;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.paths.PathTracker;
-
 import java.util.Map;
 
 public interface Algorithm {

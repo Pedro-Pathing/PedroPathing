@@ -5,29 +5,34 @@
 package com.pedropathing.api;
 
 import com.pedropathing.math.Pose;
+import com.pedropathing.utils.Angle;
 import java.util.function.DoubleUnaryOperator;
 
 public final class PoseFactory {
     private final Operation operation;
-    private final boolean useDegrees;
+    private final Angle.Unit angleUnit;
+
+    public PoseFactory(Operation operation, Angle.Unit angleUnit) {
+        this.operation = operation;
+        this.angleUnit = angleUnit;
+    }
 
     public PoseFactory(Operation operation, boolean useDegrees) {
-        this.operation = operation;
-        this.useDegrees = useDegrees;
+        this(operation, useDegrees ? Angle.Unit.DEGREES : Angle.Unit.RADIANS);
     }
 
     /**
      * Creates a PoseFactory that uses degrees for heading.
      */
     public static PoseFactory degrees() {
-        return new PoseFactory(Operation.IDENTITY, true);
+        return new PoseFactory(Operation.IDENTITY, Angle.Unit.DEGREES);
     }
 
     /**
      * Creates a PoseFactory that uses radians for heading.
      */
     public static PoseFactory radians() {
-        return new PoseFactory(Operation.IDENTITY, false);
+        return new PoseFactory(Operation.IDENTITY, Angle.Unit.RADIANS);
     }
 
     /**
@@ -36,25 +41,60 @@ public final class PoseFactory {
      * Any operations defined in the PoseFactory will be applied to the created Pose.
      */
     public Pose of(double x, double y, double heading) {
-        return operation.apply(new Pose(x, y, useDegrees ? Math.toRadians(heading) : heading));
+        return operation.apply(new Pose(x, y, angleUnit.toRadians(heading)));
     }
 
     public PoseFactory map(Operation operator) {
-        return new PoseFactory(operation.andThen(operator), useDegrees);
+        return new PoseFactory(operation.andThen(operator), angleUnit);
     }
 
     /**
-     * Returns a new PoseFactory that mirrors the x-coordinate of the Pose across the specified axis and inverts the heading.
+     * Returns a new PoseFactory that reflects the Pose across the vertical line at the specified
+     * x-coordinate, mirroring the x-coordinate and the heading.
      */
     public PoseFactory mirrorX(double axis) {
-        return map(pose -> pose.withX(2 * axis - pose.x()).withHeading(-pose.heading()));
+        return map(pose -> new Pose(2 * axis - pose.x(), pose.y(), Math.PI - pose.heading()));
     }
 
     /**
-     * Returns a new PoseFactory that mirrors the y-coordinate of the Pose across the specified axis and keeps the heading unchanged.
+     * Returns a new PoseFactory that reflects the Pose across the horizontal line at the specified
+     * y-coordinate, mirroring the y-coordinate and the heading.
      */
     public PoseFactory mirrorY(double axis) {
-        return map(pose -> pose.withY(2 * axis - pose.y()).withHeading(pose.heading()));
+        return map(pose -> new Pose(pose.x(), 2 * axis - pose.y(), -pose.heading()));
+    }
+
+    public PoseFactory mirrorAroundPoint(double centerX, double centerY) {
+        return rotateAround(centerX, centerY, angleUnit.fromRadians(Math.PI));
+    }
+
+    public PoseFactory mirrorAroundPoint(Pose center) {
+        return mirrorAroundPoint(center.x(), center.y());
+    }
+
+    /**
+     * Returns a new PoseFactory that rotates the Pose counter-clockwise around the specified point
+     * by the specified angle, which is interpreted in the unit specified by the PoseFactory
+     * (degrees or radians).
+     */
+    public PoseFactory rotateAround(double centerX, double centerY, double angle) {
+        double radians = angleUnit.toRadians(angle);
+        double cos = Math.cos(radians);
+        double sin = Math.sin(radians);
+        return map(pose -> {
+            double dx = pose.x() - centerX;
+            double dy = pose.y() - centerY;
+            return new Pose(centerX + dx * cos - dy * sin, centerY + dx * sin + dy * cos, pose.heading() + radians);
+        });
+    }
+
+    /**
+     * Returns a new PoseFactory that rotates the Pose counter-clockwise around the specified point
+     * by the specified angle, which is interpreted in the unit specified by the PoseFactory
+     * (degrees or radians). Only the point's coordinates are used; its heading is ignored.
+     */
+    public PoseFactory rotateAround(Pose point, double angle) {
+        return rotateAround(point.x(), point.y(), angle);
     }
 
     public PoseFactory mapX(DoubleUnaryOperator operator) {
@@ -66,7 +106,8 @@ public final class PoseFactory {
     }
 
     public PoseFactory mapHeading(DoubleUnaryOperator operator) {
-        return map(pose -> pose.withHeading(operator.applyAsDouble(pose.heading())));
+        return map(pose ->
+                pose.withHeading(angleUnit.toRadians(operator.applyAsDouble(angleUnit.fromRadians(pose.heading())))));
     }
 
     @FunctionalInterface

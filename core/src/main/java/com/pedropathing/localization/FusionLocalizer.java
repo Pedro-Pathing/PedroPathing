@@ -161,7 +161,7 @@ public class FusionLocalizer implements Localizer {
         Matrix measurementR = measurementVariance == null
                 ? R
                 : Matrix.diag(measurementVariance.x(), measurementVariance.y(), measurementVariance.heading())
-                .clampDiagonals(EPSILON);
+                        .clampDiagonals(EPSILON);
 
         // Reject if timestamp is outside our poseHistory time window
         if (history.isEmpty() || timestamp < history.firstKey() || timestamp > history.lastKey()) return;

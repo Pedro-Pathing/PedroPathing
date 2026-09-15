@@ -22,7 +22,7 @@ public class BasisMatrixSupplier {
      * This method sets up this class and caches some commonly used Bézier curves,
      * such as the quadratic and cubic Béziers.
      */
-    public void initialize(){
+    public void initialize() {
         if (!initialized) {
             getBezierCharacteristicMatrix(2); // quadratic bezier
             getBezierCharacteristicMatrix(3); // cubic bezier
@@ -69,7 +69,7 @@ public class BasisMatrixSupplier {
      * @param controlPointCount bezier curve's control point count
      * @return characteristic matrix of the Matrix class
      */
-    public static Matrix generateBezierCharacteristicMatrix(int controlPointCount){
+    public static Matrix generateBezierCharacteristicMatrix(int controlPointCount) {
         // get a square matrix that contains Pascal's triangle
         double[][] outputVals = generatePascalTriangle(controlPointCount);
 
@@ -89,7 +89,8 @@ public class BasisMatrixSupplier {
      * @param controlPointCount bezier curve's degree
      * @return characteristic matrix of the Matrix class
      */
-    public static Matrix getBezierCharacteristicMatrix(int controlPointCount){
-        return bezierMatrices.computeIfAbsent(controlPointCount, BasisMatrixSupplier::generateBezierCharacteristicMatrix);
+    public static Matrix getBezierCharacteristicMatrix(int controlPointCount) {
+        return bezierMatrices.computeIfAbsent(
+                controlPointCount, BasisMatrixSupplier::generateBezierCharacteristicMatrix);
     }
 }

@@ -7,7 +7,6 @@ package com.pedropathing.localization;
 import com.pedropathing.math.Pose;
 import com.pedropathing.math.Twist;
 import com.pedropathing.math.Velocity;
-
 import java.util.HashMap;
 import java.util.Map;
 
