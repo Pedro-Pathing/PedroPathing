@@ -5,33 +5,35 @@
 package com.pedropathing.api;
 
 import com.pedropathing.math.Pose;
+import com.pedropathing.utils.Angle;
+
 import java.util.function.DoubleUnaryOperator;
 
 public final class PoseFactory {
     private final Operation operation;
-    private final AngleUnit angleUnit;
+    private final Angle.Unit angleUnit;
 
-    public PoseFactory(Operation operation, AngleUnit angleUnit) {
+    public PoseFactory(Operation operation, Angle.Unit angleUnit) {
         this.operation = operation;
         this.angleUnit = angleUnit;
     }
 
     public PoseFactory(Operation operation, boolean useDegrees) {
-        this(operation, useDegrees ? AngleUnit.DEGREES : AngleUnit.RADIANS);
+        this(operation, useDegrees ? Angle.Unit.DEGREES : Angle.Unit.RADIANS);
     }
 
     /**
      * Creates a PoseFactory that uses degrees for heading.
      */
     public static PoseFactory degrees() {
-        return new PoseFactory(Operation.IDENTITY, AngleUnit.DEGREES);
+        return new PoseFactory(Operation.IDENTITY, Angle.Unit.DEGREES);
     }
 
     /**
      * Creates a PoseFactory that uses radians for heading.
      */
     public static PoseFactory radians() {
-        return new PoseFactory(Operation.IDENTITY, AngleUnit.RADIANS);
+        return new PoseFactory(Operation.IDENTITY, Angle.Unit.RADIANS);
     }
 
     /**
@@ -83,35 +85,6 @@ public final class PoseFactory {
     public PoseFactory mapHeading(DoubleUnaryOperator operator) {
         return map(pose ->
                 pose.withHeading(angleUnit.toRadians(operator.applyAsDouble(angleUnit.fromRadians(pose.heading())))));
-    }
-
-    public enum AngleUnit {
-        DEGREES {
-            @Override
-            public double toRadians(double heading) {
-                return Math.toRadians(heading);
-            }
-
-            @Override
-            public double fromRadians(double radians) {
-                return Math.toDegrees(radians);
-            }
-        },
-        RADIANS {
-            @Override
-            public double toRadians(double heading) {
-                return heading;
-            }
-
-            @Override
-            public double fromRadians(double radians) {
-                return radians;
-            }
-        };
-
-        public abstract double toRadians(double heading);
-
-        public abstract double fromRadians(double radians);
     }
 
     @FunctionalInterface
