@@ -54,7 +54,7 @@ public final class PoseFactory {
      * x-coordinate, mirroring the x-coordinate and the heading.
      */
     public PoseFactory mirrorX(double axis) {
-        return map(pose -> pose.withX(2 * axis - pose.x()).withHeading(Math.PI - pose.heading()));
+        return map(pose -> new Pose(2 * axis - pose.x(), pose.y(), Math.PI - pose.heading()));
     }
 
     /**
@@ -62,16 +62,43 @@ public final class PoseFactory {
      * y-coordinate, mirroring the y-coordinate and the heading.
      */
     public PoseFactory mirrorY(double axis) {
-        return map(pose -> pose.withY(2 * axis - pose.y()).withHeading(-pose.heading()));
+        return map(pose -> new Pose(pose.x(), 2 * axis - pose.y(), -pose.heading()));
     }
 
     public PoseFactory mirrorAroundPoint(double centerX, double centerY) {
-        return map(pose ->
-                pose.withX(2 * centerX - pose.x()).withY(2 * centerY - pose.y()).withHeading(pose.heading() + Math.PI));
+        return rotateAround(centerX, centerY, angleUnit.fromRadians(Math.PI));
     }
 
     public PoseFactory mirrorAroundPoint(Pose center) {
         return mirrorAroundPoint(center.x(), center.y());
+    }
+
+    /**
+     * Returns a new PoseFactory that rotates the Pose counter-clockwise around the specified point
+     * by the specified angle, which is interpreted in the unit specified by the PoseFactory
+     * (degrees or radians).
+     */
+    public PoseFactory rotateAround(double centerX, double centerY, double angle) {
+        double radians = angleUnit.toRadians(angle);
+        double cos = Math.cos(radians);
+        double sin = Math.sin(radians);
+        return map(pose -> {
+            double dx = pose.x() - centerX;
+            double dy = pose.y() - centerY;
+            return new Pose(
+                    centerX + dx * cos - dy * sin,
+                    centerY + dx * sin + dy * cos,
+                    pose.heading() + radians);
+        });
+    }
+
+    /**
+     * Returns a new PoseFactory that rotates the Pose counter-clockwise around the specified point
+     * by the specified angle, which is interpreted in the unit specified by the PoseFactory
+     * (degrees or radians). Only the point's coordinates are used; its heading is ignored.
+     */
+    public PoseFactory rotateAround(Pose point, double angle) {
+        return rotateAround(point.x(), point.y(), angle);
     }
 
     public PoseFactory mapX(DoubleUnaryOperator operator) {
