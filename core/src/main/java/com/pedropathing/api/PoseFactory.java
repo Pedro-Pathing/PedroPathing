@@ -6,7 +6,6 @@ package com.pedropathing.api;
 
 import com.pedropathing.math.Pose;
 import com.pedropathing.utils.Angle;
-
 import java.util.function.DoubleUnaryOperator;
 
 public final class PoseFactory {
@@ -85,10 +84,7 @@ public final class PoseFactory {
         return map(pose -> {
             double dx = pose.x() - centerX;
             double dy = pose.y() - centerY;
-            return new Pose(
-                    centerX + dx * cos - dy * sin,
-                    centerY + dx * sin + dy * cos,
-                    pose.heading() + radians);
+            return new Pose(centerX + dx * cos - dy * sin, centerY + dx * sin + dy * cos, pose.heading() + radians);
         });
     }
 

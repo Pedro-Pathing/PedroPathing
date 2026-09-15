@@ -73,32 +73,32 @@ public class Angle {
         return -1; // clock wise
     }
 
-  public enum Unit {
-      DEGREES {
-          @Override
-          public double toRadians(double heading) {
-              return Math.toRadians(heading);
-          }
+    public enum Unit {
+        DEGREES {
+            @Override
+            public double toRadians(double heading) {
+                return Math.toRadians(heading);
+            }
 
-          @Override
-          public double fromRadians(double radians) {
-              return Math.toDegrees(radians);
-          }
-      },
-      RADIANS {
-          @Override
-          public double toRadians(double heading) {
-              return heading;
-          }
+            @Override
+            public double fromRadians(double radians) {
+                return Math.toDegrees(radians);
+            }
+        },
+        RADIANS {
+            @Override
+            public double toRadians(double heading) {
+                return heading;
+            }
 
-          @Override
-          public double fromRadians(double radians) {
-              return radians;
-          }
-      };
+            @Override
+            public double fromRadians(double radians) {
+                return radians;
+            }
+        };
 
-      public abstract double toRadians(double heading);
+        public abstract double toRadians(double heading);
 
-      public abstract double fromRadians(double radians);
-  }
+        public abstract double fromRadians(double radians);
+    }
 }
