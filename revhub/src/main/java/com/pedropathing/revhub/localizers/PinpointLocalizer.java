@@ -98,5 +98,11 @@ public class PinpointLocalizer implements Localizer {
         } else if (resetMode == ResetMode.RECALIBRATE_IMU) {
             pinpoint.recalibrateIMU();
         }
+
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
