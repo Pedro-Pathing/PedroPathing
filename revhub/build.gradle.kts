@@ -18,6 +18,15 @@ android {
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+        unitTests.all {
+            val coreJar = project(":core").tasks.named("jar")
+            it.dependsOn(coreJar)
+            it.classpath += coreJar.get().outputs.files
+        }
+    }
+
     publishing {
         singleVariant("release") {
             withSourcesJar()
@@ -29,6 +38,9 @@ dependencies {
     compileOnly(libs.bundles.ftc)
     api(project(":core"))
     dokkaPlugin(libs.dokka.java.plugin)
+    testImplementation("junit:junit:4.13.2")
+    testImplementation(libs.bundles.ftc)
+    testImplementation(project(":core"))
 }
 
 

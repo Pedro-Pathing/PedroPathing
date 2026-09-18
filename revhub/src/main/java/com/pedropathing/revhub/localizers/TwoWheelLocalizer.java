@@ -1,5 +1,6 @@
 package com.pedropathing.revhub.localizers;
 
+import com.pedropathing.localization.HeadingSource;
 import com.pedropathing.localization.Localizer;
 import com.pedropathing.localization.MotionState;
 import com.pedropathing.math.Matrix;
@@ -10,8 +11,13 @@ import com.pedropathing.utils.Timer;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import java.util.function.DoubleSupplier;
+import java.util.function.IntSupplier;
+
 public class TwoWheelLocalizer implements Localizer {
     private final CustomIMU imu;
+    private final HeadingSource headingSource;
+    private final boolean resetImuOnRequest;
     private final Encoder xPodEncoder;
     private final Encoder yPodEncoder;
 
@@ -26,23 +32,53 @@ public class TwoWheelLocalizer implements Localizer {
     private final Timer timer;
     private double previousIMUOrientation;
 
+    /**
+     * Creates a hardware-backed localizer from a HardwareMap. Encoders and the IMU are
+     * constructed from the configured names and then delegated to the source-injection path.
+     */
     public TwoWheelLocalizer(HardwareMap map, TwoWheelConfig config) {
+        this(config,
+                initializedHeading(map, config),
+                new Encoder(map.get(DcMotorEx.class, config.xPodName.get())),
+                new Encoder(map.get(DcMotorEx.class, config.yPodName.get())),
+                true);
+    }
+
+    /**
+     * Creates a localizer from injected encoder and heading sources. Encoder values are raw
+     * hardware-sign ticks; Pedro applies the directions in {@code config}. Heading is in
+     * radians. Reset rebases encoder software zeros and does not physically reset sensors.
+     */
+    public TwoWheelLocalizer(TwoWheelConfig config, IntSupplier xPodPosition,
+                             IntSupplier yPodPosition, DoubleSupplier headingRadians) {
+        this(config, headingRadians::getAsDouble, Encoder.from(xPodPosition), Encoder.from(yPodPosition), false);
+    }
+
+    private static HeadingSource initializedHeading(HardwareMap map, TwoWheelConfig config) {
+        CustomIMU imu = config.imu.get();
+        imu.initialize(map, config.imuName.get());
+        return imu::getHeading;
+    }
+
+    private TwoWheelLocalizer(TwoWheelConfig config, HeadingSource headingSource,
+                              Encoder xPodEncoder, Encoder yPodEncoder, boolean resetImuOnRequest) {
         this.forwardTicksToInches = config.forwardTicksToInches.get();
         this.strafeTicksToInches = config.strafeTicksToInches.get();
         this.xPodOffset = config.xPodOffset.get();
         this.yPodOffset = config.yPodOffset.get();
 
-        this.imu = config.imu.get();
-        this.imu.initialize(map, config.imuName.get());
+        this.imu = resetImuOnRequest ? config.imu.get() : null;
+        this.headingSource = headingSource;
+        this.resetImuOnRequest = resetImuOnRequest;
 
-        this.xPodEncoder = new Encoder(map.get(DcMotorEx.class, config.xPodName.get()));
-        this.yPodEncoder = new Encoder(map.get(DcMotorEx.class, config.yPodName.get()));
+        this.xPodEncoder = xPodEncoder;
+        this.yPodEncoder = yPodEncoder;
 
         this.xPodEncoder.setDirection(config.xPodDirection.get());
         this.yPodEncoder.setDirection(config.yPodDirection.get());
 
         this.timer = new Timer();
-        this.previousIMUOrientation = Angle.normalize(imu.getHeading());
+        this.previousIMUOrientation = Angle.normalize(headingSource.headingRadians());
 
         this.motionState = MotionState.ofVelocity(pose, Velocity.zero());
         update();
@@ -68,7 +104,7 @@ public class TwoWheelLocalizer implements Localizer {
         xPodEncoder.update();
         yPodEncoder.update();
 
-        double currentIMUOrientation = Angle.normalize(imu.getHeading());
+        double currentIMUOrientation = Angle.normalize(headingSource.headingRadians());
         double deltaRadians = Angle.turnDirection(previousIMUOrientation, currentIMUOrientation)
                 * Angle.smallestDifference(currentIMUOrientation, previousIMUOrientation);
         previousIMUOrientation = currentIMUOrientation;
@@ -123,10 +159,12 @@ public class TwoWheelLocalizer implements Localizer {
     }
 
     public void reset() {
-        imu.resetYaw();
+        if (resetImuOnRequest) {
+            imu.resetYaw();
+        }
         xPodEncoder.reset();
         yPodEncoder.reset();
         pose = Pose.zero();
-        previousIMUOrientation = Angle.normalize(imu.getHeading());
+        previousIMUOrientation = Angle.normalize(headingSource.headingRadians());
     }
 }

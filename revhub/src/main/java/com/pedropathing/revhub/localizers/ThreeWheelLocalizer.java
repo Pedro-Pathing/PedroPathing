@@ -9,6 +9,8 @@ import com.pedropathing.utils.Timer;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import java.util.function.IntSupplier;
+
 public class ThreeWheelLocalizer implements Localizer {
     private final Encoder leftEncoder;
     private final Encoder rightEncoder;
@@ -28,7 +30,40 @@ public class ThreeWheelLocalizer implements Localizer {
 
     private final Timer timer;
 
+    /**
+     * Creates a motor-backed localizer from a HardwareMap. Encoders are constructed from the
+     * configured motor names and then delegated to the source-injection path.
+     */
     public ThreeWheelLocalizer(HardwareMap map, ThreeWheelConfig config) {
+        this(config,
+                new Encoder(map.get(DcMotorEx.class, config.leftEncoderName.get())),
+                new Encoder(map.get(DcMotorEx.class, config.rightEncoderName.get())),
+                new Encoder(map.get(DcMotorEx.class, config.strafeEncoderName.get())));
+    }
+
+    /**
+     * Creates a localizer from injected encoder position sources. Each source is raw
+     * hardware-sign ticks; Pedro applies the directions in {@code config}. Reset rebases a
+     * software zero and does not physically reset encoders.
+     *
+     * <p>The callbacks may come from direct hardware, a simulator, a replay, a cycle-level
+     * cache, or another external sensor runtime.
+     *
+     * <pre>{@code
+     * IntSupplier left = externalSnapshot::leftTicks;
+     * IntSupplier right = externalSnapshot::rightTicks;
+     * IntSupplier strafe = externalSnapshot::strafeTicks;
+     * Localizer localizer = new ThreeWheelLocalizer(config, left, right, strafe);
+     * Follower follower = new Follower(localizer, drivetrain, algorithm);
+     * }</pre>
+     */
+    public ThreeWheelLocalizer(ThreeWheelConfig config, IntSupplier leftPosition,
+                               IntSupplier rightPosition, IntSupplier strafePosition) {
+        this(config, Encoder.from(leftPosition), Encoder.from(rightPosition), Encoder.from(strafePosition));
+    }
+
+    private ThreeWheelLocalizer(ThreeWheelConfig config, Encoder leftEncoder, Encoder rightEncoder,
+                                Encoder strafeEncoder) {
         this.forwardTicksToInches = config.forwardTicksToInches.get();
         this.strafeTicksToInches = config.strafeTicksToInches.get();
         this.turnTicksToRadians = config.turnTicksToRadians.get();
@@ -37,9 +72,9 @@ public class ThreeWheelLocalizer implements Localizer {
         this.rightPodY = config.rightPodY.get();
         this.strafePodX = config.strafePodX.get();
 
-        this.leftEncoder = new Encoder(map.get(DcMotorEx.class, config.leftEncoderName.get()));
-        this.rightEncoder = new Encoder(map.get(DcMotorEx.class, config.rightEncoderName.get()));
-        this.strafeEncoder = new Encoder(map.get(DcMotorEx.class, config.strafeEncoderName.get()));
+        this.leftEncoder = leftEncoder;
+        this.rightEncoder = rightEncoder;
+        this.strafeEncoder = strafeEncoder;
 
         this.leftEncoder.setDirection(config.leftEncoderDirection.get());
         this.rightEncoder.setDirection(config.rightEncoderDirection.get());

@@ -1,5 +1,6 @@
 package com.pedropathing.revhub.localizers;
 
+import com.pedropathing.localization.HeadingSource;
 import com.pedropathing.localization.Localizer;
 import com.pedropathing.localization.MotionState;
 import com.pedropathing.math.Matrix;
@@ -10,8 +11,13 @@ import com.pedropathing.utils.Timer;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import java.util.function.DoubleSupplier;
+import java.util.function.IntSupplier;
+
 public class ThreeWheelIMULocalizer implements Localizer {
     private final CustomIMU imu;
+    private final HeadingSource headingSource;
+    private final boolean resetImuOnRequest;
     private final Encoder leftEncoder;
     private final Encoder rightEncoder;
     private final Encoder strafeEncoder;
@@ -32,7 +38,41 @@ public class ThreeWheelIMULocalizer implements Localizer {
     private final Timer timer;
     public static boolean useIMU = true;
 
+    /**
+     * Creates a hardware-backed localizer from a HardwareMap. Encoders and the IMU are
+     * constructed from the configured names and then delegated to the source-injection path.
+     */
     public ThreeWheelIMULocalizer(HardwareMap map, ThreeWheelIMUConfig config) {
+        this(config,
+                initializedHeading(map, config),
+                new Encoder(map.get(DcMotorEx.class, config.leftEncoderName.get())),
+                new Encoder(map.get(DcMotorEx.class, config.rightEncoderName.get())),
+                new Encoder(map.get(DcMotorEx.class, config.strafeEncoderName.get())),
+                true);
+    }
+
+    /**
+     * Creates a localizer from injected encoder and heading sources. Encoder values are raw
+     * hardware-sign ticks; Pedro applies the directions in {@code config}. Heading is in
+     * radians. Reset rebases encoder software zeros and does not physically reset sensors.
+     */
+    public ThreeWheelIMULocalizer(ThreeWheelIMUConfig config, IntSupplier leftPosition,
+                                  IntSupplier rightPosition, IntSupplier strafePosition,
+                                  DoubleSupplier headingRadians) {
+        this(config, headingRadians::getAsDouble,
+                Encoder.from(leftPosition), Encoder.from(rightPosition), Encoder.from(strafePosition),
+                false);
+    }
+
+    private static HeadingSource initializedHeading(HardwareMap map, ThreeWheelIMUConfig config) {
+        CustomIMU imu = config.imu.get();
+        imu.initialize(map, config.imuName.get());
+        return imu::getHeading;
+    }
+
+    private ThreeWheelIMULocalizer(ThreeWheelIMUConfig config, HeadingSource headingSource,
+                                   Encoder leftEncoder, Encoder rightEncoder, Encoder strafeEncoder,
+                                   boolean resetImuOnRequest) {
         this.forwardTicksToInches = config.forwardTicksToInches.get();
         this.strafeTicksToInches = config.strafeTicksToInches.get();
         this.turnTicksToRadians = config.turnTicksToRadians.get();
@@ -41,19 +81,20 @@ public class ThreeWheelIMULocalizer implements Localizer {
         this.rightPodY = config.rightPodY.get();
         this.strafePodX = config.strafePodX.get();
 
-        this.imu = config.imu.get();
-        this.imu.initialize(map, config.imuName.get());
+        this.imu = resetImuOnRequest ? config.imu.get() : null;
+        this.headingSource = headingSource;
+        this.resetImuOnRequest = resetImuOnRequest;
 
-        this.leftEncoder = new Encoder(map.get(DcMotorEx.class, config.leftEncoderName.get()));
-        this.rightEncoder = new Encoder(map.get(DcMotorEx.class, config.rightEncoderName.get()));
-        this.strafeEncoder = new Encoder(map.get(DcMotorEx.class, config.strafeEncoderName.get()));
+        this.leftEncoder = leftEncoder;
+        this.rightEncoder = rightEncoder;
+        this.strafeEncoder = strafeEncoder;
 
         this.leftEncoder.setDirection(config.leftEncoderDirection.get());
         this.rightEncoder.setDirection(config.rightEncoderDirection.get());
         this.strafeEncoder.setDirection(config.strafeEncoderDirection.get());
 
         this.timer = new Timer();
-        this.previousIMUOrientation = Angle.normalize(imu.getHeading());
+        this.previousIMUOrientation = Angle.normalize(headingSource.headingRadians());
 
         this.motionState = MotionState.ofVelocity(pose, Velocity.zero());
         update();
@@ -81,7 +122,7 @@ public class ThreeWheelIMULocalizer implements Localizer {
         rightEncoder.update();
         strafeEncoder.update();
 
-        double currentIMUOrientation = Angle.normalize(imu.getHeading());
+        double currentIMUOrientation = Angle.normalize(headingSource.headingRadians());
         double imuDeltaRadians = Angle.turnDirection(previousIMUOrientation, currentIMUOrientation)
                 * Angle.smallestDifference(currentIMUOrientation, previousIMUOrientation);
         previousIMUOrientation = currentIMUOrientation;
@@ -154,12 +195,14 @@ public class ThreeWheelIMULocalizer implements Localizer {
     }
 
     public void reset() {
-        imu.resetYaw();
+        if (resetImuOnRequest) {
+            imu.resetYaw();
+        }
         leftEncoder.reset();
         rightEncoder.reset();
         strafeEncoder.reset();
         pose = Pose.zero();
-        previousIMUOrientation = Angle.normalize(imu.getHeading());
+        previousIMUOrientation = Angle.normalize(headingSource.headingRadians());
         totalHeading = 0;
     }
 }
