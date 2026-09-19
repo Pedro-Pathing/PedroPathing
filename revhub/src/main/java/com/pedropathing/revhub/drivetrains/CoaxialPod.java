@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.DoubleSupplier;
 
 /**
  * CoaxialPod is a hardware-backed implementation of the core `SwervePod` interface. It owns the
@@ -20,7 +21,7 @@ import java.util.Map;
  */
 public class CoaxialPod implements SwervePod {
     private final String name;
-    private final AnalogInput turnEncoder; // for rotation of servo
+    private final DoubleSupplier turnEncoderAngleRad;
     private final CRServo turnServo;
     private final DcMotorEx driveMotor;
 
@@ -30,13 +31,30 @@ public class CoaxialPod implements SwervePod {
     private double lastTurnPower = 0;
 
     public CoaxialPod(HardwareMap hardwareMap, CoaxialPodConfig config) {
+        this(hardwareMap, config, analogEncoderAngleSupplier(hardwareMap, config));
+    }
+
+    /**
+     * Creates a coaxial pod with a caller-provided source for its raw steering angle.
+     *
+     * <p>The supplier must return the pod's raw steering angle in radians, before
+     * {@link CoaxialPodConfig#angleOffsetRad} is applied. This overload supports custom encoders,
+     * geared steering mechanisms, and sensor-processing pipelines while retaining the standard
+     * Pedro steering controller and pod behavior.</p>
+     *
+     * @param hardwareMap FTC hardware map containing the drive motor and turn servo
+     * @param config pod configuration
+     * @param turnEncoderAngleRad supplies the raw pod steering angle in radians
+     */
+    public CoaxialPod(HardwareMap hardwareMap, CoaxialPodConfig config,
+                      DoubleSupplier turnEncoderAngleRad) {
         this.config = config;
+        this.turnEncoderAngleRad = turnEncoderAngleRad;
 
         this.name = config.name.get();
 
         this.driveMotor = hardwareMap.get(DcMotorEx.class, config.motorName.get());
         this.turnServo = hardwareMap.get(CRServo.class, config.servoName.get());
-        this.turnEncoder = hardwareMap.get(AnalogInput.class, config.servoEncoderName.get());
 
         setMotorToFloat();
 
@@ -44,6 +62,22 @@ public class CoaxialPod implements SwervePod {
         turnServo.setDirection(config.servoDirection.get());
 
         turnServo.setPower(0);
+    }
+
+    private static DoubleSupplier analogEncoderAngleSupplier(HardwareMap hardwareMap,
+                                                              CoaxialPodConfig config) {
+        AnalogInput turnEncoder = hardwareMap.get(AnalogInput.class, config.servoEncoderName.get());
+        return () -> {
+            double analogMinVoltage = config.analogMinVoltage.get();
+            double analogMaxVoltage = config.analogMaxVoltage.get();
+            double range = analogMaxVoltage - analogMinVoltage;
+            if (range == 0) {
+                return 0;
+            }
+
+            double normalized = (turnEncoder.getVoltage() - analogMinVoltage) / range;
+            return Utils.clamp(normalized, 0, 1) * (2.0 * Math.PI);
+        };
     }
 
     /**
@@ -229,15 +263,7 @@ public class CoaxialPod implements SwervePod {
      * @return raw encoder angle in radians
      */
     public double getRawAngleRad() {
-        double v = turnEncoder.getVoltage();
-        double analogMinVoltage = config.analogMinVoltage.get();
-        double analogMaxVoltage = config.analogMaxVoltage.get();
-        double range = analogMaxVoltage - analogMinVoltage;
-        if (range == 0)
-            return 0;
-        double normalized = (v - analogMinVoltage) / range;
-        normalized = Utils.clamp(normalized, 0, 1);
-        return normalized * (2.0 * Math.PI);
+        return turnEncoderAngleRad.getAsDouble();
     }
 
     /**
