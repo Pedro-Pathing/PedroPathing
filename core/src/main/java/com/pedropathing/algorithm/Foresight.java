@@ -326,7 +326,7 @@ public class Foresight implements Algorithm {
         if (maxDecelerationScale != ForesightConfig.Constraint.NONE) {
             double naturalDeceleration = drivetrain.interpolateAcceleration(
                     config.naturalForwardDeceleration.get(), config.naturalStrafeDeceleration.get(), theta);
-            maxDecelerationConstraint = Math.min(maxDecelerationScale * naturalDeceleration, maxAccelerationConstraint);
+            maxDecelerationConstraint = Math.min(maxDecelerationScale * naturalDeceleration, maxDecelerationConstraint);
         }
 
         double targetVel = maxAchievableVelocity;

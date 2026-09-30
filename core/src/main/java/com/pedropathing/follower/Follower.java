@@ -207,7 +207,7 @@ public class Follower {
     }
 
     public boolean isBusy() {
-        return algorithm.isBusy();
+        return mode != Mode.IDLE && mode != Mode.MANUAL && algorithm.isBusy();
     }
 
     public boolean holding() {

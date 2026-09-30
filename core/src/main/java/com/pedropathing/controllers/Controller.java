@@ -156,7 +156,7 @@ public interface Controller {
             @Override
             public void reset() {
                 super.reset();
-                previousTime = 0;
+                integral = 0;
             }
         };
     }
