@@ -16,7 +16,7 @@ import java.util.Locale;
 public class Matrix {
     public final int rows;
     public final int cols;
-    private final double[] data;
+    public final double[] data;
 
     /**
      * Constructs a new matrix from an existing 2D array.
