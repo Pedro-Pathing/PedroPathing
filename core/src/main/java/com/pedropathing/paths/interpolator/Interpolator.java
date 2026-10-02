@@ -13,7 +13,17 @@ import com.pedropathing.utils.Angle;
 
 @FunctionalInterface
 public interface Interpolator {
-    Interpolator tangent = (curve, t) -> curve.tangent(t).theta();
+    Interpolator tangent = new Interpolator() {
+        @Override
+        public double interpolate(Curve curve, double t) {
+            return curve.tangent(t).theta();
+        }
+
+        @Override
+        public boolean isGeometric() {
+            return true;
+        }
+    };
 
     default Interpolator reverse() {
         Interpolator outer = this;
@@ -34,7 +44,7 @@ public interface Interpolator {
         double finalEnd = Angle.normalize(end);
         double deltaHeading = error(finalStart, finalEnd);
 
-        return (curve, t) -> Angle.normalize(finalStart + deltaHeading * curve.pathCompletion(t));
+        return (curve, t) -> Angle.normalize(finalStart + deltaHeading * t);
     }
 
     static Interpolator linear(Pose start, Pose end) {
@@ -48,7 +58,7 @@ public interface Interpolator {
         double deltaHeading = -Angle.turnDirection(finalStart, finalEnd)
                 * (2 * Math.PI - Angle.smallestDifference(finalStart, finalEnd));
 
-        return (curve, t) -> Angle.normalize(finalStart + deltaHeading * curve.pathCompletion(t));
+        return (curve, t) -> Angle.normalize(finalStart + deltaHeading * t);
     }
 
     static Interpolator longLinear(Pose start, Pose end) {
@@ -56,7 +66,17 @@ public interface Interpolator {
     }
 
     static Interpolator facingPoint(Vector2D point) {
-        return (curve, t) -> point.minus(curve.get(t)).theta();
+        return new Interpolator() {
+            @Override
+            public double interpolate(Curve curve, double t) {
+                return point.minus(curve.get(t)).theta();
+            }
+
+            @Override
+            public boolean isGeometric() {
+                return true;
+            }
+        };
     }
 
     static Interpolator facingPoint(Pose pose) {
@@ -68,4 +88,8 @@ public interface Interpolator {
     }
 
     double interpolate(Curve curve, double t);
+
+    default boolean isGeometric() {
+        return false;
+    }
 }
