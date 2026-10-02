@@ -283,6 +283,7 @@ public class FusionLocalizer implements Localizer {
 
     public void setStartPose(Pose setStart) {
         deadReckoning.setPose(setStart);
+        history.clear();
         history.put(0L, new KalmanState(setStart, Velocity.zero(), setStart, P));
         motionState = MotionState.ofVelocity(setStart, motionState.velocity());
         currentRawPose = setStart;
@@ -294,7 +295,7 @@ public class FusionLocalizer implements Localizer {
         deadReckoning.setPose(setPose);
         currentRawPose = setPose;
 
-        if (!history.isEmpty()) history.lastEntry().getValue().pose = setPose;
-        else setStartPose(setPose);
+        history.clear();
+        history.put(System.nanoTime(), new KalmanState(setPose, motionState.velocity(), Pose.zero(), P));
     }
 }
