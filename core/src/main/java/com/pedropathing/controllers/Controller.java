@@ -49,6 +49,17 @@ public interface Controller {
             }
 
             @Override
+            public double calculate(double target, double error, double derivative) {
+                double output = 0;
+
+                for (Controller controller : controllers) {
+                    output += controller.calculate(target, error, derivative);
+                }
+
+                return output;
+            }
+
+            @Override
             public void reset() {
                 for (Controller controller : controllers) {
                     controller.reset();

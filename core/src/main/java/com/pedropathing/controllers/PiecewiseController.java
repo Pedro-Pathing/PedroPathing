@@ -33,6 +33,12 @@ public class PiecewiseController implements Controller {
     }
 
     @Override
+    public double calculate(double target, double error, double derivative) {
+        double absError = Math.abs(error);
+        return controllers.floorEntry(absError).getValue().calculate(target, error, derivative);
+    }
+
+    @Override
     public void reset() {
         controllers.values().forEach(Controller::reset);
     }
