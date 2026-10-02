@@ -29,7 +29,7 @@ public class Pose {
     public static Pose interpolate(Pose lowerPose, Pose upperPose, double ratio) {
         double x = lowerPose.x() + ratio * (upperPose.x() - lowerPose.x());
         double y = lowerPose.y() + ratio * (upperPose.y() - lowerPose.y());
-        double headingDiff = Angle.smallestDifference(upperPose.heading(), lowerPose.heading());
+        double headingDiff = Angle.normalizeSigned(upperPose.heading() - lowerPose.heading());
         double heading = Angle.normalize(lowerPose.heading() + ratio * headingDiff);
         return new Pose(x, y, heading);
     }
@@ -121,20 +121,24 @@ public class Pose {
     }
 
     public Twist log() {
+        double h = Angle.normalizeSigned(heading);
         double eps = 1e-6;
-        if (Math.abs(heading) < eps) {
+        if (Math.abs(h) < eps) {
             // Small-angle: Jacobian ≈ I
-            return new Twist(x, y, heading);
+            return new Twist(x, y, h);
         }
 
-        double A = Math.sin(heading) / heading;
-        double B = (1.0 - Math.cos(heading)) / heading;
+        double A = Math.sin(h) / h;
+        double B = (1.0 - Math.cos(h)) / h;
         double denom = A * A + B * B;
+        if (denom < 1e-12) {
+            return new Twist(x, y, h);
+        }
 
         double vx = (A * x + B * y) / denom;
         double vy = (-B * x + A * y) / denom;
 
-        return new Twist(vx, vy, heading);
+        return new Twist(vx, vy, h);
     }
 
     @Override

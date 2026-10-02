@@ -283,18 +283,36 @@ public class FusionLocalizer implements Localizer {
 
     public void setStartPose(Pose setStart) {
         deadReckoning.setPose(setStart);
+        history.clear();
         history.put(0L, new KalmanState(setStart, Velocity.zero(), setStart, P));
         motionState = MotionState.ofVelocity(setStart, motionState.velocity());
         currentRawPose = setStart;
     }
 
+    /**
+     * Teleports the estimate and discards filter history. Use at init or startup to hard set a robot's location or to hard reset to a known location during a match.
+     */
     @Override
     public void setPose(Pose setPose) {
         motionState = MotionState.ofVelocity(setPose, motionState.velocity());
         deadReckoning.setPose(setPose);
         currentRawPose = setPose;
 
-        if (!history.isEmpty()) history.lastEntry().getValue().pose = setPose;
-        else setStartPose(setPose);
+        history.clear();
+        history.put(System.nanoTime(), new KalmanState(setPose, motionState.velocity(), Pose.zero(), P));
+    }
+
+    /**
+     * Applies a small non-timestamped correction while preserving filter history. For vision, use timestamped addMeasurement.
+     */
+    public void correctPose(Pose correctedPose) {
+        Pose shift = correctedPose.compose(motionState.pose().invert());
+        for (KalmanState state : history.values()) {
+            state.pose = shift.compose(state.pose);
+        }
+
+        motionState = MotionState.ofVelocity(correctedPose, motionState.velocity());
+        deadReckoning.setPose(correctedPose);
+        currentRawPose = correctedPose;
     }
 }
