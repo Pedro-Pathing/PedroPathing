@@ -169,6 +169,22 @@ public class Vector2D {
         return rotate(heading);
     }
 
+    public Velocity toVelocity(double angularVelocity) {
+        return new Velocity(x, y, angularVelocity);
+    }
+
+    public Velocity toVelocity() {
+        return new Velocity(x, y, 0);
+    }
+
+    public Twist toTwist(double angularVelocity) {
+        return new Twist(x, y, angularVelocity);
+    }
+
+    public Twist toTwist() {
+        return new Twist(x, y, 0);
+    }
+
     @Override
     public String toString() {
         return "Vector2D{" + "x=" + x + ", y=" + y + '}';
