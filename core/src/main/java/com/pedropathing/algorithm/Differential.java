@@ -106,7 +106,7 @@ public class Differential implements Algorithm {
             return calculatePath(drivetrain, pathTracker, state, deltaTime);
         }
 
-        Vector2D drive = projectedTangent.times(drive(
+        double drivePower = drive(
                 isBraking && config.brakeAtEnd.get(),
                 velocityToBrakeInTime,
                 deltaTime,
@@ -114,7 +114,8 @@ public class Differential implements Algorithm {
                 tangentialSpeed,
                 state,
                 curve,
-                drivetrain));
+                drivetrain);
+        Vector2D drive = projectedTangent.times(drivePower);
 
         Pair<Double, Vector2D> translationalResult =
                 translationalCorrection(projectedPose, projectedTargetPos, projectedNormal);
@@ -128,7 +129,7 @@ public class Differential implements Algorithm {
         double headingFeedbackPower = config.headingFeedback.get().calculate(0, headingError);
         double headingFeedforwardPower = config.headingStaticFF.get().calculate(0, turnDirection(headingError));
 
-        double curvatureFeedforward = drive.magnitude() * pathCurvature * config.centripetalGain.get();
+        double curvatureFeedforward = Math.max(drivePower, 0) * pathCurvature * config.centripetalGain.get();
         headingFeedforwardPower += curvatureFeedforward;
 
         if (atParametricStart) {
