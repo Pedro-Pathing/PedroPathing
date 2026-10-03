@@ -1,0 +1,38 @@
+package com.pedropathing.revhub.drivetrains;
+
+import com.pedropathing.config.ConfigVar;
+import com.pedropathing.config.Configuration;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+
+import static com.pedropathing.config.Validator.nonnegative;
+
+public class TankConfig {
+    public final ConfigVar<String> leftFrontName = ConfigVar.required();
+    public final ConfigVar<String> leftRearName = ConfigVar.required();
+    public final ConfigVar<String> rightFrontName = ConfigVar.required();
+    public final ConfigVar<String> rightRearName = ConfigVar.required();
+
+    public final ConfigVar<DcMotorSimple.Direction> leftFrontDirection = ConfigVar.required();
+    public final ConfigVar<DcMotorSimple.Direction> leftRearDirection = ConfigVar.required();
+    public final ConfigVar<DcMotorSimple.Direction> rightFrontDirection = ConfigVar.required();
+    public final ConfigVar<DcMotorSimple.Direction> rightRearDirection = ConfigVar.required();
+
+    /** Whether ZeroPowerBrake mode is enabled in manual (teleop) mode. */
+    public final ConfigVar<Boolean> manualBrakeMode = ConfigVar.of(false);
+
+    /** Smallest power change that triggers a hardware write. */
+    public final ConfigVar<Double> powerThreshold = ConfigVar.of(0.01, nonnegative());
+
+    /** Whether to scale drive power based on battery voltage. */
+    public final ConfigVar<Boolean> voltageCompensation = ConfigVar.of(false);
+
+    /** Nominal battery voltage used as the voltage-compensation reference point. */
+    public final ConfigVar<Double> nominalVoltage = ConfigVar.of(12.0, nonnegative());
+
+    /** Coefficient describing static friction losses, used by voltage compensation. */
+    public final ConfigVar<Double> staticFrictionCoefficient = ConfigVar.of(0.0, nonnegative());
+
+    public TankConfig(Configuration<TankConfig> config) {
+        config.configure(this);
+    }
+}
