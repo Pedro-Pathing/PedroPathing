@@ -10,20 +10,11 @@ import com.pedropathing.math.Pose;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.utils.Angle;
+import java.util.function.BiFunction;
 
 @FunctionalInterface
 public interface Interpolator {
-    Interpolator tangent = new Interpolator() {
-        @Override
-        public double interpolate(Curve curve, double t) {
-            return curve.tangent(t).theta();
-        }
-
-        @Override
-        public boolean isGeometric() {
-            return true;
-        }
-    };
+    Interpolator tangent = Interpolator.geometric((curve, t) -> curve.tangent(t).theta());
 
     default Interpolator reverse() {
         Interpolator outer = this;
@@ -66,17 +57,7 @@ public interface Interpolator {
     }
 
     static Interpolator facingPoint(Vector2D point) {
-        return new Interpolator() {
-            @Override
-            public double interpolate(Curve curve, double t) {
-                return point.minus(curve.get(t)).theta();
-            }
-
-            @Override
-            public boolean isGeometric() {
-                return true;
-            }
-        };
+        return Interpolator.geometric((curve, t) -> point.minus(curve.get(t)).theta());
     }
 
     static Interpolator facingPoint(Pose pose) {
@@ -85,6 +66,20 @@ public interface Interpolator {
 
     static PiecewiseInterpolator piecewise() {
         return new PiecewiseInterpolator();
+    }
+
+    static Interpolator geometric(BiFunction<Curve, Double, Double> function) {
+        return new Interpolator() {
+            @Override
+            public double interpolate(Curve curve, double t) {
+                return function.apply(curve, t);
+            }
+
+            @Override
+            public boolean isGeometric() {
+                return true;
+            }
+        };
     }
 
     double interpolate(Curve curve, double t);

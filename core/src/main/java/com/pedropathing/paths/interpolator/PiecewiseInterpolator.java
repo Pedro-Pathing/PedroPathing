@@ -39,8 +39,7 @@ public class PiecewiseInterpolator implements Interpolator {
 
         Interpolator interpolator = entry.getValue();
 
-        if (interpolator.isGeometric())
-            return interpolator.interpolate(curve, t);
+        if (interpolator.isGeometric()) return interpolator.interpolate(curve, t);
 
         double initialCompletion = previous == null ? 0.0 : previous.getKey();
         double finalCompletion = entry.getKey();
