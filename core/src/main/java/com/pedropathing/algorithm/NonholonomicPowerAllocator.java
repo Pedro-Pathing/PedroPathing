@@ -15,7 +15,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class NonholonomicPowerAllocator {
-    private final ForesightConfig config;
+    private final DifferentialConfig config;
     private List<Pair<Vector2D, Boolean>> vectors = Collections.emptyList();
 
     private Vector2D normalFeedforwardVector;
@@ -24,7 +24,7 @@ public class NonholonomicPowerAllocator {
     private Vector2D driveVector;
     private double headingPower;
 
-    public NonholonomicPowerAllocator(ForesightConfig config) {
+    public NonholonomicPowerAllocator(DifferentialConfig config) {
         this.config = config;
     }
 

@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class Differential implements Algorithm {
-    public final ForesightConfig config;
+    public final DifferentialConfig config;
     public final NonholonomicPowerAllocator allocator;
     private double closestT, curvature;
     private double projectedClosestT, coastClosestT;
@@ -40,7 +40,7 @@ public class Differential implements Algorithm {
     private MotionState currentState;
     private Map<String, Object> debug = new HashMap<>();
 
-    public Differential(ForesightConfig config) {
+    public Differential(DifferentialConfig config) {
         this.config = config;
         this.allocator = new NonholonomicPowerAllocator(config);
         this.naturalDeceleration =
@@ -128,7 +128,7 @@ public class Differential implements Algorithm {
         double headingFeedbackPower = config.headingFeedback.get().calculate(0, headingError);
         double headingFeedforwardPower = config.headingStaticFF.get().calculate(0, turnDirection(headingError));
 
-        double curvatureFeedforward = drive.magnitude() * pathCurvature;
+        double curvatureFeedforward = drive.magnitude() * pathCurvature * config.centripetalGain.get();
         headingFeedforwardPower += curvatureFeedforward;
 
         if (atParametricStart) {
@@ -208,10 +208,6 @@ public class Differential implements Algorithm {
             translational = translationalResult.second();
             closestNormal = closestTangent;
 
-            // A nonholonomic chassis can't translate sideways onto a point, so far
-            // from the target it should steer toward the target's bearing rather
-            // than toward target.heading() -- target.heading() only matters once
-            // position is effectively reached.
             headingCorrection = headingFeedback(projectedPose.heading(), closestTangent.theta()).second();
         }
 
