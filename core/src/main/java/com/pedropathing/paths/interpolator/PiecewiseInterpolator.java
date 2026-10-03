@@ -37,10 +37,19 @@ public class PiecewiseInterpolator implements Interpolator {
         Map.Entry<Double, Interpolator> entry = interpolators.ceilingEntry(completion);
         Map.Entry<Double, Interpolator> previous = interpolators.lowerEntry(entry.getKey());
 
-        double initialT = previous == null ? 0.0 : curve.parameter(previous.getKey());
-        double finalT = curve.parameter(entry.getKey());
+        Interpolator interpolator = entry.getValue();
 
-        double normalizedT = (t - initialT) / (finalT - initialT);
-        return entry.getValue().interpolate(curve, normalizedT);
+        if (interpolator.isGeometric()) return interpolator.interpolate(curve, t);
+
+        double initialCompletion = previous == null ? 0.0 : previous.getKey();
+        double finalCompletion = entry.getKey();
+
+        double normalizedCompletion = (completion - initialCompletion) / (finalCompletion - initialCompletion);
+        return interpolator.interpolate(curve, normalizedCompletion);
+    }
+
+    @Override
+    public boolean isGeometric() {
+        return true;
     }
 }
