@@ -32,8 +32,8 @@ public class OctoQuadLocalizer implements Localizer {
                 config.yPodPort.get(),
                 ticksPerMM,
                 ticksPerMM,
-                (float) -config.offsetUnits.get().toMm(config.xPodOffset.get()),
                 (float) -config.offsetUnits.get().toMm(config.yPodOffset.get()),
+                (float) -config.offsetUnits.get().toMm(config.xPodOffset.get()),
                 config.headingScalar.get().floatValue(),
                 config.localizerVelocityIntervalMS.get()
         );
