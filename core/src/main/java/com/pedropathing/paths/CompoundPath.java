@@ -35,7 +35,10 @@ public class CompoundPath extends Path {
     @Override
     public double heading(double t) {
         TValue.check(t);
-        if (interpolator != null) return interpolator.interpolate(curve, t);
+        if (interpolator != null) {
+            if (!interpolator.isGeometric()) return interpolator.interpolate(curve, curve.pathCompletion(t));
+            return interpolator.interpolate(curve, t);
+        }
         return paths.get(t).heading(paths.localT(t));
     }
 

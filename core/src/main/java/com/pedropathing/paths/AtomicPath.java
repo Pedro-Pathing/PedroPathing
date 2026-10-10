@@ -33,6 +33,7 @@ public class AtomicPath extends Path {
     public double heading(double t) {
         TValue.check(t);
         if (interpolator == null) throw new UnsupportedOperationException("No heading interpolator set.");
+        if (!interpolator.isGeometric()) return interpolator.interpolate(curve, curve.pathCompletion(t));
         return interpolator.interpolate(curve, t);
     }
 
