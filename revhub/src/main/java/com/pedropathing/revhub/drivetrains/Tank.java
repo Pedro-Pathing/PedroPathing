@@ -158,12 +158,7 @@ public class Tank implements Drivetrain {
 
     @Override
     public double interpolateVelocity(double xRadius, double yRadius, double theta) {
-        return Math.max(0, Math.cos(theta)) * xRadius;
-    }
-
-    @Override
-    public double interpolateAcceleration(double xRadius, double yRadius, double theta) {
-        return Math.max(0, Math.cos(theta)) * xRadius;
+        return 0;
     }
 
     public void setZeroPowerBehavior(DcMotor.ZeroPowerBehavior behavior) {
