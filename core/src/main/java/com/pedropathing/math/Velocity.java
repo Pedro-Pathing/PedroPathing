@@ -62,6 +62,10 @@ public class Velocity {
         return new Velocity(pose.x(), pose.y(), pose.heading());
     }
 
+    public double linSpeed() {
+        return Math.sqrt(vx * vx + vy * vy);
+    }
+
     @Override
     public String toString() {
         return "Velocity{" + "vx=" + vx + ", vy=" + vy + ", omega=" + omega + '}';

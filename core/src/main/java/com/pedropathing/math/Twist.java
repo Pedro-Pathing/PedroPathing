@@ -66,6 +66,10 @@ public class Twist {
         return Vector2D.cartesian(vx, vy);
     }
 
+    public double linSpeed() {
+        return Math.sqrt(vx * vx + vy * vy);
+    }
+
     @Override
     public String toString() {
         return "Twist{" + "vx=" + vx + ", vy=" + vy + ", omega=" + omega + '}';
