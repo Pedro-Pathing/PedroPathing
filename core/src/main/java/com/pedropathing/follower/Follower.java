@@ -138,9 +138,9 @@ public class Follower {
 
     public void follow(Path path) {
         clearState();
-        mode = Mode.FOLLOW;
         pathTracker = new PathTracker(path);
         algorithm.reset();
+        mode = Mode.FOLLOW;
     }
 
     public void hold(Pose pose) {
