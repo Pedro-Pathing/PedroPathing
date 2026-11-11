@@ -6,6 +6,7 @@ package com.pedropathing.follower;
 
 import static com.pedropathing.utils.Angle.normalizeSigned;
 
+import com.pedropathing.algorithm.ForesightConfig;
 import com.pedropathing.controllers.Controller;
 import com.pedropathing.controllers.PIDController;
 import com.pedropathing.drivetrain.DrivePowers;
@@ -62,16 +63,26 @@ public class ManualDrive {
             Controller headingFeedback,
             DrivePowers powers,
             double targetHeading,
-            double headingLinear,
-            double headingQuadratic,
+            double maxBrakingPower,
             double strength) {
         double angularVel = follower.velocity().omega;
-        double brakeDist =
-                headingLinear * angularVel + headingQuadratic * angularVel * angularVel * Math.signum(angularVel);
+
         double headingError =
                 Angle.normalizeSigned(targetHeading - follower.pose().heading());
-        double error = headingError - brakeDist;
-        double power = Utils.clamp(headingFeedback.calculate(0, error), -0.3, 1.0) * strength;
+        double lowerBound;
+        double upperBound;
+
+        if (angularVel >= 0){
+            lowerBound = -Math.abs(maxBrakingPower);
+            upperBound = 1.0;
+        } else {
+            lowerBound = -1.0;
+            upperBound = Math.abs(maxBrakingPower);
+        }
+
+        double feedback = headingFeedback.calculate(0, headingError);
+        double power = Utils.clamp(feedback, lowerBound, upperBound) * strength;
+
         return new DrivePowers(powers.forward(), powers.strafe(), power);
     }
 
@@ -80,9 +91,12 @@ public class ManualDrive {
             Controller headingFeedback,
             DrivePowers powers,
             double targetHeading,
-            double headingLinear,
-            double headingQuadratic) {
-        return headingLock(follower, headingFeedback, powers, targetHeading, headingLinear, headingQuadratic, 0.5);
+            ForesightConfig foresightConfig
+            ) {
+
+        double maxBrakingPower = foresightConfig.headingBrakeCoefficients.get().x();
+
+        return headingLock(follower, headingFeedback, powers, targetHeading, maxBrakingPower, 0.5);
     }
 
     /** Drives manually or holds pose when input stops and standing still. */
