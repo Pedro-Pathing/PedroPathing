@@ -18,6 +18,16 @@ public interface CustomIMU {
      * Resets the IMU's yaw to 0.
      */
     void resetYaw();
+
+    /**
+     * Gets the IMU's angular velocity about the vertical axis in radians per second.
+     * <p>
+     * The default returns {@link Double#NaN}, which disables angular-velocity-based filtering.
+     * Implementations that can measure rotation rate should override this.
+     */
+    default double getAngularVelocity() {
+        return Double.NaN;
+    }
 }
 
 
