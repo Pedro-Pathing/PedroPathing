@@ -17,7 +17,7 @@ public class OTOSLocalizer implements Localizer {
         otos = hardwareMap.get(SparkFunOTOS.class, config.name.get());
 
         otos.setLinearUnit(config.linearUnit.get());
-        otos.setAngularUnit(AngleUnit.RADIANS);
+        otos.setAngularUnit(config.angularUnit.get());
 
         SparkFunOTOS.Pose2D offsetPose = new SparkFunOTOS.Pose2D(
                 config.offset.get().x(),

@@ -9,6 +9,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 public class OTOSConfig {
     public final ConfigVar<String> name = ConfigVar.required();
     public final ConfigVar<DistanceUnit> linearUnit = ConfigVar.of(DistanceUnit.INCH);
+    public final ConfigVar<AngleUnit> angularUnit = ConfigVar.of(AngleUnit.RADIANS);
     public final ConfigVar<Double> linearScalar = ConfigVar.of(1.0);
     public final ConfigVar<Double> angularScalar = ConfigVar.of(1.0);
     public final ConfigVar<Pose> offset = ConfigVar.required();
