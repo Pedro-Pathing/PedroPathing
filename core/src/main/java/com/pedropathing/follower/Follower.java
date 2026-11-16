@@ -76,7 +76,7 @@ public class Follower {
                     } else {
                         stop();
                     }
-                    pathTracker = null;
+
                     break;
                 }
 
@@ -100,9 +100,7 @@ public class Follower {
             }
         }
 
-        if (debug != null && !loggers.isEmpty()) {
-            createDebug();
-        }
+
 
         for (Consumer<FollowerLog> logger : loggers) {
             logger.accept(debug());
