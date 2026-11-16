@@ -91,7 +91,12 @@ public class Vector2D {
     }
 
     public Vector2D projectOnto(Vector2D other) {
-        return other.times(dot(other) / other.dot(other));
+        double denom = other.dot(other);
+        if (denom < 1e-18){
+            return ZERO;
+        } else {
+            return other.times(dot(other) / other.dot(other));
+        }
     }
 
     public double theta() {
