@@ -41,4 +41,12 @@ public class RevHubIMU implements CustomIMU {
     public void resetYaw() {
         imu.resetYaw();
     }
+
+    /**
+     * Gets the IMU's angular velocity about the vertical axis in radians per second.
+     */
+    @Override
+    public double getAngularVelocity() {
+        return imu.getRobotAngularVelocity(AngleUnit.RADIANS).zRotationRate;
+    }
 }
