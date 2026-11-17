@@ -32,6 +32,7 @@ public class FusionLocalizer implements Localizer {
 
     public static double EPSILON = 1e-6; // floor for covariance matrices
     private final Localizer deadReckoning;
+    private final VisionLocalizer vision;
     private Pose currentRawPose;
     private MotionState motionState;
     private Pose currentRelativeTransform;
@@ -42,13 +43,47 @@ public class FusionLocalizer implements Localizer {
     private final NavigableMap<Long, KalmanState> history = new TreeMap<>();
     private final int bufferSize;
 
+    /**
+     * Creates a fusion localizer without a vision source.
+     *
+     * @param deadReckoning the continuous odometry localizer
+     * @param initialCovariance the initial state covariance
+     * @param processVariance the process noise covariance
+     * @param measurementVariance the default vision measurement covariance
+     * @param bufferSize the maximum number of pose history entries to retain
+     */
     public FusionLocalizer(
             Localizer deadReckoning,
             Pose initialCovariance,
             Pose processVariance,
             Pose measurementVariance,
             int bufferSize) {
+        this(deadReckoning, null, initialCovariance, processVariance, measurementVariance, bufferSize);
+    }
+
+    /**
+     * Creates a fusion localizer that manages a vision localizer's update and pose lifecycle.
+     * <p>
+     * The vision localizer is updated after the dead-reckoning estimate each loop, and any new
+     * measurement is fused automatically. {@link #setPose(Pose)}, {@link #setStartPose(Pose)},
+     * {@link #correctPose(Pose)}, and {@link #reset()} are forwarded to the vision localizer.
+     *
+     * @param deadReckoning the continuous odometry localizer
+     * @param vision the absolute pose sensor, or {@code null} for none
+     * @param initialCovariance the initial state covariance
+     * @param processVariance the process noise covariance
+     * @param measurementVariance the default vision measurement covariance
+     * @param bufferSize the maximum number of pose history entries to retain
+     */
+    public FusionLocalizer(
+            Localizer deadReckoning,
+            VisionLocalizer vision,
+            Pose initialCovariance,
+            Pose processVariance,
+            Pose measurementVariance,
+            int bufferSize) {
         this.deadReckoning = deadReckoning;
+        this.vision = vision;
         motionState = MotionState.zero();
         currentRawPose = Pose.zero();
 
@@ -97,11 +132,35 @@ public class FusionLocalizer implements Localizer {
 
         history.put(now, new KalmanState(currentPosition, currentVelocity, currentRelativeTransform, P));
         if (history.size() > bufferSize) history.pollFirstEntry();
+
+        updateVision(now);
+    }
+
+    /**
+     * Updates the vision source and fuses at most one new measurement. The measurement is applied
+     * after the current dead-reckoning state has been added to the history so it can be
+     * interpolated against a complete buffer.
+     */
+    private void updateVision(long now) {
+        if (vision == null) return;
+
+        // Give the vision source the fused heading so it does not drift from the estimate.
+        vision.update(motionState.pose().heading());
+
+        Pose measurement = vision.pollMeasurement();
+        if (measurement == null) return;
+
+        long timestamp = vision.lastMeasurementTimestamp();
+        // A measurement cannot be newer than the history entry we just added.
+        if (timestamp > now) timestamp = now;
+
+        addMeasurement(measurement, timestamp, vision.lastMeasurementVariance());
     }
 
     @Override
     public void reset() {
         deadReckoning.reset();
+        if (vision != null) vision.reset();
     }
 
     /**
@@ -283,9 +342,10 @@ public class FusionLocalizer implements Localizer {
 
     public void setStartPose(Pose setStart) {
         deadReckoning.setPose(setStart);
+        if (vision != null) vision.setPose(setStart);
         history.clear();
-        history.put(0L, new KalmanState(setStart, Velocity.zero(), setStart, P));
-        motionState = MotionState.ofVelocity(setStart, motionState.velocity());
+        history.put(0L, new KalmanState(setStart, Velocity.zero(), Pose.zero(), P));
+        motionState = MotionState.ofVelocity(setStart, Velocity.zero());
         currentRawPose = setStart;
     }
 
@@ -296,6 +356,7 @@ public class FusionLocalizer implements Localizer {
     public void setPose(Pose setPose) {
         motionState = MotionState.ofVelocity(setPose, motionState.velocity());
         deadReckoning.setPose(setPose);
+        if (vision != null) vision.setPose(setPose);
         currentRawPose = setPose;
 
         history.clear();
@@ -313,6 +374,7 @@ public class FusionLocalizer implements Localizer {
 
         motionState = MotionState.ofVelocity(correctedPose, motionState.velocity());
         deadReckoning.setPose(correctedPose);
+        if (vision != null) vision.setPose(correctedPose);
         currentRawPose = correctedPose;
     }
 }
