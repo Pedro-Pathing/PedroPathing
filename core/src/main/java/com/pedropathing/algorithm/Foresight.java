@@ -235,7 +235,9 @@ public class Foresight implements Algorithm {
             headingCorrection *= headingScale;
         }
 
-        DrivePowers drivePowers = allocator.getDrivePowers(translational, state, headingCorrection);
+        Vector2D robotFrameDrivePower = translational.rotate(-state.pose().heading());
+        DrivePowers drivePowers =
+                new DrivePowers(robotFrameDrivePower.x(), robotFrameDrivePower.y(), headingCorrection);
 
         debug = debugData();
 
