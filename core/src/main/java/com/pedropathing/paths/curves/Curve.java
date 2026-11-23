@@ -4,6 +4,8 @@
  */
 package com.pedropathing.paths.curves;
 
+import static com.pedropathing.utils.Utils.clamp;
+
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.paths.TValue;
 
@@ -20,9 +22,9 @@ public interface Curve {
 
     default double remainingDistance(double t) {
         TValue.check(t);
+        t = clamp(t, 0.0, 1.0);
         return (1 - t) * length();
     }
-    ;
 
     default double pathCompletion(double t) {
         if (length() == 0) return 0.0;

@@ -229,6 +229,7 @@ public class BezierCurve implements Curve {
     @Override
     public double remainingDistance(double t) {
         TValue.check(t);
+        t = Utils.clamp(t, 0, 1);
         return (1 - pathCompletion(t)) * length;
     }
 
@@ -246,6 +247,7 @@ public class BezierCurve implements Curve {
     @Override
     public double pathCompletion(double t) {
         TValue.check(t);
+        t = Utils.clamp(t, 0, 1);
         if (length == 0) return 0.0;
         return Utils.clamp(completionMap.interpolateKey(t) / length, 0, 1);
     }

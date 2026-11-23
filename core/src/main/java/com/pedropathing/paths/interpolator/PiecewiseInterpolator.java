@@ -4,6 +4,8 @@
  */
 package com.pedropathing.paths.interpolator;
 
+import static com.pedropathing.utils.Utils.clamp;
+
 import com.pedropathing.paths.TValue;
 import com.pedropathing.paths.curves.Curve;
 import java.util.Map;
@@ -31,6 +33,7 @@ public class PiecewiseInterpolator implements Interpolator {
         if (greatestT < 1.0)
             throw new IllegalStateException("piecewise interpolation must be fully defined before interpolating.");
         TValue.check(t);
+        t = clamp(t, 0.0, 1.0);
 
         double completion = curve.pathCompletion(t);
 

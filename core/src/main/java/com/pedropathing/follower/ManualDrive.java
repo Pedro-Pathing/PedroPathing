@@ -6,11 +6,13 @@ package com.pedropathing.follower;
 
 import static com.pedropathing.utils.Angle.normalizeSigned;
 
+import com.pedropathing.algorithm.ForesightConfig;
 import com.pedropathing.controllers.Controller;
 import com.pedropathing.controllers.PIDController;
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.utils.Angle;
+import com.pedropathing.utils.Control;
 import com.pedropathing.utils.Utils;
 
 public class ManualDrive {
@@ -70,8 +72,9 @@ public class ManualDrive {
                 headingLinear * angularVel + headingQuadratic * angularVel * angularVel * Math.signum(angularVel);
         double headingError =
                 Angle.normalizeSigned(targetHeading - follower.pose().heading());
-        double error = headingError - brakeDist;
-        double power = Utils.clamp(headingFeedback.calculate(0, error), -0.3, 1.0) * strength;
+        double error = Angle.normalizeSigned(headingError - brakeDist);
+        double power = headingFeedback.calculate(0, error) * strength;
+        power = Control.clampBrakingPower(power, angularVel, 0.3);
         return new DrivePowers(powers.forward(), powers.strafe(), power);
     }
 
@@ -83,6 +86,30 @@ public class ManualDrive {
             double headingLinear,
             double headingQuadratic) {
         return headingLock(follower, headingFeedback, powers, targetHeading, headingLinear, headingQuadratic, 0.5);
+    }
+
+    public static DrivePowers headingLock(ForesightConfig config, Follower follower, DrivePowers powers, double targetHeading, double strength) {
+        return headingLock(
+                follower,
+                config.headingFeedback.get(),
+                powers,
+                targetHeading,
+                config.headingBrakeCoefficients.get().x(),
+                config.headingBrakeCoefficients.get().y(),
+                strength
+        );
+    }
+
+    public static DrivePowers headingLock(ForesightConfig config, Follower follower, DrivePowers powers, double targetHeading) {
+        return headingLock(
+                follower,
+                config.headingFeedback.get(),
+                powers,
+                targetHeading,
+                config.headingBrakeCoefficients.get().x(),
+                config.headingBrakeCoefficients.get().y(),
+                0.5
+        );
     }
 
     /** Drives manually or holds pose when input stops and standing still. */
